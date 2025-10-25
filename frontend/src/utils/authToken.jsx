@@ -21,27 +21,35 @@ export const getToken = async () => {
 export const removeToken = async () => {
     try {
         await AsyncStorage.removeItem("access_token");
-        await AsyncStorage.removeItem("refresh_token");
     } catch (err) {
         console.log("Error removing token", err);
     }
 };
 
-// Refresh token functions
-export const storeRefreshToken = async (token) => {
+// User data storage
+export const storeUser = async (user) => {
     try {
-        await AsyncStorage.setItem("refresh_token", token);
+        await AsyncStorage.setItem("user", JSON.stringify(user));
     } catch (err) {
-        console.log("Error storing refresh token", err);
+        console.log("Error storing user", err);
     }
 };
 
-export const getRefreshToken = async () => {
+export const getUser = async () => {
     try {
-        return await AsyncStorage.getItem("refresh_token");
+        const userData = await AsyncStorage.getItem("user");
+        return userData ? JSON.parse(userData) : null;
     } catch (err) {
-        console.log("Error getting refresh token", err);
+        console.log("Error getting user", err);
         return null;
+    }
+};
+
+export const removeUser = async () => {
+    try {
+        await AsyncStorage.removeItem("user");
+    } catch (err) {
+        console.log("Error removing user", err);
     }
 };
 
@@ -56,11 +64,11 @@ export const isAuthenticated = async () => {
     }
 };
 
-// Clear all tokens (logout)
-export const clearTokens = async () => {
+// Clear all auth data (logout)
+export const clearAuth = async () => {
     try {
-        await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
+        await AsyncStorage.multiRemove(["access_token", "user"]);
     } catch (err) {
-        console.log("Error clearing tokens", err);
+        console.log("Error clearing auth data", err);
     }
 };

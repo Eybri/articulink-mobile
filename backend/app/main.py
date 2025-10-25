@@ -4,17 +4,25 @@ from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 import os
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 from app.routes import auth
 from app.db.database import create_indexes
 
 load_dotenv()
 
 app = FastAPI(
-    title="ArticuLink API",
-    description="Authentication API for ArticuLink",
-    version="1.0.0"
+    title="ArticuLink",
 )
 
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 # CORS middleware - Add your React Native URLs
 origins = os.getenv("ALLOWED_ORIGINS", "").split(",") + [
     "http://localhost:19006",
@@ -22,9 +30,10 @@ origins = os.getenv("ALLOWED_ORIGINS", "").split(",") + [
     "exp://192.168.100.11:19000"
 ]
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
