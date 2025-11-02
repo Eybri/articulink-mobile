@@ -1,6 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Token storage functions
+export const storeTokens = async (accessToken, refreshToken) => {
+    try {
+        await AsyncStorage.multiSet([
+            ["access_token", accessToken],
+            ["refresh_token", refreshToken]
+        ]);
+    } catch (err) {
+        console.log("Error storing tokens", err);
+    }
+};
+
 export const storeToken = async (token) => {
     try {
         await AsyncStorage.setItem("access_token", token);
@@ -18,6 +29,15 @@ export const getToken = async () => {
     }
 };
 
+export const getRefreshToken = async () => {
+    try {
+        return await AsyncStorage.getItem("refresh_token");
+    } catch (err) {
+        console.log("Error getting refresh token", err);
+        return null;
+    }
+};
+
 export const removeToken = async () => {
     try {
         await AsyncStorage.removeItem("access_token");
@@ -26,25 +46,44 @@ export const removeToken = async () => {
     }
 };
 
-// User data storage
-export const storeUser = async (user) => {
+export const removeRefreshToken = async () => {
     try {
-        await AsyncStorage.setItem("user", JSON.stringify(user));
+        await AsyncStorage.removeItem("refresh_token");
     } catch (err) {
-        console.log("Error storing user", err);
+        console.log("Error removing refresh token", err);
+    }
+};
+
+// User data storage
+export const storeUser = async (userData) => {
+    try {
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        console.log("User data stored");
+    } catch (error) {
+        console.log("Error storing user data:", error);
+        throw error;
     }
 };
 
 export const getUser = async () => {
     try {
-        const userData = await AsyncStorage.getItem("user");
-        return userData ? JSON.parse(userData) : null;
-    } catch (err) {
-        console.log("Error getting user", err);
+        const userJson = await AsyncStorage.getItem('user');
+        if (userJson) {
+            const userData = JSON.parse(userJson);
+            // Check if user is deactivated
+            if (userData.status === "inactive") {
+                console.log("Stored user is deactivated - clearing");
+                await clearAuth();
+                return null;
+            }
+            return userData;
+        }
+        return null;
+    } catch (error) {
+        console.log("Error getting user data:", error);
         return null;
     }
 };
-
 export const removeUser = async () => {
     try {
         await AsyncStorage.removeItem("user");
@@ -67,7 +106,7 @@ export const isAuthenticated = async () => {
 // Clear all auth data (logout)
 export const clearAuth = async () => {
     try {
-        await AsyncStorage.multiRemove(["access_token", "user"]);
+        await AsyncStorage.multiRemove(["access_token", "refresh_token", "user"]);
     } catch (err) {
         console.log("Error clearing auth data", err);
     }

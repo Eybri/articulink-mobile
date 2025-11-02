@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 
 const LoginScreen = ({ navigation }) => {
@@ -7,12 +7,47 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     
-    // Use the login function from AuthContext
     const { login } = useContext(AuthContext);
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    };
+
+    const formatDeactivationMessage = (errorDetail) => {
+        // Extract time information
+        const timeMatch = errorDetail.match(/Available in (\d+) days/);
+        const reasonMatch = errorDetail.match(/Reason: (.+)$/);
+        
+        let message = "";
+        let title = "Account Deactivated";
+        
+        if (errorDetail.includes("temporarily deactivated")) {
+            title = "Account Temporarily Deactivated";
+            
+            if (timeMatch) {
+                const days = timeMatch[1];
+                message = `Your account is temporarily deactivated. It will be automatically reactivated in ${days} day${days > 1 ? 's' : ''}.`;
+            } else {
+                message = "Your account is temporarily deactivated. Please try again later.";
+            }
+            
+            if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
+                message += `\n\nReason: ${reasonMatch[1]}`;
+            }
+            
+        } else if (errorDetail.includes("Account deactivated")) {
+            title = "Account Permanently Deactivated";
+            message = "Your account has been permanently deactivated.";
+            
+            if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
+                message += `\n\nReason: ${reasonMatch[1]}`;
+            }
+            
+            message += "\n\nPlease contact support for more information.";
+        }
+        
+        return { title, message };
     };
 
     const handleLogin = async () => {
@@ -37,7 +72,6 @@ const LoginScreen = ({ navigation }) => {
         try {
             console.log("Attempting login...");
             
-            // Use AuthContext login function
             await login({
                 email: email.toLowerCase().trim(),
                 password: password.trim()
@@ -49,86 +83,104 @@ const LoginScreen = ({ navigation }) => {
             setEmail("");
             setPassword("");
             
-            // No need to navigate manually - AppNavigator will handle this
-            // when the user state changes in AuthContext
-            
         } catch (err) {
             console.error("Login error:", err);
             
             let errorMessage = "Invalid credentials";
+            let errorTitle = "Login Failed";
             
             if (err.detail) {
-                errorMessage = err.detail;
+                // Check for deactivation messages
+                if (err.detail.includes("deactivated")) {
+                    const { title, message } = formatDeactivationMessage(err.detail);
+                    errorTitle = title;
+                    errorMessage = message;
+                } else {
+                    errorMessage = err.detail;
+                }
             } else if (err.message) {
                 errorMessage = err.message;
             } else if (err.error) {
                 errorMessage = err.error;
             }
             
-            Alert.alert("Login Failed", errorMessage);
+            Alert.alert(errorTitle, errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
-            
-            <TextInput 
-                placeholder="Email" 
-                style={styles.input} 
-                value={email} 
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholderTextColor="#999"
-                editable={!isLoading}
-                autoCorrect={false}
-            />
-            
-            <TextInput 
-                placeholder="Password" 
-                style={styles.input} 
-                secureTextEntry 
-                value={password} 
-                onChangeText={setPassword}
-                placeholderTextColor="#999"
-                editable={!isLoading}
-                autoCorrect={false}
-            />
-            
-            <TouchableOpacity 
-                style={[styles.button, isLoading && styles.buttonDisabled]} 
-                onPress={handleLogin}
-                disabled={isLoading}
-                activeOpacity={0.8}
-            >
-                <Text style={styles.buttonText}>
-                    {isLoading ? "Logging in..." : "Login"}
-                </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-                onPress={() => navigation.navigate("Register")}
-                style={styles.linkContainer}
-                disabled={isLoading}
-            >
-                <Text style={styles.link}>Don't have an account? </Text>
-                <Text style={styles.linkBold}>Register</Text>
-            </TouchableOpacity>
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.container}>
+                <Text style={styles.title}>Welcome Back</Text>
+                <Text style={styles.subtitle}>Sign in to your account</Text>
+                
+                <TextInput 
+                    placeholder="Email" 
+                    style={styles.input} 
+                    value={email} 
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    placeholderTextColor="#999"
+                    editable={!isLoading}
+                    autoCorrect={false}
+                />
+                
+                <TextInput 
+                    placeholder="Password" 
+                    style={styles.input} 
+                    secureTextEntry 
+                    value={password} 
+                    onChangeText={setPassword}
+                    placeholderTextColor="#999"
+                    editable={!isLoading}
+                    autoCorrect={false}
+                />
+                
+                <TouchableOpacity 
+                    style={[styles.button, isLoading && styles.buttonDisabled]} 
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.buttonText}>
+                        {isLoading ? "Logging in..." : "Login"}
+                    </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate("Register")}
+                    style={styles.linkContainer}
+                    disabled={isLoading}
+                >
+                    <Text style={styles.link}>Don't have an account? </Text>
+                    <Text style={styles.linkBold}>Register</Text>
+                </TouchableOpacity>
+                
+                {/* Information about account status */}
+                <View style={styles.infoContainer}>
+                    <Text style={styles.infoText}>
+                        If your account is deactivated, you'll see the reason and duration here.
+                    </Text>
+                </View>
+            </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+    },
     container: { 
         flex: 1, 
         justifyContent: "center", 
         alignItems: "center", 
         padding: 20,
-        backgroundColor: "#f8f9fa"
+        backgroundColor: "#f8f9fa",
+        minHeight: '100%',
     },
     title: { 
         fontSize: 32, 
@@ -200,6 +252,19 @@ const styles = StyleSheet.create({
         color: "#007bff",
         fontSize: 16,
         fontWeight: "bold"
+    },
+    infoContainer: {
+        marginTop: 30,
+        padding: 15,
+        backgroundColor: "#e9ecef",
+        borderRadius: 8,
+        width: "100%",
+    },
+    infoText: {
+        color: "#6c757d",
+        fontSize: 14,
+        textAlign: "center",
+        lineHeight: 20,
     }
 });
 
