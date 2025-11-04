@@ -49,8 +49,10 @@ async def register(user: UserCreate):
         profile_pic=result.get("profile_pic"),
         birthdate=result.get("birthdate"),
         gender=result.get("gender"),
+        status=result.get("status", "active"),
+        created_at=result.get("created_at"),
+        updated_at=result.get("updated_at")
     )
-
 @router.post("/login", response_model=Token)
 async def login(login_data: LoginRequest):
     """Authenticate user and return access token and refresh token"""

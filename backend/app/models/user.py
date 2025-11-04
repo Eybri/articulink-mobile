@@ -1,3 +1,4 @@
+# In your user models file
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, Dict, Any
 from datetime import date, datetime
@@ -21,6 +22,7 @@ class UserCreate(BaseModel):
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
+    status: Optional[str] = "active"  # Add default status
 
     @validator('email')
     def email_to_lowercase(cls, v):
@@ -36,6 +38,8 @@ class UserOut(BaseModel):
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     status: Optional[str] = "active"  # Add status field
+    created_at: Optional[datetime] = None  # Add created_at field
+    updated_at: Optional[datetime] = None  # Add updated_at field
 
     class Config:
         from_attributes = True
@@ -50,10 +54,13 @@ class UserUpdateResponse(BaseModel):
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     status: Optional[str] = "active"  # Add status field
+    created_at: Optional[datetime] = None  # Add created_at field
+    updated_at: Optional[datetime] = None  # Add updated_at field
     message: str = "Profile updated successfully"
     
     class Config:
         from_attributes = True
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str
@@ -114,11 +121,13 @@ async def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
     user_data.update({
         "email": user_data["email"].lower(),
         "refresh_tokens": [],
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "status": user_data.get("status", "active"),  # Ensure status is set
+        "role": user_data.get("role", "user")  # Ensure role is set
     })
     result = await db.users.insert_one(user_data)
     return await db.users.find_one({"_id": result.inserted_id})
-
 async def update_user(user_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Update user profile information"""
     try:
