@@ -1,13 +1,46 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Alert, 
+  ScrollView,
+  Dimensions,
+  Animated,
+  StatusBar,
+  ActivityIndicator
+} from "react-native";
 import { AuthContext } from "../context/AuthContext";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react-native";
+
+const { width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [fadeAnim] = useState(new Animated.Value(0));
+    const [slideAnim] = useState(new Animated.Value(30));
     
     const { login } = useContext(AuthContext);
+
+    React.useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 600,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -15,7 +48,6 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const formatDeactivationMessage = (errorDetail) => {
-        // Extract time information
         const timeMatch = errorDetail.match(/Available in (\d+) days/);
         const reasonMatch = errorDetail.match(/Reason: (.+)$/);
         
@@ -51,7 +83,6 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const handleLogin = async () => {
-        // Input validation
         if (!email || !password) {
             Alert.alert("Error", "Please fill in all fields");
             return;
@@ -79,7 +110,6 @@ const LoginScreen = ({ navigation }) => {
 
             console.log("Login successful!");
             
-            // Clear form
             setEmail("");
             setPassword("");
             
@@ -90,7 +120,6 @@ const LoginScreen = ({ navigation }) => {
             let errorTitle = "Login Failed";
             
             if (err.detail) {
-                // Check for deactivation messages
                 if (err.detail.includes("deactivated")) {
                     const { title, message } = formatDeactivationMessage(err.detail);
                     errorTitle = title;
@@ -111,161 +140,349 @@ const LoginScreen = ({ navigation }) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.container}>
-                <Text style={styles.title}>Welcome Back</Text>
-                <Text style={styles.subtitle}>Sign in to your account</Text>
-                
-                <TextInput 
-                    placeholder="Email" 
-                    style={styles.input} 
-                    value={email} 
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    placeholderTextColor="#999"
-                    editable={!isLoading}
-                    autoCorrect={false}
-                />
-                
-                <TextInput 
-                    placeholder="Password" 
-                    style={styles.input} 
-                    secureTextEntry 
-                    value={password} 
-                    onChangeText={setPassword}
-                    placeholderTextColor="#999"
-                    editable={!isLoading}
-                    autoCorrect={false}
-                />
-                
-                <TouchableOpacity 
-                    style={[styles.button, isLoading && styles.buttonDisabled]} 
-                    onPress={handleLogin}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.buttonText}>
-                        {isLoading ? "Logging in..." : "Login"}
-                    </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                    onPress={() => navigation.navigate("Register")}
-                    style={styles.linkContainer}
-                    disabled={isLoading}
-                >
-                    <Text style={styles.link}>Don't have an account? </Text>
-                    <Text style={styles.linkBold}>Register</Text>
-                </TouchableOpacity>
-                
-                {/* Information about account status */}
-                <View style={styles.infoContainer}>
-                    <Text style={styles.infoText}>
-                        If your account is deactivated, you'll see the reason and duration here.
-                    </Text>
-                </View>
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
+            
+            {/* Background Orbs */}
+            <View style={styles.backgroundOrbs}>
+                <View style={[styles.orb, styles.orb1]} />
+                <View style={[styles.orb, styles.orb2]} />
             </View>
-        </ScrollView>
+
+            <ScrollView 
+                contentContainerStyle={styles.scrollContainer}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
+                <Animated.View style={[
+                    styles.content,
+                    {
+                        opacity: fadeAnim,
+                        transform: [{ translateY: slideAnim }]
+                    }
+                ]}>
+                    
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View style={styles.logoContainer}>
+                            <View style={styles.logoCircle}>
+                                <Shield size={28} color="#2563eb" />
+                            </View>
+                            <Text style={styles.logoText}>Articulink</Text>
+                        </View>
+                        <Text style={styles.welcomeTitle}>Welcome Back</Text>
+                        <Text style={styles.welcomeSubtitle}>
+                            Sign in to continue your communication journey
+                        </Text>
+                    </View>
+
+                    {/* Form */}
+                    <View style={styles.formContainer}>
+                        {/* Email Input */}
+                        <View style={styles.inputContainer}>
+                            <View style={styles.inputIcon}>
+                                <Mail size={20} color="#64748b" />
+                            </View>
+                            <TextInput 
+                                placeholder="Email address" 
+                                style={styles.input} 
+                                value={email} 
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                                placeholderTextColor="#94a3b8"
+                                editable={!isLoading}
+                                autoCorrect={false}
+                                returnKeyType="next"
+                            />
+                        </View>
+
+                        {/* Password Input */}
+                        <View style={styles.inputContainer}>
+                            <View style={styles.inputIcon}>
+                                <Lock size={20} color="#64748b" />
+                            </View>
+                            <TextInput 
+                                placeholder="Password" 
+                                style={styles.input} 
+                                secureTextEntry={!showPassword}
+                                value={password} 
+                                onChangeText={setPassword}
+                                placeholderTextColor="#94a3b8"
+                                editable={!isLoading}
+                                autoCorrect={false}
+                                returnKeyType="done"
+                                onSubmitEditing={handleLogin}
+                            />
+                            <TouchableOpacity 
+                                style={styles.eyeIcon}
+                                onPress={() => setShowPassword(!showPassword)}
+                                disabled={isLoading}
+                            >
+                                {showPassword ? 
+                                    <EyeOff size={20} color="#64748b" /> : 
+                                    <Eye size={20} color="#64748b" />
+                                }
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Login Button */}
+                        <TouchableOpacity 
+                            style={[
+                                styles.loginButton, 
+                                isLoading && styles.loginButtonDisabled
+                            ]} 
+                            onPress={handleLogin}
+                            disabled={isLoading}
+                            activeOpacity={0.9}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <>
+                                    <Text style={styles.loginButtonText}>Sign In</Text>
+                                    <View style={styles.buttonIcon}>
+                                        <ArrowRight size={20} color="white" />
+                                    </View>
+                                </>
+                            )}
+                        </TouchableOpacity>
+
+                        {/* Divider */}
+                        <View style={styles.divider}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>or</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+
+                        {/* Register Link */}
+                        <TouchableOpacity 
+                            onPress={() => navigation.navigate("Register")}
+                            style={styles.registerContainer}
+                            disabled={isLoading}
+                        >
+                            <Text style={styles.registerText}>
+                                Don't have an account?{" "}
+                                <Text style={styles.registerLink}>Create one</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Security Info */}
+                    <View style={styles.securityInfo}>
+                        <View style={styles.securityIcon}>
+                            <Shield size={16} color="#64748b" />
+                        </View>
+                        <Text style={styles.securityText}>
+                            Your data is securely encrypted and protected
+                        </Text>
+                    </View>
+                </Animated.View>
+            </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fafafa',
+    },
     scrollContainer: {
         flexGrow: 1,
+        justifyContent: 'center',
     },
-    container: { 
-        flex: 1, 
-        justifyContent: "center", 
-        alignItems: "center", 
-        padding: 20,
-        backgroundColor: "#f8f9fa",
-        minHeight: '100%',
+    backgroundOrbs: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
     },
-    title: { 
-        fontSize: 32, 
-        fontWeight: "bold", 
-        marginBottom: 10,
-        color: "#333"
+    orb: {
+        position: 'absolute',
+        borderRadius: 500,
+        opacity: 0.6,
     },
-    subtitle: {
-        fontSize: 16,
-        color: "#666",
-        marginBottom: 30,
-        textAlign: "center"
+    orb1: {
+        width: width * 0.7,
+        height: width * 0.7,
+        top: -width * 0.3,
+        right: -width * 0.2,
+        backgroundColor: '#dbeafe',
     },
-    input: { 
-        width: "100%", 
-        height: 55, 
-        borderWidth: 1, 
-        borderColor: "#ddd",
-        paddingHorizontal: 15, 
-        marginBottom: 20, 
-        borderRadius: 10,
-        backgroundColor: "#fff",
-        fontSize: 16,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
+    orb2: {
+        width: width * 0.5,
+        height: width * 0.5,
+        bottom: -width * 0.2,
+        left: -width * 0.1,
+        backgroundColor: '#f0f9ff',
+    },
+    content: {
+        paddingHorizontal: 24,
+        paddingVertical: 40,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 40,
+    },
+    logoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    logoCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowRadius: 8,
+        elevation: 3,
     },
-    button: { 
-        width: "100%", 
-        backgroundColor: "#007bff", 
-        padding: 16, 
-        borderRadius: 10, 
-        alignItems: "center",
-        marginTop: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+    logoText: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#1e293b',
+        letterSpacing: -0.5,
     },
-    buttonDisabled: {
-        backgroundColor: "#6c757d",
+    welcomeTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#0f172a',
+        marginBottom: 8,
+        textAlign: 'center',
+        letterSpacing: -0.5,
+    },
+    welcomeSubtitle: {
+        fontSize: 16,
+        color: '#64748b',
+        textAlign: 'center',
+        lineHeight: 22,
+        maxWidth: 280,
+    },
+    formContainer: {
+        backgroundColor: 'white',
+        borderRadius: 24,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8fafc',
+        borderRadius: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        overflow: 'hidden',
+    },
+    inputIcon: {
+        padding: 16,
+        paddingRight: 12,
+    },
+    input: {
+        flex: 1,
+        height: 56,
+        fontSize: 16,
+        color: '#0f172a',
+        paddingRight: 16,
+    },
+    eyeIcon: {
+        padding: 16,
+        paddingLeft: 12,
+    },
+    loginButton: {
+        backgroundColor: '#2563eb',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderRadius: 16,
+        marginTop: 8,
+        marginBottom: 24,
+        shadowColor: '#2563eb',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    loginButtonDisabled: {
+        backgroundColor: '#94a3b8',
         shadowOpacity: 0,
         elevation: 0,
     },
-    buttonText: { 
-        color: "#fff", 
-        fontSize: 18, 
-        fontWeight: "bold" 
+    loginButtonText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
+        marginRight: 8,
+        letterSpacing: 0.5,
     },
-    linkContainer: {
-        flexDirection: "row",
-        marginTop: 25,
-        alignItems: "center"
+    buttonIcon: {
+        opacity: 0.9,
     },
-    link: { 
-        color: "#666",
-        fontSize: 16
+    divider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 24,
     },
-    linkBold: {
-        color: "#007bff",
-        fontSize: 16,
-        fontWeight: "bold"
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#e2e8f0',
     },
-    infoContainer: {
-        marginTop: 30,
-        padding: 15,
-        backgroundColor: "#e9ecef",
-        borderRadius: 8,
-        width: "100%",
-    },
-    infoText: {
-        color: "#6c757d",
+    dividerText: {
+        color: '#94a3b8',
         fontSize: 14,
-        textAlign: "center",
-        lineHeight: 20,
-    }
+        fontWeight: '500',
+        marginHorizontal: 16,
+        letterSpacing: 0.5,
+    },
+    registerContainer: {
+        alignItems: 'center',
+    },
+    registerText: {
+        color: '#64748b',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    registerLink: {
+        color: '#2563eb',
+        fontWeight: '600',
+        letterSpacing: 0.3,
+    },
+    securityInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 32,
+        padding: 16,
+        backgroundColor: '#f8fafc',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    securityIcon: {
+        marginRight: 8,
+        opacity: 0.7,
+    },
+    securityText: {
+        color: '#64748b',
+        fontSize: 14,
+        fontWeight: '500',
+        letterSpacing: 0.3,
+    },
 });
 
 export default LoginScreen;
