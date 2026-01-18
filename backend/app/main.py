@@ -8,7 +8,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-from app.routes import auth
+from app.routes import auth, transcribe
 from app.db.database import create_indexes
 
 load_dotenv()
@@ -44,6 +44,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(transcribe.router)
 
 @app.on_event("startup")
 async def startup_event():

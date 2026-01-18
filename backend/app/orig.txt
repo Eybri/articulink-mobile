@@ -1,0 +1,53 @@
+from fastapi import APIRouter, UploadFile, File
+import torch
+import librosa
+import tempfile
+import os
+from transformers import WhisperProcessor, WhisperForConditionalGeneration
+
+router = APIRouter(prefix="/api/v1", tags=["Transcription"])
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+processor = WhisperProcessor.from_pretrained("openai/whisper-small")
+model = WhisperForConditionalGeneration.from_pretrained(
+    "openai/whisper-small"
+).to(device)
+
+model.eval()
+
+@router.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    # 1️⃣ Save upload to temp file
+    suffix = os.path.splitext(file.filename)[-1] or ".m4a"
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    # 2️⃣ Load audio (librosa uses ffmpeg → supports m4a)
+    audio, sr = librosa.load(tmp_path, sr=16000, mono=True)
+
+    os.remove(tmp_path)
+
+    # 3️⃣ Whisper inference
+    inputs = processor(
+        audio,
+        sampling_rate=16000,
+        return_tensors="pt",
+        padding=True
+    ).to(device)
+
+    with torch.no_grad():
+        predicted_ids = model.generate(
+            inputs.input_features,
+            task="transcribe",
+            language="en"  # or "tl" or remove for auto
+        )
+
+    text = processor.batch_decode(
+        predicted_ids,
+        skip_special_tokens=True
+    )[0]
+
+    return {"text": text}

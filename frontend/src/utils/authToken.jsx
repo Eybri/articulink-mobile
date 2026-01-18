@@ -1,17 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Token storage functions
-export const storeTokens = async (accessToken, refreshToken) => {
-    try {
-        await AsyncStorage.multiSet([
-            ["access_token", accessToken],
-            ["refresh_token", refreshToken]
-        ]);
-    } catch (err) {
-        console.log("Error storing tokens", err);
-    }
-};
-
 export const storeToken = async (token) => {
     try {
         await AsyncStorage.setItem("access_token", token);
@@ -29,28 +18,11 @@ export const getToken = async () => {
     }
 };
 
-export const getRefreshToken = async () => {
-    try {
-        return await AsyncStorage.getItem("refresh_token");
-    } catch (err) {
-        console.log("Error getting refresh token", err);
-        return null;
-    }
-};
-
 export const removeToken = async () => {
     try {
         await AsyncStorage.removeItem("access_token");
     } catch (err) {
         console.log("Error removing token", err);
-    }
-};
-
-export const removeRefreshToken = async () => {
-    try {
-        await AsyncStorage.removeItem("refresh_token");
-    } catch (err) {
-        console.log("Error removing refresh token", err);
     }
 };
 
@@ -84,6 +56,7 @@ export const getUser = async () => {
         return null;
     }
 };
+
 export const removeUser = async () => {
     try {
         await AsyncStorage.removeItem("user");
@@ -106,8 +79,21 @@ export const isAuthenticated = async () => {
 // Clear all auth data (logout)
 export const clearAuth = async () => {
     try {
-        await AsyncStorage.multiRemove(["access_token", "refresh_token", "user"]);
+        // Only clear access_token and user (no refresh_token)
+        await AsyncStorage.multiRemove(["access_token", "user"]);
+        console.log("Auth data cleared");
     } catch (err) {
         console.log("Error clearing auth data", err);
+    }
+};
+
+// Kept for backward compatibility (for now, but can be removed later)
+export const storeTokens = async (accessToken, refreshToken) => {
+    try {
+        // Only store access token (ignore refreshToken)
+        await AsyncStorage.setItem("access_token", accessToken);
+        console.log("Access token stored (legacy function)");
+    } catch (err) {
+        console.log("Error storing tokens", err);
     }
 };

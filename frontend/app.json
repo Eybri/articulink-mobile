@@ -15,7 +15,17 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone for speech recognition and text-to-speech functionality."
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone.",
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
+        ],
+        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition."
       }
     },
     "android": {
@@ -25,8 +35,16 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "RECORD_AUDIO"
-      ]
+        "RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.eybri_0803.frontend"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,7 +57,13 @@
         }
       ],
       "expo-web-browser",
-      "expo-facebook"
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition."
+        }
+      ]
     ]
   }
 }

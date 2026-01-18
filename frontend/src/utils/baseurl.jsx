@@ -12,7 +12,7 @@ if (Platform.OS === 'ios') {
 // For physical device testing (use your computer's IP)
 if (__DEV__) {
     // Get your computer's local IP automatically or set manually
-    baseURL = 'http://192.168.100.11:5000/api/v1';
+    baseURL = 'http://172.20.10.5:5000/api/v1';
 }
 
 export default baseURL;

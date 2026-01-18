@@ -85,6 +85,16 @@ class JWTBearer(HTTPBearer):
                 request.state.user_id = user_id
                 logger.info(f"Authentication successful for user: {user_id}")
                 return user_id
+            else:
+                # No credentials provided
+                if self.optional:
+                    request.state.user_id = None
+                    return None
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Authentication required"
+                    )
                 
         except HTTPException as e:
             logger.error(f"HTTPException in auth: {e.detail}")
