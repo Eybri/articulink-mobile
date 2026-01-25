@@ -1,4 +1,3 @@
-// Update your baseurl.js
 import { Platform } from 'react-native';
 
 // For Android emulator
@@ -12,7 +11,7 @@ if (Platform.OS === 'ios') {
 // For physical device testing (use your computer's IP)
 if (__DEV__) {
     // Get your computer's local IP automatically or set manually
-    baseURL = 'http://172.20.10.5:5000/api/v1';
+    baseURL = 'http://192.168.100.10:5000/api/v1';
 }
 
 export default baseURL;
