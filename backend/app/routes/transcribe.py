@@ -18,8 +18,9 @@ model = WhisperForConditionalGeneration.from_pretrained(
 ).to(device)
 
 model.eval()
-model.config.forced_decoder_ids = None
-model.config.suppress_tokens = []
+# Use generation_config instead of model.config for generation settings
+model.generation_config.forced_decoder_ids = None
+model.generation_config.suppress_tokens = []
 
 @router.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
