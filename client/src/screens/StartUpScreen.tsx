@@ -18,7 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('screen');
 
 // ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
@@ -231,7 +231,7 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
       <View style={styles.slide}>
 
-        {/* ── Layered background ── */}
+        {/* ── Layered background — now covers full screen height ── */}
         <View style={[styles.bgBase, { backgroundColor: item.bgFrom }]} />
         <View style={[styles.bgOverlay, { backgroundColor: item.bgTo }]} />
 
@@ -250,7 +250,7 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View key={`v${i}`} style={[styles.gridLineV, { left: (width / 7) * i, backgroundColor: `${item.accentColor}07` }]} />
           ))}
           {Array.from({ length: 10 }).map((_, i) => (
-            <View key={`h${i}`} style={[styles.gridLineH, { top: (height * 0.73 / 10) * i, backgroundColor: `${item.accentColor}07` }]} />
+            <View key={`h${i}`} style={[styles.gridLineH, { top: (height / 10) * i, backgroundColor: `${item.accentColor}07` }]} />
           ))}
         </View>
 
@@ -328,8 +328,8 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   // ─── Main Render ─────────────────────────────────────────────
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.lightGray} translucent={false} />
+    <View style={[styles.container, { backgroundColor: slides[activeIndex].bgFrom }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
 
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
         <Text style={styles.skipText}>Skip</Text>
@@ -353,6 +353,7 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
       />
 
+      {/* Bottom section — transparent so slide bg shows through */}
       <View style={styles.bottomSection}>
         <Pagination />
         <TouchableOpacity style={styles.primaryButton} onPress={handleNext} activeOpacity={0.9}>
@@ -387,11 +388,17 @@ const BTN_SHADOW = Platform.select({
 }) as any;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: { flex: 1, backgroundColor: 'transparent' },
 
-  // Background
-  bgBase: { ...StyleSheet.absoluteFillObject },
-  bgOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: height * 0.45, opacity: 0.5 },
+  // Background — full screen
+  bgBase: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width, height },
+  bgOverlay: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    // Extend to full height so it bleeds under the bottom section
+    height: height,
+    opacity: 0.5,
+  },
 
   // Depth orbs
   depthOrbA: {
@@ -426,7 +433,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
-  // Grid
+  // Grid — full screen
   gridOverlay: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
   gridLineV: { position: 'absolute', width: 1, top: 0, bottom: 0 },
   gridLineH: { position: 'absolute', height: 1, left: 0, right: 0 },
@@ -448,8 +455,8 @@ const styles = StyleSheet.create({
   },
   skipText: { fontSize: 14, fontWeight: '600', color: COLORS.royalBlue, letterSpacing: 0.4 },
 
-  // Slide
-  slide: { width, height: height * 0.73, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, overflow: 'hidden' },
+  // Slide — full screen height, nudge card up to visually center above bottom controls
+  slide: { width, height, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, overflow: 'hidden', paddingBottom: 100 },
 
   // Card
   card: {
@@ -477,8 +484,17 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 26, fontWeight: '800', color: COLORS.darkSlate, textAlign: 'center', lineHeight: 34, marginBottom: 12, letterSpacing: -0.3 },
   cardDescription: { fontSize: 15, color: COLORS.darkSlate, opacity: 0.6, textAlign: 'center', lineHeight: 23, letterSpacing: 0.15, maxWidth: 300, marginBottom: 4 },
 
-  // Bottom
-  bottomSection: { paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8, backgroundColor: COLORS.lightGray },
+  // Bottom — transparent background so slide bg shows through
+  bottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 8,
+    backgroundColor: 'transparent',
+  },
 
   // Pagination
   pagination: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 24, gap: 8 },
