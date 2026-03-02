@@ -255,7 +255,7 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
 
         {/* Floating particles */}
-        {particles.map(p => <FloatingParticle key={p.key} {...p} />)}
+        {particles.map(({ key, ...p }) => <FloatingParticle key={key} {...p} />)}
 
         {/* Diamond accents */}
         <View style={[styles.diamond, styles.diamondTopRight, { backgroundColor: `${item.accentColor}15`, borderColor: `${item.accentColor}22` }]} />

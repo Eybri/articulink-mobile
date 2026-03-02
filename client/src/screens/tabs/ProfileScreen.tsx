@@ -43,7 +43,8 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         "Please log in again",
         [{
           text: "OK", onPress: () => {
-            navigation.navigate("Login");
+            // AppNavigator will handle redirection to Login when user becomes null
+            logout();
           }
         }]
       );
@@ -69,7 +70,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('Are you sure you want to logout?');
       if (confirmed) {
-        logout().then(() => navigation.navigate("Login"));
+        logout(); // Redirection handled by AppNavigator
       }
     } else {
       Alert.alert("Logout", "Are you sure?", [
@@ -77,8 +78,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {
           text: "Logout",
           onPress: async () => {
-            await logout();
-            navigation.navigate("Login");
+            await logout(); // Redirection handled by AppNavigator
           }
         }
       ]);
@@ -120,7 +120,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
       <View style={styles.centered}>
         <Text>No profile data</Text>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
+        <TouchableOpacity style={styles.button} onPress={() => logout()}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
