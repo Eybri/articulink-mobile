@@ -10,6 +10,7 @@ import {
     Animated,
     LayoutAnimation,
     UIManager,
+    Image,
 } from "react-native";
 import {
     Info,
@@ -139,9 +140,11 @@ const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             >
                 {/* Hero */}
                 <View style={styles.hero}>
-                    <View style={styles.heroIconCircle}>
-                        <Info size={32} color="#2563eb" />
-                    </View>
+                    <Image
+                        source={require('../../../assets/images/logo2-nobg.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                    />
                     <Text style={styles.heroTitle}>Articulink</Text>
                     <Text style={styles.heroVersion}>Version 1.0.0</Text>
                     <Text style={styles.heroSubtitle}>
@@ -319,16 +322,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 28,
     },
-    heroIconCircle: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: "#eff6ff",
-        justifyContent: "center",
-        alignItems: "center",
+    logoImage: {
+        width: 100,
+        height: 100,
         marginBottom: 14,
-        borderWidth: 1,
-        borderColor: "#dbeafe",
     },
     heroTitle: {
         fontSize: 24,

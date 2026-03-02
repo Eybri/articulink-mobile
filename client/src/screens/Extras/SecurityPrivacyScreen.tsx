@@ -9,6 +9,7 @@ import {
     Platform,
     Animated,
     LayoutAnimation,
+    Image,
     UIManager,
 } from "react-native";
 import {
@@ -143,9 +144,11 @@ const SecurityPrivacyScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             >
                 {/* Hero */}
                 <View style={styles.hero}>
-                    <View style={styles.heroIconCircle}>
-                        <Shield size={32} color="#2563eb" />
-                    </View>
+                    <Image
+                        source={require('../../../assets/images/logo2-nobg.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                    />
                     <Text style={styles.heroTitle}>Your Privacy Matters</Text>
                     <Text style={styles.heroSubtitle}>
                         Articulink respects user privacy. Voice recordings are stored only with
@@ -368,16 +371,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 28,
     },
-    heroIconCircle: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: "#eff6ff",
-        justifyContent: "center",
-        alignItems: "center",
+    logoImage: {
+        width: 100,
+        height: 100,
         marginBottom: 14,
-        borderWidth: 1,
-        borderColor: "#dbeafe",
     },
     heroTitle: {
         fontSize: 22,
