@@ -291,7 +291,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         </TouchableOpacity>
                         <Text style={styles.footerDot}>·</Text>
                         <TouchableOpacity
-                            onPress={() => Linking.openURL('https://articulink.app/about')}
+                            onPress={() => navigation.navigate('About')}
                             activeOpacity={0.7}
                         >
                             <Text style={styles.footerLinkText}>About</Text>
