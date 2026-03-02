@@ -280,6 +280,23 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                             Your data is securely encrypted and protected
                         </Text>
                     </View>
+
+                    {/* Footer Links */}
+                    <View style={styles.footerLinks}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('SecurityPrivacy')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.footerLinkText}>Privacy & Security</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.footerDot}>·</Text>
+                        <TouchableOpacity
+                            onPress={() => Linking.openURL('https://articulink.app/about')}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.footerLinkText}>About</Text>
+                        </TouchableOpacity>
+                    </View>
                 </Animated.View>
             </ScrollView>
         </View>
@@ -485,6 +502,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '500',
         letterSpacing: 0.3,
+    },
+    footerLinks: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+        gap: 8,
+    },
+    footerLinkText: {
+        color: '#94a3b8',
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    footerDot: {
+        color: '#cbd5e1',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
 
