@@ -8,7 +8,8 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Platform
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
@@ -65,16 +66,23 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure?", [
-      { text: "Cancel" },
-      {
-        text: "Logout",
-        onPress: async () => {
-          await logout();
-          navigation.navigate("Login");
-        }
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to logout?');
+      if (confirmed) {
+        logout().then(() => navigation.navigate("Login"));
       }
-    ]);
+    } else {
+      Alert.alert("Logout", "Are you sure?", [
+        { text: "Cancel" },
+        {
+          text: "Logout",
+          onPress: async () => {
+            await logout();
+            navigation.navigate("Login");
+          }
+        }
+      ]);
+    }
   };
 
   const InfoRow: React.FC<{ icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string | undefined | null }> = ({ icon, label, value }) => (

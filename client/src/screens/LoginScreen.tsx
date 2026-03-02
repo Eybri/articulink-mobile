@@ -10,7 +10,9 @@ import {
     Dimensions,
     Animated,
     StatusBar,
-    ActivityIndicator
+    ActivityIndicator,
+    Image,
+    Linking,
 } from "react-native";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react-native";
