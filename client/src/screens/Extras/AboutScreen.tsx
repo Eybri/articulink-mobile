@@ -36,62 +36,73 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// ─── Brand Palette ───────────────────────────────────────────────
+// ─── Brand Palette (matches StartUpScreen) ───────────────────────
 const COLORS = {
-    deepNavy: '#0F2F5F',
-    royalBlue: '#1E4E8C',
-    tealBlue: '#1F6F8B',
-    softAqua: '#4FA7B8',
-    bgLight: '#F8FAFC',
-    darkSlate: '#1D2A3A',
+    // Backgrounds
+    cream: '#FAF8F4',
+    warmWhite: '#F5F1EA',
+    sandLight: '#EDE8DF',
+    sandMid: '#DDD6C8',
+
+    // Brand blues
+    deepNavy: '#0F2847',
+    royalBlue: '#1A4480',
+    mediumBlue: '#2A5FA8',
+
+    // Warm teal accent
+    teal: '#2A8FA0',
+    tealLight: '#3DAFC4',
+
+    // Soft orb tints
+    orbBlue: '#C8D8EE',
+    orbTeal: '#BEE4EC',
+    orbSand: '#E8E0D0',
+
+    // Text
+    textDark: '#1C2B3A',
+    textMid: '#4A5A6A',
+
     white: '#FFFFFF',
-    textMuted: '#64748B',
-    accentLight: 'rgba(79, 167, 184, 0.12)',
 };
 
-// ─── Floating Particle ──────────────────────────────────────────
-interface ParticleProps {
-    color: string;
-    size: number;
-    x: number;
-    y: number;
-    duration: number;
-    delay: number;
-}
+// ─── Soft Background Orb (from StartUpScreen) ────────────────────
+interface OrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
 
-const FloatingParticle: React.FC<ParticleProps> = ({ color, size, x, y, duration, delay }) => {
+const SoftOrb: React.FC<OrbProps> = ({ color, size, x, y, duration, delay }) => {
     const anim = useRef(new Animated.Value(0)).current;
-
     useEffect(() => {
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.delay(delay),
                 Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
                 Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
-            ]),
+            ])
         );
         loop.start();
         return () => loop.stop();
-    }, [delay, duration, anim]);
-
-    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -30] });
-    const opacity = anim.interpolate({ inputRange: [0, 0.3, 0.7, 1], outputRange: [0, 0.4, 0.4, 0] });
-    const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.6, 1, 0.6] });
+    }, []);
+    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -18] });
+    const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.92, 1, 0.92] });
 
     return (
-        <Animated.View
-            style={{
+        <Animated.View style={{
+            position: 'absolute',
+            left: x - size / 2, top: y - size / 2,
+            width: size, height: size,
+            borderRadius: size / 2,
+            backgroundColor: color,
+            opacity: 0.5,
+            transform: [{ translateY }, { scale }],
+        }}>
+            <View style={{
                 position: 'absolute',
-                left: x,
-                top: y,
-                width: size,
-                height: size,
-                borderRadius: size / 2,
-                backgroundColor: color,
-                opacity,
-                transform: [{ translateY }, { scale }],
-            }}
-        />
+                top: size * 0.15, left: size * 0.15,
+                width: size * 0.7, height: size * 0.7,
+                borderRadius: size * 0.35,
+                backgroundColor: COLORS.white,
+                opacity: 0.35,
+            }} />
+        </Animated.View>
     );
 };
 
@@ -130,7 +141,7 @@ const Accordion: React.FC<AccordionProps> = ({ icon, title, children, defaultOpe
                     <Text style={styles.accordionTitle}>{title}</Text>
                 </View>
                 <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-                    <ChevronDown size={20} color={COLORS.textMuted} />
+                    <ChevronDown size={20} color={COLORS.textMid} />
                 </Animated.View>
             </TouchableOpacity>
             {expanded && <View style={styles.accordionBody}>{children}</View>}
@@ -139,7 +150,7 @@ const Accordion: React.FC<AccordionProps> = ({ icon, title, children, defaultOpe
 };
 
 // ─── Sub Components ──────────────────────────────────────────────
-const Bullet: React.FC<{ text: string; color?: string }> = ({ text, color = COLORS.softAqua }) => (
+const Bullet: React.FC<{ text: string; color?: string }> = ({ text, color = COLORS.teal }) => (
     <View style={styles.bulletRow}>
         <View style={[styles.bullet, { backgroundColor: color }]} />
         <Text style={styles.bulletText}>{text}</Text>
@@ -179,47 +190,67 @@ const InfoBox: React.FC<{ text: string; type?: "info" | "warning" }> = ({ text, 
 const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const { width, height } = useWindowDimensions();
 
-    const particles = useMemo(() => {
-        return Array.from({ length: 12 }, (_, i) => ({
-            key: i,
-            color: i % 2 === 0 ? COLORS.softAqua : 'rgba(30, 78, 140, 0.4)',
-            size: 3 + (i % 4),
-            x: Math.random() * width,
-            y: Math.random() * height,
-            duration: 3000 + (Math.random() * 2000),
-            delay: Math.random() * 2000,
-        }));
-    }, [width, height]);
+    const orbs = useMemo(() => ([
+        { color: COLORS.orbBlue, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
+        { color: COLORS.orbTeal, size: width * 0.5, x: width * 0.1, y: height * 0.48, duration: 7200, delay: 1000 },
+        { color: COLORS.orbSand, size: width * 0.38, x: width * 0.62, y: height * 0.8, duration: 5500, delay: 500 },
+    ]), [width, height]);
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-            {/* ── Background Accents ── */}
-            <View style={styles.bgOverlay} pointerEvents="none">
-                <View style={[styles.depthOrbA, {
-                    backgroundColor: COLORS.softAqua,
-                    width: width * 0.9, height: width * 0.9,
-                    top: -width * 0.3, right: -width * 0.2,
-                }]} />
-                <View style={[styles.depthOrbB, {
-                    backgroundColor: COLORS.royalBlue,
-                    width: width * 0.6, height: width * 0.6,
-                    bottom: height * 0.1, left: -width * 0.1,
-                }]} />
+            {/* ── Background (StartUpScreen style) ── */}
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                {/* Warm cream base */}
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.cream }]} />
 
-                <View style={[styles.ringOuter, {
-                    borderColor: 'rgba(30, 78, 140, 0.05)',
-                    width: width * 1.2, height: width * 1.2,
-                    top: -width * 0.1, left: -width * 0.1,
-                }]}>
-                    <View style={[styles.ringInner, {
-                        borderColor: 'rgba(30, 78, 140, 0.03)',
-                        width: width * 0.7, height: width * 0.7,
-                    }]} />
+                {/* Sand bloom — top right */}
+                <View style={{
+                    position: 'absolute', top: -height * 0.1, right: -width * 0.15,
+                    width: width * 0.95, height: width * 0.95, borderRadius: width * 0.475,
+                    backgroundColor: COLORS.sandLight, opacity: 0.55,
+                }} />
+
+                {/* Sand swell — bottom left */}
+                <View style={{
+                    position: 'absolute', bottom: -height * 0.06, left: -width * 0.2,
+                    width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4,
+                    backgroundColor: COLORS.sandMid, opacity: 0.22,
+                }} />
+
+                {/* Tinted soft orbs */}
+                {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
+
+                {/* Subtle dot grid */}
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    {Array.from({ length: 9 }).map((_, row) =>
+                        Array.from({ length: 6 }).map((_, col) => (
+                            <View key={`${row}-${col}`} style={{
+                                position: 'absolute',
+                                width: 2, height: 2, borderRadius: 1,
+                                backgroundColor: COLORS.royalBlue,
+                                opacity: 0.055,
+                                left: (width / 6) * col + (width / 12),
+                                top: (height / 9) * row + (height / 18),
+                            }} />
+                        ))
+                    )}
                 </View>
 
-                {particles.map(({ key, ...p }) => <FloatingParticle key={key} {...p} />)}
+                {/* Corner bracket — top left */}
+                <View style={{
+                    position: 'absolute', top: 58, left: 22, width: 34, height: 34,
+                    borderTopWidth: 1.5, borderLeftWidth: 1.5,
+                    borderColor: `${COLORS.royalBlue}28`, borderTopLeftRadius: 6,
+                }} />
+
+                {/* Corner bracket — bottom right */}
+                <View style={{
+                    position: 'absolute', bottom: 60, right: 22, width: 34, height: 34,
+                    borderBottomWidth: 1.5, borderRightWidth: 1.5,
+                    borderColor: `${COLORS.teal}28`, borderBottomRightRadius: 6,
+                }} />
             </View>
 
             {/* Header */}
@@ -229,14 +260,13 @@ const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     style={styles.backButton}
                     activeOpacity={0.7}
                 >
-                    <ChevronLeft size={24} color={COLORS.darkSlate} />
+                    <ChevronLeft size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>About Articulink</Text>
                 <View style={styles.backButton} />
             </View>
 
             <ScrollView
-                className="scroll-container"
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
@@ -380,6 +410,13 @@ const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
                 {/* Footer */}
                 <View style={styles.footer}>
+                    <View style={styles.footerDividerRow}>
+                        <View style={styles.footerLine} />
+                        {[4, 8, 12, 8, 4].map((h, i) => (
+                            <View key={i} style={{ width: 2.5, height: h, borderRadius: 1, backgroundColor: COLORS.teal, opacity: 0.45, marginHorizontal: 1.5 }} />
+                        ))}
+                        <View style={styles.footerLine} />
+                    </View>
                     <Text style={styles.footerText}>
                         Articulink © 2026
                     </Text>
@@ -390,35 +427,20 @@ const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 };
 
 // ─── Styles ──────────────────────────────────────────────────────
+const CARD_SHADOW = Platform.select({
+    ios: {
+        shadowColor: '#8A96A4',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+    },
+    android: { elevation: 6 },
+}) as any;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.bgLight,
-    },
-    bgOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        zIndex: -1,
-    },
-    depthOrbA: {
-        position: 'absolute',
-        opacity: 0.12,
-        borderRadius: 9999,
-    },
-    depthOrbB: {
-        position: 'absolute',
-        opacity: 0.08,
-        borderRadius: 9999,
-    },
-    ringOuter: {
-        position: 'absolute',
-        borderRadius: 9999,
-        borderWidth: 1.5,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    ringInner: {
-        borderRadius: 9999,
-        borderWidth: 1,
+        backgroundColor: COLORS.cream,
     },
     header: {
         flexDirection: "row",
@@ -435,11 +457,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderWidth: 1,
+        borderColor: COLORS.sandMid,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: "800",
-        color: COLORS.darkSlate,
+        color: COLORS.textDark,
         letterSpacing: -0.4,
     },
     scrollContent: {
@@ -459,8 +484,8 @@ const styles = StyleSheet.create({
         width: 160,
         height: 160,
         borderRadius: 80,
-        backgroundColor: COLORS.softAqua,
-        opacity: 0.15,
+        backgroundColor: COLORS.orbTeal,
+        opacity: 0.5,
     },
     logoImage: {
         width: 130,
@@ -469,16 +494,18 @@ const styles = StyleSheet.create({
     heroTitle: {
         fontSize: 28,
         fontWeight: "900",
-        color: COLORS.darkSlate,
+        color: COLORS.textDark,
         marginBottom: 4,
         letterSpacing: -1,
     },
     versionBadge: {
-        backgroundColor: 'rgba(30, 78, 140, 0.08)',
+        backgroundColor: `${COLORS.royalBlue}14`,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 20,
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: `${COLORS.royalBlue}20`,
     },
     heroVersion: {
         fontSize: 12,
@@ -487,7 +514,7 @@ const styles = StyleSheet.create({
     },
     heroSubtitle: {
         fontSize: 15,
-        color: COLORS.textMuted,
+        color: COLORS.textMid,
         textAlign: "center",
         lineHeight: 23,
         maxWidth: 300,
@@ -500,15 +527,9 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         marginBottom: 16,
         overflow: "hidden",
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.06,
-                shadowRadius: 15,
-            },
-            android: { elevation: 6 },
-        }),
+        ...CARD_SHADOW,
+        borderWidth: 1,
+        borderColor: COLORS.sandMid,
     },
     accordionHeader: {
         flexDirection: "row",
@@ -526,7 +547,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: COLORS.accentLight,
+        backgroundColor: `${COLORS.royalBlue}0C`,
         justifyContent: "center",
         alignItems: "center",
         marginRight: 16,
@@ -534,7 +555,7 @@ const styles = StyleSheet.create({
     accordionTitle: {
         fontSize: 16,
         fontWeight: "800",
-        color: COLORS.darkSlate,
+        color: COLORS.textDark,
         flex: 1,
         letterSpacing: -0.3,
     },
@@ -543,7 +564,7 @@ const styles = StyleSheet.create({
         paddingBottom: 22,
         paddingTop: 8,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.03)',
+        borderTopColor: COLORS.sandLight,
     },
 
     /* Bullets */
@@ -562,7 +583,7 @@ const styles = StyleSheet.create({
     bulletText: {
         flex: 1,
         fontSize: 15,
-        color: "#475569",
+        color: COLORS.textMid,
         lineHeight: 22,
         fontWeight: "500",
     },
@@ -570,19 +591,19 @@ const styles = StyleSheet.create({
     /* Body Text */
     bodyText: {
         fontSize: 15,
-        color: '#64748B',
+        color: COLORS.textMid,
         lineHeight: 24,
         marginBottom: 14,
     },
 
     /* Step Cards */
     stepCard: {
-        backgroundColor: 'rgba(30, 78, 140, 0.03)',
+        backgroundColor: `${COLORS.royalBlue}06`,
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: 'rgba(30, 78, 140, 0.05)',
+        borderColor: `${COLORS.royalBlue}10`,
     },
     stepHeader: {
         flexDirection: "row",
@@ -610,11 +631,13 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         justifyContent: "center",
         alignItems: "center",
+        borderWidth: 1,
+        borderColor: COLORS.sandMid,
     },
     stepTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: COLORS.darkSlate,
+        color: COLORS.textDark,
         marginBottom: 6,
     },
     optionalTag: {
@@ -624,7 +647,7 @@ const styles = StyleSheet.create({
     },
     stepDesc: {
         fontSize: 14,
-        color: "#64748B",
+        color: COLORS.textMid,
         lineHeight: 20,
     },
 
@@ -632,12 +655,12 @@ const styles = StyleSheet.create({
     infoBox: {
         flexDirection: "row",
         alignItems: "flex-start",
-        backgroundColor: "#F0F9FF",
+        backgroundColor: `${COLORS.royalBlue}08`,
         padding: 16,
         borderRadius: 16,
         marginTop: 18,
         borderWidth: 1,
-        borderColor: "#E0F2FE",
+        borderColor: `${COLORS.royalBlue}15`,
     },
     infoBoxWarning: {
         backgroundColor: "#FFFBEB",
@@ -646,7 +669,7 @@ const styles = StyleSheet.create({
     infoBoxText: {
         flex: 1,
         fontSize: 14,
-        color: "#0369A1",
+        color: COLORS.royalBlue,
         lineHeight: 20,
         fontWeight: "700",
     },
@@ -663,7 +686,7 @@ const styles = StyleSheet.create({
     sectionHeading: {
         fontSize: 16,
         fontWeight: "800",
-        color: COLORS.darkSlate,
+        color: COLORS.textDark,
     },
 
     /* Disclaimer */
@@ -691,9 +714,21 @@ const styles = StyleSheet.create({
         marginTop: 20,
         alignItems: 'center',
     },
+    footerDividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '80%',
+        marginBottom: 14,
+        gap: 4,
+    },
+    footerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: COLORS.sandMid,
+    },
     footerText: {
         fontSize: 13,
-        color: COLORS.textMuted,
+        color: COLORS.textMid,
         fontWeight: "600",
         letterSpacing: 0.5,
     },
