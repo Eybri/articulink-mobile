@@ -338,14 +338,6 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <View style={{ position: 'absolute', bottom: 60, right: 22, width: 34, height: 34, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderColor: `${COLORS.teal}30`, borderBottomRightRadius: 6 }} />
             </View>
 
-            {/* ── Header ── */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn} activeOpacity={0.7}>
-                    <ChevronLeft size={20} color={COLORS.deepNavy} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Edit Profile</Text>
-                <View style={{ width: 40 }} />
-            </View>
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}

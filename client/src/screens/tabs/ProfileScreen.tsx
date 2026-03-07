@@ -325,14 +325,6 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <View style={{ position: 'absolute', bottom: 60, right: 22, width: 34, height: 34, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderColor: `${COLORS.teal}28`, borderBottomRightRadius: 6 }} />
       </View>
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <View style={{ width: 40 }} />
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={styles.headerBtn} activeOpacity={0.7}>
-          <Settings size={20} color={COLORS.deepNavy} />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
