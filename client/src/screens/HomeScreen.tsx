@@ -11,6 +11,7 @@ import {
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import baseURL from "./../utils/baseurl";
+import { getToken } from "./../utils/authToken";
 
 const HomeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -62,9 +63,16 @@ const HomeScreen: React.FC = () => {
     } as any);
 
     try {
+      const token = await getToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${baseURL}/transcribe`, {
         method: "POST",
         body: formData,
+        headers,
       });
 
       const data = await response.json();
@@ -92,7 +100,7 @@ const HomeScreen: React.FC = () => {
 
     Speech.stop();
     Speech.speak(transcript, {
-      language: "en-US",
+      language: "fil-PH",
       rate: 0.9,
       pitch: 1.0,
     });
