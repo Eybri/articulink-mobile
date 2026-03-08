@@ -11,9 +11,9 @@ router = APIRouter(prefix="/api/v1", tags=["Transcription"])
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.float16 if device == "cuda" else torch.float32
 
-processor = WhisperProcessor.from_pretrained("openai/whisper-base")
+processor = WhisperProcessor.from_pretrained("openai/whisper-small")
 model = WhisperForConditionalGeneration.from_pretrained(
-    "openai/whisper-base",
+    "openai/whisper-small",
     torch_dtype=dtype
 ).to(device)
 
