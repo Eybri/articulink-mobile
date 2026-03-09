@@ -83,3 +83,19 @@ async def delete_chat_history(user_id: str) -> int:
     except Exception as e:
         logger.error(f"Error deleting chat history for user {user_id}: {e}")
         return 0
+
+async def delete_specific_message(user_id: str, timestamp: str) -> bool:
+    """Delete a specific message from the user's messages array by timestamp"""
+    try:
+        # timestamp is stored as a datetime object in the array
+        # We need to convert the string timestamp from the API to a datetime
+        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        
+        result = await COLLECTION.update_one(
+            {"user_id": ObjectId(user_id)},
+            {"$pull": {"messages": {"created_at": dt}}}
+        )
+        return result.modified_count > 0
+    except Exception as e:
+        logger.error(f"Error deleting specific message for user {user_id}: {e}")
+        return False

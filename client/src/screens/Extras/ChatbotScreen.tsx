@@ -242,6 +242,32 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const handleDeleteMessage = (message: Message) => {
+    Alert.alert(
+      "Delete Message",
+      "Are you sure you want to delete this message?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const result = await auth.deleteMessage(message.timestamp);
+              if (result.success) {
+                setMessages(prev => prev.filter(m => m.timestamp !== message.timestamp));
+              } else {
+                Alert.alert("Error", result.error || "Failed to delete message");
+              }
+            } catch (error) {
+              Alert.alert("Error", "An unexpected error occurred");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const MessageBubble = ({ message }: { message: Message }) => {
     const isUser = message.sender === "user";
     const isLongMessage = message.text.length > 300;
@@ -263,7 +289,10 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Bot size={14} color={COLORS.teal} />
           </View>
         )}
-        <View
+        <TouchableOpacity
+          onLongPress={() => handleDeleteMessage(message)}
+          delayLongPress={500}
+          activeOpacity={0.9}
           style={[
             styles.messageBubble,
             isUser ? styles.userBubble : styles.botBubble,
@@ -289,7 +318,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <Text style={[styles.timestamp, isUser && styles.userTimestamp]}>
             {formatTime(message.timestamp)}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   };

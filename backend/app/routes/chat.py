@@ -7,7 +7,8 @@ from app.models.user_memory import (
 from app.models.chat import (
     save_chat_message,
     get_chat_history,
-    delete_chat_history
+    delete_chat_history,
+    delete_specific_message
 )
 from app.utils.authMiddleware import require_auth, get_current_user_id
 from typing import List, Dict
@@ -77,3 +78,14 @@ async def clear_history(user_id: str = Depends(get_current_user_id)):
     """Clear all chat history for the user"""
     count = await delete_chat_history(user_id)
     return {"message": f"Deleted {count} messages"}
+
+@router.delete("/history/{timestamp}")
+async def delete_message(
+    timestamp: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Delete a specific message from chat history"""
+    success = await delete_specific_message(user_id, timestamp)
+    if not success:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"message": "Message deleted successfully"}

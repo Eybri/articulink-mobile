@@ -38,6 +38,7 @@ export interface AuthContextType {
     sendChatMessage: (messageText: string, currentHistory: any[]) => Promise<any>;
     clearChatHistory: () => Promise<any>;
     fetchChatHistory: () => Promise<any[]>;
+    deleteMessage: (timestamp: string) => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -272,6 +273,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             return { success: false, error: "Failed to clear chat history" };
         }
     };
+    const deleteMessage = async (timestamp: string) => {
+        try {
+            await axios.delete(`${baseURL}/history/${timestamp}`);
+            return { success: true };
+        } catch (error: any) {
+            console.error("Error deleting message:", error);
+            return { success: false, error: "Failed to delete message" };
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -285,7 +296,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             setUser,
             sendChatMessage,
             clearChatHistory,
-            fetchChatHistory
+            fetchChatHistory,
+            deleteMessage
         }}>
             {children}
         </AuthContext.Provider>
