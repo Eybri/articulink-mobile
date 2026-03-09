@@ -98,7 +98,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const auth = useContext(AuthContext) as AuthContextType;
-  const { sendChatMessage, clearChatHistory, user } = auth;
+  const { sendChatMessage, clearChatHistory, fetchChatHistory, user } = auth;
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
 
@@ -107,7 +107,25 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   }, [user]);
 
   const loadConversationHistory = async () => {
-    // If you want to load previous conversations, you can add that logic here
+    if (!user) return;
+    setLoading(true);
+    try {
+      const history = await fetchChatHistory();
+      if (history && history.length > 0) {
+        const formattedMessages: Message[] = history.map((msg: any, index: number) => ({
+          id: msg.id || index,
+          text: msg.content,
+          sender: msg.role === 'assistant' ? 'bot' : 'user',
+          timestamp: msg.created_at || new Date().toISOString(),
+          isExpanded: true,
+        }));
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -130,11 +148,13 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputText.trim();
     setInputText("");
     setLoading(true);
 
     try {
-      const result = await sendChatMessage(inputText.trim());
+      // Pass the current messages to serve as context for the backend
+      const result = await sendChatMessage(currentInput, messages);
 
       if (result.success) {
         const botMessage: Message = {
@@ -148,7 +168,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       } else {
         const errorMessage: Message = {
           id: Date.now() + 1,
-          text: result.error,
+          text: result.error || "Failed to get response",
           sender: "bot",
           timestamp: new Date().toISOString(),
           isExpanded: true,
@@ -161,7 +181,6 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       }
     } catch (error) {
       console.error("Error in handleSendMessage:", error);
-
       const errorMessage: Message = {
         id: Date.now() + 1,
         text: "An unexpected error occurred. Please try again.",
@@ -193,18 +212,24 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           text: "Clear",
           style: "destructive",
           onPress: async () => {
-            setMessages([
-              {
-                id: 1,
-                text: "Hello! I'm your Articulink AI assistant. I can help with speech exercises, answer questions, or just chat. How can I help you today?",
-                sender: "bot",
-                timestamp: new Date().toISOString(),
-                isExpanded: true,
-              },
-            ]);
-
-            if (clearChatHistory) {
-              await clearChatHistory();
+            setLoading(true);
+            try {
+              if (clearChatHistory) {
+                await clearChatHistory();
+              }
+              setMessages([
+                {
+                  id: 1,
+                  text: "Hello! I'm your Articulink AI assistant. I can help with speech exercises, answer questions, or just chat. How can I help you today?",
+                  sender: "bot",
+                  timestamp: new Date().toISOString(),
+                  isExpanded: true,
+                },
+              ]);
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear chat history");
+            } finally {
+              setLoading(false);
             }
           },
         },

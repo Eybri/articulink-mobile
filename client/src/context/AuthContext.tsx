@@ -35,8 +35,9 @@ export interface AuthContextType {
     fetchUserProfile: () => Promise<User>;
     checkUserStatus: () => boolean;
     setUser: (user: User | null) => void;
-    sendChatMessage: (messageText: string) => Promise<any>;
+    sendChatMessage: (messageText: string, currentHistory: any[]) => Promise<any>;
     clearChatHistory: () => Promise<any>;
+    fetchChatHistory: () => Promise<any[]>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -218,114 +219,53 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const checkUserStatus = () => {
         return user?.status === "active";
     };
-    const sendChatMessage = async (messageText: string) => {
+    const sendChatMessage = async (messageText: string, currentHistory: any[]) => {
         try {
             const token = await getToken();
             if (!token) {
                 throw new Error("Please log in to use the chatbot");
             }
 
-            // Get existing conversation from AsyncStorage
-            let conversation = [];
-            try {
-                const storedConversation = await AsyncStorage.getItem(`chat_conversation_${user?.id}`);
-                if (storedConversation) {
-                    conversation = JSON.parse(storedConversation);
-                }
-            } catch (storageError: any) {
-                console.error("Error loading conversation:", storageError);
-            }
-
-            // Add user message to conversation
-            const userMessage = {
-                role: "user",
-                content: messageText
-            };
-
-            // Add assistant's previous reply if exists
-            const allMessages = [...conversation, userMessage];
-
-            console.log("Sending to backend:", {
-                messages: allMessages.map(msg => ({
-                    role: msg.role,
-                    content: msg.content.substring(0, 50) + (msg.content.length > 50 ? "..." : "")
-                }))
-            });
+            // Construct new message list for Gemini context
+            const userMessage = { role: "user", content: messageText };
+            const allMessages = [...currentHistory, userMessage];
 
             const response = await axios.post(
                 `${baseURL}/message`,
                 {
                     messages: allMessages.map(msg => ({
-                        role: msg.role,
-                        content: msg.content
+                        role: msg.role || (msg.sender === 'bot' ? 'assistant' : 'user'),
+                        content: msg.text || msg.content || ""
                     }))
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    timeout: 30000, // Increase timeout for longer responses
                 }
-            );
-
-            console.log("Backend response:", {
-                status: response.status,
-                dataLength: response.data?.content?.length || 0,
-                contentPreview: response.data?.content?.substring(0, 100) + "..."
-            });
-
-            // Add assistant's response to conversation
-            const assistantMessage = {
-                role: "assistant",
-                content: response.data.content || response.data.reply || ""
-            };
-
-            const updatedConversation = [...allMessages, assistantMessage];
-
-            // Save updated conversation (limit to last 20 messages to prevent storage bloat)
-            const limitedConversation = updatedConversation.slice(-20);
-            await AsyncStorage.setItem(
-                `chat_conversation_${user?.id}`,
-                JSON.stringify(limitedConversation)
             );
 
             return {
                 success: true,
                 data: response.data,
-                response: response.data.content || response.data.reply || "I received your message.",
+                response: response.data.content || "I received your message.",
             };
         } catch (error: any) {
-            console.error("Chatbot error details:", {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-            });
-
+            console.error("Chatbot error details:", error);
             let errorMessage = "Sorry, I'm having trouble responding. Please try again.";
-
-            if (error.response?.status === 401) {
-                errorMessage = "Session expired. Please log in again.";
-            } else if (error.response?.data?.detail) {
-                errorMessage = error.response.data.detail;
-            } else if (error.message === "Please log in to use the chatbot") {
-                errorMessage = error.message;
-            } else if (error.code === 'ECONNABORTED') {
-                errorMessage = "Request timed out. Please try a shorter message.";
-            }
-
-            return {
-                success: false,
-                error: errorMessage,
-                statusCode: error.response?.status,
-            };
+            if (error.response?.status === 401) errorMessage = "Session expired.";
+            return { success: false, error: errorMessage, statusCode: error.response?.status };
         }
     };
+
+    const fetchChatHistory = async () => {
+        try {
+            const response = await axios.get(`${baseURL}/history`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching chat history:", error);
+            return [];
+        }
+    };
+
     const clearChatHistory = async () => {
         try {
-            if (user?.id) {
-                await AsyncStorage.removeItem(`chat_conversation_${user.id}`);
-            }
+            await axios.delete(`${baseURL}/history`);
             return { success: true };
         } catch (error: any) {
             console.error("Error clearing chat history:", error);
@@ -344,7 +284,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             checkUserStatus,
             setUser,
             sendChatMessage,
-            clearChatHistory
+            clearChatHistory,
+            fetchChatHistory
         }}>
             {children}
         </AuthContext.Provider>

@@ -4,6 +4,11 @@ from app.models.user_memory import (
     get_user_memory,
     create_or_update_memory
 )
+from app.models.chat import (
+    save_chat_message,
+    get_chat_history,
+    delete_chat_history
+)
 from app.utils.authMiddleware import require_auth, get_current_user_id
 from typing import List, Dict
 
@@ -19,27 +24,34 @@ async def send_message(
     user_id: str = Depends(get_current_user_id)
 ):
     """
-    Stateless chat endpoint with summary memory
+    Stateful chat endpoint with database persistence and memory
     """
-
     messages: List[Dict[str, str]] = payload.get("messages")
 
     if not messages:
         raise HTTPException(status_code=400, detail="Messages required")
 
-    # 1️⃣ Load user memory (summary only)
+    # 1️⃣ Save the latest user message to DB
+    user_msg = messages[-1]
+    if user_msg["role"] == "user":
+        await save_chat_message(user_id, "user", user_msg["content"])
+
+    # 2️⃣ Load user memory (summary only)
     memory = await get_user_memory(user_id)
     user_summary = memory["summary"] if memory else None
 
-    # 2️⃣ Generate Gemini reply
+    # 3️⃣ Generate Gemini reply
     reply = await generate_gemini_reply(
         messages=messages[-8:],  # limit context
         user_summary=user_summary
     )
 
-    # 3️⃣ Occasionally update memory (optional rule)
+    # 4️⃣ Save assistant reply to DB
+    await save_chat_message(user_id, "assistant", reply)
+
+    # 5️⃣ Occasionally update memory
     if len(messages) % 15 == 0:
-        summary_prompt = f"""
+        summary_prompt = """
 Summarize the user's communication needs, struggles,
 and goals in 2–3 sentences based on this conversation.
 """
@@ -47,10 +59,21 @@ and goals in 2–3 sentences based on this conversation.
             messages + [{"role": "assistant", "content": summary_prompt}],
             user_summary
         )
-
         await create_or_update_memory(user_id, summary)
 
     return {
         "role": "assistant",
         "content": reply
     }
+
+@router.get("/history")
+async def get_history(user_id: str = Depends(get_current_user_id)):
+    """Retrieve chat history for the user"""
+    history = await get_chat_history(user_id)
+    return history
+
+@router.delete("/history")
+async def clear_history(user_id: str = Depends(get_current_user_id)):
+    """Clear all chat history for the user"""
+    count = await delete_chat_history(user_id)
+    return {"message": f"Deleted {count} messages"}
