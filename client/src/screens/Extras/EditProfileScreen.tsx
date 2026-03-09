@@ -28,6 +28,7 @@ import {
     Calendar,
     ChevronDown,
     ChevronLeft,
+    ChevronRight,
     UserCircle,
 } from "lucide-react-native";
 import axios from "axios";
@@ -39,7 +40,7 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// ─── Brand Palette (same base as ProfileScreen) ───────────────────
+// ─── Brand Palette (blue-tinted variant of ProfileScreen) ─────────
 const COLORS = {
     cream: '#FAF8F4',
     warmWhite: '#F5F1EA',
@@ -50,11 +51,9 @@ const COLORS = {
     mediumBlue: '#2A5FA8',
     teal: '#2A8FA0',
     tealLight: '#3DAFC4',
-    // ── Blue-tinted variants for EditProfile background ──
     orbBlue: '#C8D8EE',
     orbTeal: '#BEE4EC',
     orbSand: '#E8E0D0',
-    // Slightly cooler/bluer ambient pools
     ambientBlue: '#D4E5F7',
     ambientMid: '#B8D0EC',
     ambientDeep: '#9BBDE0',
@@ -63,9 +62,10 @@ const COLORS = {
     white: '#FFFFFF',
 };
 
-// ─── Ambient Glow Pool ────────────────────────────────────────────
-interface GlowPoolProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
-const GlowPool: React.FC<GlowPoolProps> = ({ color, size, x, y, duration, delay }) => {
+// ─── Soft Orb (from StartUpScreen) ────────────────────────────────
+interface SoftOrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
+
+const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay }) => {
     const anim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
         const loop = Animated.loop(
@@ -78,67 +78,65 @@ const GlowPool: React.FC<GlowPoolProps> = ({ color, size, x, y, duration, delay 
         loop.start();
         return () => loop.stop();
     }, []);
-    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
-    const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.95, 1.03, 0.95] });
+    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -18] });
+    const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.92, 1, 0.92] });
+
     return (
         <Animated.View style={{
-            position: 'absolute', left: x - size / 2, top: y - size / 2,
-            width: size, height: size * 0.68,
+            position: 'absolute',
+            left: x - size / 2, top: y - size / 2,
+            width: size, height: size,
+            borderRadius: size / 2,
+            backgroundColor: color,
+            opacity: 0.5,
             transform: [{ translateY }, { scale }],
         }}>
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: size * 0.34, backgroundColor: color, opacity: 0.13 }} />
-            <View style={{ position: 'absolute', top: size * 0.1, left: size * 0.1, right: size * 0.1, bottom: size * 0.1, borderRadius: size * 0.34, backgroundColor: color, opacity: 0.15 }} />
-            <View style={{ position: 'absolute', top: size * 0.24, left: size * 0.24, right: size * 0.24, bottom: size * 0.24, borderRadius: size * 0.34, backgroundColor: color, opacity: 0.18 }} />
+            <View style={{
+                position: 'absolute',
+                top: size * 0.15, left: size * 0.15,
+                width: size * 0.7, height: size * 0.7,
+                borderRadius: size * 0.35,
+                backgroundColor: COLORS.white,
+                opacity: 0.35,
+            }} />
         </Animated.View>
     );
 };
 
-// ─── Ring Accent ──────────────────────────────────────────────────
-interface RingAccentProps { color: string; size: number; x: number; y: number; opacity?: number; }
-const RingAccent: React.FC<RingAccentProps> = ({ color, size, x, y, opacity = 0.09 }) => (
-    <>
-        <View style={{ position: 'absolute', left: x - size / 2, top: y - size / 2, width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderColor: color, opacity }} />
-        <View style={{ position: 'absolute', left: x - size * 0.65 / 2, top: y - size * 0.65 / 2, width: size * 0.65, height: size * 0.65, borderRadius: size * 0.325, borderWidth: 1, borderColor: color, opacity: opacity * 0.55 }} />
-    </>
-);
+// ─── Animated Waveform Bars ───────────────────────────────────────
+const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
+    const barHeights = [6, 12, 20, 14, 28, 18, 8, 24, 16, 10];
+    const barAnims = useRef(barHeights.map(() => new Animated.Value(0))).current;
 
-// ─── Diagonal Stripes ─────────────────────────────────────────────
-const DiagonalStripes: React.FC<{ color: string; width: number; height: number }> = ({ color, width, height }) => {
-    const stripes = useMemo(() => {
-        const lines: { x1: number }[] = [];
-        const gap = 38;
-        const count = Math.ceil((width + height) / gap);
-        for (let i = -4; i < count; i++) lines.push({ x1: i * gap });
-        return lines;
-    }, [width, height]);
-    return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            {stripes.map((s, i) => (
-                <View key={i} style={{
-                    position: 'absolute', left: s.x1, top: 0,
-                    width: 1, height: Math.sqrt(2) * Math.max(width, height),
-                    backgroundColor: color, opacity: 0.025,
-                    transform: [{ rotate: '45deg' }, { translateX: -Math.sqrt(2) * Math.max(width, height) / 2 }],
-                }} />
-            ))}
-        </View>
-    );
-};
+    useEffect(() => {
+        const animations = barAnims.map((anim, i) =>
+            Animated.loop(
+                Animated.sequence([
+                    Animated.delay(i * 80),
+                    Animated.timing(anim, { toValue: 1, duration: 500 + (i % 4) * 120, useNativeDriver: true }),
+                    Animated.timing(anim, { toValue: 0, duration: 500 + (i % 4) * 120, useNativeDriver: true }),
+                ])
+            )
+        );
+        animations.forEach(a => a.start());
+        return () => animations.forEach(a => a.stop());
+    }, []);
 
-// ─── Texture Dot Grid ─────────────────────────────────────────────
-const TextureOverlay: React.FC<{ accentColor: string; width: number; height: number }> = ({ accentColor, width, height }) => {
-    const dots = useMemo(() => {
-        const cols = 14, rows = 22, items: { left: number; top: number; op: number }[] = [];
-        for (let r = 0; r < rows; r++)
-            for (let c = 0; c < cols; c++)
-                items.push({ left: (width / cols) * c + (width / (cols * 2)), top: (height / rows) * r + (height / (rows * 2)), op: (r * cols + c) % 3 === 0 ? 0.055 : (r * cols + c) % 3 === 1 ? 0.028 : 0.013 });
-        return items;
-    }, [width, height]);
     return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            {dots.map((d, i) => (
-                <View key={i} style={{ position: 'absolute', left: d.left, top: d.top, width: 1.2, height: 1.2, borderRadius: 0.6, backgroundColor: accentColor, opacity: d.op }} />
-            ))}
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            {barHeights.map((h, i) => {
+                const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
+                return (
+                    <Animated.View key={i} style={{
+                        width: 3, height: h,
+                        borderRadius: 1.5,
+                        backgroundColor: color,
+                        opacity: 0.18,
+                        marginHorizontal: 2,
+                        transform: [{ scaleY }],
+                    }} />
+                );
+            })}
         </View>
     );
 };
@@ -173,18 +171,24 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     const { width, height } = useWindowDimensions();
 
-    // ── Blue-tinted glow pools (cooler / more blue than ProfileScreen) ──
-    const glowPools = useMemo(() => ([
-        { color: COLORS.ambientBlue, size: width * 0.80, x: width * 0.90, y: height * 0.06, duration: 6000, delay: 0 },
-        { color: COLORS.ambientMid, size: width * 0.60, x: width * 0.08, y: height * 0.44, duration: 7200, delay: 900 },
-        { color: COLORS.ambientDeep, size: width * 0.48, x: width * 0.65, y: height * 0.82, duration: 5600, delay: 500 },
+    // SoftOrbs — blue-tinted variant
+    const orbs = useMemo(() => ([
+        { color: COLORS.ambientBlue, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
+        { color: COLORS.ambientMid, size: width * 0.5, x: width * 0.08, y: height * 0.46, duration: 7200, delay: 900 },
+        { color: COLORS.ambientDeep, size: width * 0.38, x: width * 0.65, y: height * 0.82, duration: 5500, delay: 500 },
     ]), [width, height]);
 
-    const rings = useMemo(() => ([
-        { color: COLORS.mediumBlue, size: width * 0.58, x: width * 0.92, y: height * 0.09, opacity: 0.07 },
-        { color: COLORS.teal, size: width * 0.40, x: width * 0.10, y: height * 0.40, opacity: 0.055 },
-        { color: COLORS.royalBlue, size: width * 0.32, x: width * 0.72, y: height * 0.85, opacity: 0.05 },
-    ]), [width, height]);
+    // Dot grid
+    const dotGrid = useMemo(() => {
+        const items: { left: number; top: number }[] = [];
+        for (let row = 0; row < 9; row++)
+            for (let col = 0; col < 6; col++)
+                items.push({
+                    left: (width / 6) * col + (width / 12),
+                    top: (height / 9) * row + (height / 18),
+                });
+        return items;
+    }, [width, height]);
 
     useEffect(() => {
         if (user) {
@@ -321,23 +325,50 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-            {/* ── Background (blue-tinted variant of ProfileScreen) ── */}
+            {/* ── Layered Background (blue-tinted, matches StartUpScreen structure) ── */}
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                {/* Base: very light blue-cream instead of warm cream */}
+                {/* Base: light blue-cream */}
                 <View style={[StyleSheet.absoluteFill, { backgroundColor: '#F0F5FB' }]} />
-                {/* Sand-blue blobs */}
-                <View style={{ position: 'absolute', top: -height * 0.1, right: -width * 0.18, width: width * 1.0, height: width * 1.0, borderRadius: width * 0.5, backgroundColor: COLORS.ambientBlue, opacity: 0.40 }} />
-                <View style={{ position: 'absolute', bottom: -height * 0.08, left: -width * 0.22, width: width * 0.9, height: width * 0.9, borderRadius: width * 0.45, backgroundColor: COLORS.ambientMid, opacity: 0.18 }} />
-                <View style={{ position: 'absolute', top: height * 0.3, left: -width * 0.35, width: width * 0.75, height: width * 0.75, borderRadius: width * 0.375, backgroundColor: COLORS.mediumBlue, opacity: 0.07 }} />
-                <DiagonalStripes color={COLORS.mediumBlue} width={width} height={height} />
-                <TextureOverlay accentColor={COLORS.mediumBlue} width={width} height={height} />
-                {glowPools.map((p, i) => <GlowPool key={i} {...p} />)}
-                {rings.map((r, i) => <RingAccent key={i} {...r} />)}
-                {/* Corner brackets */}
-                <View style={{ position: 'absolute', top: 58, left: 22, width: 34, height: 34, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderColor: `${COLORS.mediumBlue}30`, borderTopLeftRadius: 6 }} />
-                <View style={{ position: 'absolute', bottom: 60, right: 22, width: 34, height: 34, borderBottomWidth: 1.5, borderRightWidth: 1.5, borderColor: `${COLORS.teal}30`, borderBottomRightRadius: 6 }} />
-            </View>
 
+                {/* Blue bloom — top right */}
+                <View style={{
+                    position: 'absolute', top: -height * 0.1, right: -width * 0.15,
+                    width: width * 0.95, height: width * 0.95, borderRadius: width * 0.475,
+                    backgroundColor: COLORS.ambientBlue, opacity: 0.5,
+                }} />
+
+                {/* Blue swell — bottom left */}
+                <View style={{
+                    position: 'absolute', bottom: -height * 0.06, left: -width * 0.2,
+                    width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4,
+                    backgroundColor: COLORS.ambientMid, opacity: 0.2,
+                }} />
+
+                {/* Animated soft orbs */}
+                {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
+
+                {/* Subtle dot grid */}
+                {dotGrid.map((d, i) => (
+                    <View key={i} style={{
+                        position: 'absolute', width: 2, height: 2, borderRadius: 1,
+                        backgroundColor: COLORS.mediumBlue, opacity: 0.055,
+                        left: d.left, top: d.top,
+                    }} />
+                ))}
+
+                {/* Corner bracket — top left */}
+                <View style={{
+                    position: 'absolute', top: 58, left: 22, width: 34, height: 34,
+                    borderTopWidth: 1.5, borderLeftWidth: 1.5,
+                    borderColor: `${COLORS.mediumBlue}30`, borderTopLeftRadius: 6,
+                }} />
+                {/* Corner bracket — bottom right */}
+                <View style={{
+                    position: 'absolute', bottom: 60, right: 22, width: 34, height: 34,
+                    borderBottomWidth: 1.5, borderRightWidth: 1.5,
+                    borderColor: `${COLORS.teal}30`, borderBottomRightRadius: 6,
+                }} />
+            </View>
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -347,18 +378,21 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 {/* ── Avatar Banner ── */}
                 <View style={styles.avatarBanner}>
                     <View style={styles.bannerAccentBar} />
+                    {/* Subtle top glow */}
+                    <View style={styles.bannerTopGlow} />
                     <View style={styles.bannerContent}>
-                        {/* Avatar */}
+                        {/* Avatar with halo */}
                         <View style={styles.avatarWrap}>
+                            <View style={styles.avatarHalo} />
                             {uploading ? (
                                 <View style={styles.avatarPlaceholder}>
-                                    <ActivityIndicator size="large" color={COLORS.royalBlue} />
+                                    <ActivityIndicator size="large" color={COLORS.mediumBlue} />
                                 </View>
                             ) : profilePic ? (
                                 <Image source={{ uri: profilePic }} style={styles.avatarImage} />
                             ) : (
                                 <View style={styles.avatarPlaceholder}>
-                                    <UserCircle size={38} color={COLORS.royalBlue} strokeWidth={1.5} />
+                                    <UserCircle size={38} color={COLORS.mediumBlue} strokeWidth={1.5} />
                                 </View>
                             )}
                             {/* Camera badge */}
@@ -380,16 +414,20 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                             )}
                         </View>
                     </View>
-                    {/* Waveform decoration */}
+                    {/* Animated waveform decoration */}
                     <View style={styles.bannerWave}>
-                        {[6, 12, 20, 14, 28, 18, 8, 24, 16, 10].map((h, i) => (
-                            <View key={i} style={{ width: 3, height: h, borderRadius: 1.5, backgroundColor: COLORS.mediumBlue, opacity: 0.14, marginHorizontal: 2 }} />
-                        ))}
+                        <AnimatedWaveform color={COLORS.mediumBlue} />
                     </View>
+                    {/* Bottom accent bar */}
+                    <View style={styles.bannerBottomBar} />
                 </View>
 
                 {/* ── Personal Info Card ── */}
                 <View style={styles.card}>
+                    {/* Top accent bar */}
+                    <View style={styles.cardTopBar} />
+                    {/* Top glow */}
+                    <View style={styles.cardTopGlow} />
                     <SectionHeader
                         icon={<User size={15} color={COLORS.royalBlue} />}
                         title="Personal Information"
@@ -486,6 +524,8 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                             <>
                                 <Save size={16} color={COLORS.white} />
                                 <Text style={styles.saveButtonText}>Save Changes</Text>
+                                <View style={{ flex: 1 }} />
+                                <ChevronRight size={18} color="rgba(255,255,255,0.6)" />
                             </>
                         )}
                     </TouchableOpacity>
@@ -498,20 +538,9 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     >
                         <X size={16} color={COLORS.textMid} />
                         <Text style={styles.cancelButtonText}>Cancel</Text>
+                        <View style={{ flex: 1 }} />
+                        <ChevronRight size={18} color={`${COLORS.textMid}50`} />
                     </TouchableOpacity>
-                </View>
-
-                {/* ── Footer ── */}
-                <View style={styles.footer}>
-                    <View style={styles.footerDividerRow}>
-                        <View style={styles.footerLine} />
-                        {[4, 8, 12, 8, 4].map((h, i) => (
-                            <View key={i} style={{ width: 2.5, height: h, borderRadius: 1, backgroundColor: COLORS.teal, opacity: 0.3, marginHorizontal: 1.5 }} />
-                        ))}
-                        <View style={styles.footerLine} />
-                    </View>
-                    <Text style={styles.footerLabel}>ARTICULINK PROFILE ENGINE</Text>
-                    <Text style={styles.footerVersion}>v1.0.0 · Secure Session</Text>
                 </View>
             </ScrollView>
         </View>
@@ -520,41 +549,30 @@ const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 // ─── Styles ───────────────────────────────────────────────────────
 const CARD_SHADOW = Platform.select({
-    ios: { shadowColor: '#7A90AC', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.11, shadowRadius: 20 },
-    android: { elevation: 4 },
+    ios: { shadowColor: '#7A90AC', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 22 },
+    android: { elevation: 5 },
+}) as any;
+
+const BTN_SHADOW = Platform.select({
+    ios: { shadowColor: '#2A5FA8', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 14 },
+    android: { elevation: 6 },
 }) as any;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F0F5FB' },
 
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
+    scrollContent: {
         paddingHorizontal: 20,
-        paddingTop: Platform.OS === "android" ? 36 : 48,
-        paddingBottom: 8,
-        zIndex: 10,
+        paddingTop: Platform.OS === "android" ? 44 : 56, // Added paddingTop for status bar
+        paddingBottom: 60
     },
-    headerTitle: {
-        fontSize: 17, fontWeight: "800",
-        color: COLORS.textDark, letterSpacing: -0.3,
-    },
-    headerBtn: {
-        width: 40, height: 40, borderRadius: 20,
-        justifyContent: "center", alignItems: "center",
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        borderWidth: 1, borderColor: COLORS.sandMid,
-    },
-
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 60, paddingTop: 8 },
 
     /* Avatar Banner */
     avatarBanner: {
         backgroundColor: COLORS.white,
         borderRadius: 24,
         borderWidth: 1,
-        borderColor: '#C8D8EE',
+        borderColor: COLORS.orbBlue,
         marginBottom: 14,
         overflow: 'hidden',
         flexDirection: 'row',
@@ -566,85 +584,112 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderBottomLeftRadius: 24,
     },
+    bannerTopGlow: {
+        position: 'absolute', top: 0, left: 0, right: 0, height: 65,
+        backgroundColor: `${COLORS.mediumBlue}07`,
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    },
     bannerContent: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 20,
+        paddingVertical: 22,
         paddingHorizontal: 18,
         gap: 16,
     },
-    avatarWrap: { position: 'relative' },
+    avatarWrap: { position: 'relative', width: 80, height: 80, justifyContent: 'center', alignItems: 'center' },
+    avatarHalo: {
+        position: 'absolute',
+        width: 80, height: 80, borderRadius: 24,
+        backgroundColor: COLORS.orbBlue,
+        opacity: 0.5,
+    },
     avatarImage: {
-        width: 72, height: 72, borderRadius: 20,
+        width: 68, height: 68, borderRadius: 20,
         borderWidth: 2, borderColor: `${COLORS.mediumBlue}25`,
     },
     avatarPlaceholder: {
-        width: 72, height: 72, borderRadius: 20,
+        width: 68, height: 68, borderRadius: 20,
         backgroundColor: `${COLORS.mediumBlue}0D`,
         borderWidth: 1.5, borderColor: `${COLORS.mediumBlue}22`,
         justifyContent: 'center', alignItems: 'center',
     },
     cameraBadge: {
-        position: 'absolute', bottom: -4, right: -4,
-        width: 24, height: 24, borderRadius: 8,
+        position: 'absolute', bottom: 2, right: 2,
+        width: 26, height: 26, borderRadius: 9,
         backgroundColor: COLORS.mediumBlue,
-        borderWidth: 2, borderColor: COLORS.white,
+        borderWidth: 2.5, borderColor: COLORS.white,
         justifyContent: 'center', alignItems: 'center',
     },
     bannerTextCol: { flex: 1 },
     bannerHeading: {
-        fontSize: 18, fontWeight: '900',
-        color: COLORS.textDark, letterSpacing: -0.4, marginBottom: 3,
+        fontSize: 20, fontWeight: '900',
+        color: COLORS.textDark, letterSpacing: -0.4, marginBottom: 4,
     },
     bannerSub: {
-        fontSize: 11.5, color: COLORS.textMid, fontWeight: '500', marginBottom: 8,
+        fontSize: 12, color: COLORS.textMid, fontWeight: '500', marginBottom: 8,
     },
     removePicBtn: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
         alignSelf: 'flex-start',
-        paddingHorizontal: 8, paddingVertical: 4,
-        borderRadius: 8,
+        paddingHorizontal: 10, paddingVertical: 5,
+        borderRadius: 10,
         backgroundColor: 'rgba(220,38,38,0.06)',
         borderWidth: 1, borderColor: 'rgba(220,38,38,0.14)',
     },
     removePicText: { fontSize: 11, fontWeight: '700', color: '#DC2626' },
     bannerWave: {
-        position: 'absolute', bottom: 14, right: 16,
-        flexDirection: 'row', alignItems: 'flex-end',
+        position: 'absolute', bottom: 16, right: 16,
+    },
+    bannerBottomBar: {
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        height: 3,
+        backgroundColor: COLORS.mediumBlue,
+        borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
     },
 
     /* Card */
     card: {
         backgroundColor: COLORS.white,
-        borderRadius: 20,
+        borderRadius: 22,
         marginBottom: 12,
         overflow: 'hidden',
         ...CARD_SHADOW,
         borderWidth: 1,
-        borderColor: '#C8D8EE',
+        borderColor: COLORS.orbBlue,
         paddingHorizontal: 18,
         paddingBottom: 18,
+    },
+    cardTopBar: {
+        position: 'absolute', top: 0, left: 0, right: 0,
+        height: 3,
+        backgroundColor: COLORS.royalBlue,
+        borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    },
+    cardTopGlow: {
+        position: 'absolute', top: 0, left: 0, right: 0, height: 50,
+        backgroundColor: `${COLORS.royalBlue}07`,
+        borderTopLeftRadius: 22, borderTopRightRadius: 22,
     },
 
     /* Section Header */
     sectionHeader: {
         flexDirection: 'row', alignItems: 'center',
-        paddingTop: 16, paddingBottom: 14,
+        paddingTop: 18, paddingBottom: 14,
         gap: 10,
     },
     sectionIconWrap: {
-        width: 32, height: 32, borderRadius: 9,
+        width: 34, height: 34, borderRadius: 10,
         backgroundColor: `${COLORS.royalBlue}0C`,
         justifyContent: 'center', alignItems: 'center',
     },
     sectionTitle: {
-        fontSize: 13, fontWeight: '800',
+        fontSize: 14, fontWeight: '800',
         color: COLORS.textDark, letterSpacing: -0.2,
     },
     sectionLine: {
         flex: 1, height: 1,
-        backgroundColor: '#C8D8EE', opacity: 0.7,
+        backgroundColor: COLORS.orbBlue, opacity: 0.7,
     },
 
     /* Fields */
@@ -655,27 +700,27 @@ const styles = StyleSheet.create({
     },
     inputWrap: {
         borderWidth: 1.5,
-        borderColor: '#C8D8EE',
-        borderRadius: 12,
+        borderColor: COLORS.orbBlue,
+        borderRadius: 14,
         backgroundColor: `${COLORS.mediumBlue}04`,
         marginBottom: 14,
         overflow: 'hidden',
     },
     input: {
-        paddingHorizontal: 14, paddingVertical: 12,
+        paddingHorizontal: 14, paddingVertical: 13,
         fontSize: 14, color: COLORS.textDark, fontWeight: '600',
     },
     pickerTrigger: { position: 'relative' },
     pickerDropdown: {
-        borderWidth: 1.5, borderColor: '#C8D8EE',
-        borderRadius: 12, overflow: 'hidden',
+        borderWidth: 1.5, borderColor: COLORS.orbBlue,
+        borderRadius: 14, overflow: 'hidden',
         marginBottom: 14,
         backgroundColor: COLORS.white,
         ...CARD_SHADOW,
     },
     pickerOption: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 14, paddingVertical: 12,
+        paddingHorizontal: 14, paddingVertical: 13,
         borderBottomWidth: 1, borderBottomColor: `${COLORS.sandLight}80`,
     },
     pickerOptionActive: { backgroundColor: `${COLORS.mediumBlue}08` },
@@ -689,36 +734,26 @@ const styles = StyleSheet.create({
     },
 
     /* Action Buttons */
-    actionContainer: { marginTop: 4, gap: 10 },
+    actionContainer: { marginTop: 6, gap: 10 },
     actionButton: {
-        flexDirection: "row", alignItems: "center", justifyContent: "center",
-        padding: 15, borderRadius: 16, overflow: 'hidden',
-        ...CARD_SHADOW,
+        flexDirection: "row", alignItems: "center",
+        paddingVertical: 17, paddingHorizontal: 18, borderRadius: 18, overflow: 'hidden',
     },
-    saveButton: { backgroundColor: COLORS.mediumBlue },
+    saveButton: {
+        backgroundColor: COLORS.mediumBlue,
+        ...BTN_SHADOW,
+    },
     btnShimmer: {
-        position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
-        backgroundColor: 'rgba(255,255,255,0.1)', borderBottomRightRadius: 60,
+        position: 'absolute', top: 0, left: 0, width: '45%', height: '100%',
+        backgroundColor: 'rgba(255,255,255,0.1)', borderBottomRightRadius: 70,
     },
-    saveButtonText: { color: COLORS.white, fontWeight: "800", marginLeft: 8, fontSize: 14, letterSpacing: -0.1 },
+    saveButtonText: { color: COLORS.white, fontWeight: "800", marginLeft: 10, fontSize: 15, letterSpacing: -0.1 },
     cancelButton: {
         backgroundColor: COLORS.white,
-        borderWidth: 1, borderColor: `${COLORS.sandMid}`,
+        borderWidth: 1, borderColor: COLORS.sandMid,
+        ...CARD_SHADOW,
     },
-    cancelButtonText: { color: COLORS.textMid, fontWeight: "800", marginLeft: 8, fontSize: 14 },
-
-    /* Footer */
-    footer: { alignItems: 'center', marginTop: 36 },
-    footerDividerRow: {
-        flexDirection: 'row', alignItems: 'center',
-        width: '80%', marginBottom: 14, gap: 4,
-    },
-    footerLine: { flex: 1, height: 1, backgroundColor: '#C8D8EE' },
-    footerLabel: {
-        fontSize: 10, color: COLORS.mediumBlue,
-        fontWeight: "800", letterSpacing: 2.2, marginBottom: 5,
-    },
-    footerVersion: { fontSize: 11, color: COLORS.textMid, fontWeight: "600" },
+    cancelButtonText: { color: COLORS.textMid, fontWeight: "800", marginLeft: 10, fontSize: 15 },
 });
 
 export default EditProfileScreen;
