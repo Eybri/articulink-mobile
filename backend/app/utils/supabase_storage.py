@@ -37,13 +37,25 @@ async def upload_audio(file_bytes: bytes, user_id: str, extension: str = ".wav")
     file_path = f"clips/{user_id}/{filename}"
 
     url = f"{_STORAGE_BASE}/object/{SUPABASE_BUCKET}/{file_path}"
+    
+    # Map extension to MIME type
+    mime_types = {
+        ".wav": "audio/wav",
+        ".m4a": "audio/mp4",
+        ".mp4": "audio/mp4",
+        ".3gp": "audio/3gpp",
+        ".caf": "audio/x-caf",
+    }
+    content_type = mime_types.get(extension.lower(), "audio/wav")
+
+    print(f"Uploading {len(file_bytes)} bytes to {url} with Content-Type: {content_type}")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
             url,
             headers={
                 **_HEADERS,
-                "Content-Type": "audio/wav",
+                "Content-Type": content_type,
             },
             content=file_bytes,
         )

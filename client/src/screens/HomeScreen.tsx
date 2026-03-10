@@ -34,7 +34,7 @@ const COLORS = {
   deepNavy: '#0F2847',
   royalBlue: '#1A4480',
   mediumBlue: '#2A5FA8',
-  teal: '#2A8FA0',
+  teal: '#1A4480',
   tealLight: '#3DAFC4',
   orbBlue: '#C8D8EE',
   orbTeal: '#BEE4EC',
@@ -235,11 +235,25 @@ const HomeScreen: React.FC = () => {
   async function uploadAudio(uri: string) {
     const formData = new FormData();
 
-    // @ts-ignore - FormData expects string | Blob, but RN expects this object structure
+    // ─── Determine Extension & Mime Type ───
+    const uriParts = uri.split(".");
+    const uriExtension = uriParts[uriParts.length - 1].toLowerCase();
+
+    // Default to wav if extension looks weird or missing
+    const extension = ["wav", "m4a", "caf", "3gp", "mp4"].includes(uriExtension) ? uriExtension : "wav";
+    const fileName = `speech.${extension}`;
+
+    // Better mime mapping
+    let type = "audio/wav";
+    if (extension === "m4a") type = "audio/mp4";
+    else if (extension === "3gp") type = "audio/3gpp";
+    else if (extension === "caf") type = "audio/x-caf";
+    else if (extension === "mp4") type = "audio/mp4";
+
     formData.append("file", {
       uri,
-      name: "speech.wav",
-      type: "audio/wav",
+      name: fileName,
+      type: type,
     } as any);
 
     try {
@@ -264,7 +278,8 @@ const HomeScreen: React.FC = () => {
         return;
       }
 
-      setTranscript(data.text || "");
+      setTranscript(data.transcript || data.text || "");
+      // You could also store data.audio_url or data.id if needed elsewhere
     } catch (err: any) {
       console.error("Fetch Error:", err);
       Alert.alert("Network Error", "Could not connect to the transcription server. Please check your connection and IP address.");
