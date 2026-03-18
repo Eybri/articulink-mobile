@@ -1,23 +1,32 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Alert,
   Animated,
   useWindowDimensions,
   StatusBar,
 } from "react-native";
-import { Send, Trash2, Bot, MessageCircle } from "lucide-react-native";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  SizableText,
+  Card,
+  Image,
+  ScrollView,
+  Spinner,
+  Input,
+  Theme,
+} from "tamagui";
+import { Send, Trash2, Bot, MessageCircle } from "@tamagui/lucide-icons";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 
-// ─── Brand Palette (matches StartUpScreen / ProfileScreen) ────────
+// ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
   cream: '#FAF8F4',
   warmWhite: '#F5F1EA',
@@ -62,16 +71,18 @@ const TypingDots: React.FC = () => {
   const renderDot = (anim: Animated.Value) => {
     const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
     return (
-      <Animated.View style={[styles.typingDot, { transform: [{ translateY }] }]} />
+      <Animated.View style={{ transform: [{ translateY }] }}>
+        <Circle size={7} bg={COLORS.teal} opacity={0.5} />
+      </Animated.View>
     );
   };
 
   return (
-    <View style={styles.typingIndicator}>
+    <XStack ai="center" px="$2" py="$1" gap="$1">
       {renderDot(dot1)}
       {renderDot(dot2)}
       {renderDot(dot3)}
-    </View>
+    </XStack>
   );
 };
 
@@ -153,7 +164,6 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // Pass the current messages to serve as context for the backend
       const result = await sendChatMessage(currentInput, messages);
 
       if (result.success) {
@@ -253,7 +263,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           style: "destructive",
           onPress: async () => {
             try {
-              const result = await auth.deleteMessage(message.timestamp);
+              const result = await (auth as any).deleteMessage(message.timestamp);
               if (result.success) {
                 setMessages(prev => prev.filter(m => m.timestamp !== message.timestamp));
               } else {
@@ -277,382 +287,170 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       : message.text;
 
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          isUser ? styles.userMessageContainer : styles.botMessageContainer,
-        ]}
+      <XStack
+        gap="$2"
+        mb="$3"
+        ai="flex-end"
+        jc={isUser ? "flex-end" : "flex-start"}
       >
-        {/* Bot avatar */}
         {!isUser && (
-          <View style={styles.botAvatar}>
+          <Circle size={28} bg={`${COLORS.teal}0C`} bw={1} bc={`${COLORS.teal}18`} jc="center" ai="center" mb={2}>
             <Bot size={14} color={COLORS.teal} />
-          </View>
+          </Circle>
         )}
-        <TouchableOpacity
+        <Card
+          bg={isUser ? COLORS.teal : COLORS.white}
+          p="$3"
+          px="$4"
+          br={18}
+          borderBottomRightRadius={isUser ? 6 : 18}
+          borderBottomLeftRadius={isUser ? 18 : 6}
+          maw={width * 0.78}
+          bw={isUser ? 0 : 1}
+          bc={COLORS.sandMid}
+          elevation={isUser ? 2 : 1}
+          onPress={() => isLongMessage && !isUser && toggleMessageExpansion(message.id)}
           onLongPress={() => handleDeleteMessage(message)}
-          delayLongPress={500}
-          activeOpacity={0.9}
-          style={[
-            styles.messageBubble,
-            isUser ? styles.userBubble : styles.botBubble,
-            { maxWidth: width * 0.78 },
-          ]}
         >
-          <Text style={isUser ? styles.userMessageText : styles.botMessageText}>
+          <SizableText color={isUser ? "white" : COLORS.textDark} size="$3" lh={21} fow="500">
             {displayText}
-          </Text>
+          </SizableText>
 
           {isLongMessage && !isUser && (
-            <TouchableOpacity
-              onPress={() => toggleMessageExpansion(message.id)}
-              style={styles.expandButton}
-              activeOpacity={0.7}
+            <Button
+              unstyled
+              mt="$2"
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleMessageExpansion(message.id);
+              }}
             >
-              <Text style={styles.expandButtonText}>
+              <SizableText color={COLORS.teal} size="$2" fow="700">
                 {message.isExpanded ? "Show less" : "Show more"}
-              </Text>
-            </TouchableOpacity>
+              </SizableText>
+            </Button>
           )}
 
-          <Text style={[styles.timestamp, isUser && styles.userTimestamp]}>
+          <SizableText
+            size="$1"
+            color={isUser ? "rgba(255, 255, 255, 0.6)" : `${COLORS.textMid}80`}
+            fow="600"
+            mt="$1"
+            ta="right"
+          >
             {formatTime(message.timestamp)}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          </SizableText>
+        </Card>
+      </XStack>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <YStack f={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* ── Top Bar (clear button only, no header) ── */}
-      <View style={styles.topBar}>
-        <View style={styles.statusPill}>
-          <View style={[styles.statusDot, loading && styles.statusDotActive]} />
-          <Text style={styles.statusText}>{loading ? "Typing..." : "Online"}</Text>
-        </View>
-        <TouchableOpacity onPress={clearChat} style={styles.clearBtn} activeOpacity={0.7}>
-          <Trash2 size={16} color="#DC2626" />
-        </TouchableOpacity>
-      </View>
+      {/* Top Bar */}
+      <XStack jc="space-between" ai="center" px="$4" py="$2" pt={Platform.OS === 'android' ? 6 : 8}>
+        <XStack ai="center" bg={`${COLORS.teal}0C`} px="$3" py="$2" br={12} gap="$2">
+          <Circle size={7} bg={loading ? COLORS.teal : '#34C759'} />
+          <SizableText size="$1" fow="700" color={COLORS.teal} ls={-0.1}>
+            {loading ? "Typing..." : "Online"}
+          </SizableText>
+        </XStack>
+        <Button
+          size="$3"
+          circular
+          bg="rgba(220,38,38,0.06)"
+          bw={1}
+          bc="rgba(220,38,38,0.12)"
+          icon={<Trash2 size={16} color="#DC2626" />}
+          onPress={clearChat}
+          pressStyle={{ scale: 0.9 }}
+        />
+      </XStack>
 
-      {/* ── Chat Messages ── */}
+      {/* Chat Messages */}
       <ScrollView
         ref={scrollViewRef}
-        style={styles.chatContainer}
-        contentContainerStyle={styles.chatContent}
+        f={1}
+        px="$4"
+        pt="$2"
+        pb="$4"
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
-        {/* Welcome card for first message */}
         {messages.length === 1 && messages[0].sender === "bot" && (
-          <View style={styles.welcomeCard}>
-            <View style={styles.welcomeIconWrap}>
+          <Card bg="white" br={20} p="$5" mb="$4" bw={1} bc={COLORS.sandMid} elevation={3} ai="center">
+            <Circle size={48} bg={`${COLORS.teal}0C`} mb="$3" jc="center" ai="center">
               <MessageCircle size={22} color={COLORS.teal} />
-            </View>
-            <Text style={styles.welcomeTitle}>Articulink Assistant</Text>
-            <Text style={styles.welcomeDesc}>
+            </Circle>
+            <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3} mb="$2">
+              Articulink Assistant
+            </SizableText>
+            <SizableText size="$2" color={COLORS.textMid} fow="500" ta="center" lh={19}>
               Ask me about speech exercises, communication tips, or anything else!
-            </Text>
-          </View>
+            </SizableText>
+          </Card>
         )}
 
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}
         {loading && (
-          <View style={[styles.messageContainer, styles.botMessageContainer]}>
-            <View style={styles.botAvatar}>
+          <XStack ai="flex-end" gap="$2" mb="$3">
+            <Circle size={28} bg={`${COLORS.teal}0C`} bw={1} bc={`${COLORS.teal}18`} jc="center" ai="center" mb={2}>
               <Bot size={14} color={COLORS.teal} />
-            </View>
-            <View style={[styles.messageBubble, styles.botBubble]}>
+            </Circle>
+            <Card bg="white" p="$2" px="$3" br={18} borderBottomLeftRadius={6} bw={1} bc={COLORS.sandMid} elevation={1}>
               <TypingDots />
-            </View>
-          </View>
+            </Card>
+          </XStack>
         )}
       </ScrollView>
 
-      {/* ── Input Area ── */}
+      {/* Input Area */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-        style={styles.inputContainer}
       >
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Type a message..."
-            placeholderTextColor={`${COLORS.textMid}60`}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={1000}
-            editable={!loading}
-            onSubmitEditing={handleSendMessage}
-            returnKeyType="send"
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || loading) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
-            disabled={!inputText.trim() || loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={COLORS.white} />
-            ) : (
-              <Send size={18} color={COLORS.white} />
-            )}
-          </TouchableOpacity>
-        </View>
+        <Theme name="light">
+          <XStack bg="white" borderTopWidth={1} bc={COLORS.sandMid} px="$3" py="$2" pb={Platform.OS === 'android' ? 10 : 28} gap="$2" ai="flex-end">
+            <Input
+              f={1}
+              bg={COLORS.warmWhite}
+              br={20}
+              px="$4"
+              py="$1.5"
+              mah={120}
+              size="$4"
+              fow="500"
+              color={COLORS.textDark}
+              bw={1.5}
+              bc={COLORS.sandMid}
+              placeholder="Type a message..."
+              placeholderTextColor={`${COLORS.textMid}60`}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              disabled={loading}
+              returnKeyType="send"
+              onSubmitEditing={handleSendMessage}
+            />
+            <Button
+              size="$4"
+              circular
+              bg={!inputText.trim() || loading ? COLORS.sandMid : COLORS.teal}
+              icon={loading ? <Spinner color="white" /> : <Send size={18} color="white" />}
+              onPress={handleSendMessage}
+              disabled={!inputText.trim() || loading}
+              elevation={!inputText.trim() || loading ? 0 : 4}
+              pressStyle={{ scale: 0.9 }}
+            />
+          </XStack>
+        </Theme>
       </KeyboardAvoidingView>
-    </View>
+    </YStack>
   );
 };
-
-// ─── Styles ───────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.cream,
-  },
-
-  /* Top bar (minimal — no header) */
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingTop: Platform.OS === 'android' ? 6 : 8,
-    paddingBottom: 8,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: `${COLORS.teal}0C`,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    gap: 6,
-  },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#34C759',
-  },
-  statusDotActive: {
-    backgroundColor: COLORS.teal,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.teal,
-    letterSpacing: -0.1,
-  },
-  clearBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: 'rgba(220,38,38,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(220,38,38,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  /* Welcome Card */
-  welcomeCard: {
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-    ...Platform.select({
-      ios: { shadowColor: '#8A96A4', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 16 },
-      android: { elevation: 3 },
-    }),
-  },
-  welcomeIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: `${COLORS.teal}0C`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  welcomeTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: COLORS.textDark,
-    letterSpacing: -0.3,
-    marginBottom: 6,
-  },
-  welcomeDesc: {
-    fontSize: 13,
-    color: COLORS.textMid,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 19,
-  },
-
-  /* Chat */
-  chatContainer: {
-    flex: 1,
-  },
-  chatContent: {
-    paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 16,
-  },
-  messageContainer: {
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  userMessageContainer: {
-    justifyContent: "flex-end",
-  },
-  botMessageContainer: {
-    justifyContent: "flex-start",
-  },
-  botAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
-    backgroundColor: `${COLORS.teal}0C`,
-    borderWidth: 1,
-    borderColor: `${COLORS.teal}18`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  messageBubble: {
-    padding: 12,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-  },
-  userBubble: {
-    backgroundColor: COLORS.teal,
-    borderBottomRightRadius: 6,
-    ...Platform.select({
-      ios: { shadowColor: '#2A8FA0', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 8 },
-      android: { elevation: 2 },
-    }),
-  },
-  botBubble: {
-    backgroundColor: COLORS.white,
-    borderBottomLeftRadius: 6,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-    ...Platform.select({
-      ios: { shadowColor: '#8A96A4', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
-      android: { elevation: 1 },
-    }),
-  },
-  userMessageText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 21,
-  },
-  botMessageText: {
-    color: COLORS.textDark,
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 21,
-  },
-  timestamp: {
-    fontSize: 10,
-    color: `${COLORS.textMid}80`,
-    fontWeight: '600',
-    marginTop: 5,
-    alignSelf: "flex-end",
-  },
-  userTimestamp: {
-    color: "rgba(255, 255, 255, 0.6)",
-  },
-  expandButton: {
-    marginTop: 8,
-    paddingVertical: 3,
-  },
-  expandButtonText: {
-    color: COLORS.teal,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  /* Typing */
-  typingIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    gap: 5,
-  },
-  typingDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: COLORS.teal,
-    opacity: 0.5,
-  },
-
-  /* Input */
-  inputContainer: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.sandMid,
-    backgroundColor: COLORS.white,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    paddingBottom: Platform.OS === 'android' ? 10 : 28,
-    gap: 10,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: COLORS.warmWhite,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    paddingTop: 10,
-    maxHeight: 120,
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.textDark,
-    borderWidth: 1.5,
-    borderColor: COLORS.sandMid,
-  },
-  sendButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: COLORS.teal,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: { shadowColor: '#2A8FA0', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 },
-      android: { elevation: 4 },
-    }),
-  },
-  sendButtonDisabled: {
-    backgroundColor: COLORS.sandMid,
-    ...Platform.select({
-      ios: { shadowOpacity: 0 },
-      android: { elevation: 0 },
-    }),
-  },
-});
 
 export default ChatbotScreen;

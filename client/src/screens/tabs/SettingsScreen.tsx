@@ -1,16 +1,60 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   ScrollView,
-  Switch,
-  TouchableOpacity,
   Alert,
+  Platform,
+  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  Card,
+  Switch,
+  Separator,
+  Theme,
+} from "tamagui";
+import {
+  Settings,
+  Bell,
+  History,
+  Volume2,
+  Mic,
+  ShieldCheck,
+  Smartphone,
+  ChevronRight,
+  Trash2,
+  Info,
+  LogOut,
+  AppWindow,
+} from "@tamagui/lucide-icons";
+
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+  cream: '#FAF8F4',
+  warmWhite: '#F5F1EA',
+  sandLight: '#EDE8DF',
+  sandMid: '#DDD6C8',
+  deepNavy: '#0F2847',
+  royalBlue: '#1A4480',
+  mediumBlue: '#2A5FA8',
+  teal: '#2A8FA0',
+  tealLight: '#3DAFC4',
+  orbBlue: '#C8D8EE',
+  orbTeal: '#BEE4EC',
+  orbSand: '#E8E0D0',
+  textDark: '#1C2B3A',
+  textMid: '#4A5A6A',
+  white: '#FFFFFF',
+};
 
 const SettingsScreen: React.FC = () => {
   const [autoConfirm, setAutoConfirm] = useState(false);
@@ -19,6 +63,7 @@ const SettingsScreen: React.FC = () => {
   const [voiceVolume, setVoiceVolume] = useState(0.7);
   const [micSensitivity, setMicSensitivity] = useState(0.8);
   const [notifications, setNotifications] = useState(true);
+  const { width, height } = useWindowDimensions();
 
   const handleClearHistory = () => {
     Alert.alert(
@@ -28,7 +73,6 @@ const SettingsScreen: React.FC = () => {
         { text: "Cancel", style: "cancel" },
         {
           text: "Clear", style: "destructive", onPress: () => {
-            // Handle clear history logic here
             Alert.alert("Success", "Translation history cleared successfully!");
           }
         }
@@ -36,353 +80,149 @@ const SettingsScreen: React.FC = () => {
     );
   };
 
-  interface SettingItemProps {
-    icon: keyof typeof Ionicons.glyphMap;
-    title: string;
-    children: React.ReactNode;
-    description?: string;
-  }
-
-  const SettingItem: React.FC<SettingItemProps> = ({ icon, title, children, description }) => (
-    <View style={styles.settingItem}>
-      <View style={styles.settingHeader}>
-        <View style={styles.settingTitleContainer}>
-          <LinearGradient
-            colors={['#10B981', '#14B8A6']}
-            style={styles.iconContainer}
-          >
-            <Ionicons name={icon} size={20} color="white" />
-          </LinearGradient>
-          <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>{title}</Text>
-            {description && <Text style={styles.settingDescription}>{description}</Text>}
-          </View>
-        </View>
-      </View>
+  const SettingRow = ({ icon, title, description, children }: { icon: any, title: string, description?: string, children: React.ReactNode }) => (
+    <XStack ai="center" jc="space-between" py="$4" gap="$3">
+      <XStack ai="center" gap="$3" f={1}>
+        <YStack w={40} h={40} br={12} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+          {icon}
+        </YStack>
+        <YStack f={1}>
+          <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3}>{title}</SizableText>
+          {description && <SizableText size="$1" color={COLORS.textMid} fow="600">{description}</SizableText>}
+        </YStack>
+      </XStack>
       {children}
-    </View>
+    </XStack>
   );
 
-  interface SliderItemProps {
-    title: string;
-    value: number;
-    onValueChange: (val: number) => void;
-    min?: number;
-    max?: number;
-    step?: number;
-  }
-
-  const SliderItem: React.FC<SliderItemProps> = ({ title, value, onValueChange, min = 0, max = 1, step = 0.01 }) => (
-    <View style={styles.sliderContainer}>
-      <View style={styles.sliderHeader}>
-        <Text style={styles.sliderTitle}>{title}</Text>
-        <Text style={styles.sliderValue}>{Math.round(value * 100)}%</Text>
-      </View>
-      <View style={styles.sliderWrapper}>
+  const SliderSetting = ({ icon, title, value, onValueChange }: { icon: any, title: string, value: number, onValueChange: (v: number) => void }) => (
+    <YStack py="$4" gap="$3">
+      <XStack ai="center" jc="space-between">
+        <XStack ai="center" gap="$3">
+          <YStack w={40} h={40} br={12} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+            {icon}
+          </YStack>
+          <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3}>{title}</SizableText>
+        </XStack>
+        <SizableText size="$2" fow="800" color={COLORS.royalBlue}>{Math.round(value * 100)}%</SizableText>
+      </XStack>
+      <YStack px="$1">
         <Slider
-          style={styles.slider}
+          style={{ width: '100%', height: 40 }}
           value={value}
           onValueChange={onValueChange}
-          minimumValue={min}
-          maximumValue={max}
-          step={step}
-          minimumTrackTintColor="#10B981"
-          maximumTrackTintColor="#374151"
-          thumbTintColor="#10B981"
+          minimumValue={0}
+          maximumValue={1}
+          minimumTrackTintColor={COLORS.royalBlue}
+          maximumTrackTintColor={COLORS.sandMid}
+          thumbTintColor={COLORS.royalBlue}
         />
-        <View style={styles.sliderLabels}>
-          <Text style={styles.sliderLabel}>Low</Text>
-          <Text style={styles.sliderLabel}>High</Text>
-        </View>
-      </View>
-    </View>
+        <XStack jc="space-between" px="$1">
+          <SizableText size="$1" color={COLORS.textMid} fow="600">Low</SizableText>
+          <SizableText size="$1" color={COLORS.textMid} fow="600">High</SizableText>
+        </XStack>
+      </YStack>
+    </YStack>
   );
 
   return (
-    <LinearGradient
-      colors={['#111827', '#1F2937', '#111827']}
-      style={styles.container}
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Background Effects */}
-        <View style={styles.backgroundEffects}>
-          <LinearGradient
-            colors={['#10B98120', 'transparent']}
-            style={[styles.backgroundOrb, { top: 50, right: 20 }]}
-          />
-          <LinearGradient
-            colors={['#14B8A620', 'transparent']}
-            style={[styles.backgroundOrb, { bottom: 100, left: 20 }]}
-          />
-        </View>
+    <YStack f={1} bg={COLORS.cream}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
+      {/* Background blobs */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <Circle pos="absolute" t={-height * 0.15} l={-width * 0.2} size={width * 0.8} bg={COLORS.orbBlue} opacity={0.3} />
+        <Circle pos="absolute" b={-height * 0.1} r={-width * 0.2} size={width * 0.7} bg={COLORS.orbTeal} opacity={0.2} />
+      </ZStack>
 
-        {/* Audio Settings Section */}
-        <SettingItem
-          icon="volume-high"
-          title="Audio Settings"
-          description="Customize voice and microphone settings"
+      {/* Header Area */}
+      <YStack pt={Platform.OS === 'android' ? 60 : 70} px="$4" pb="$4">
+        <XStack ai="center" jc="space-between">
+          <YStack>
+            <H1 size="$9" fow="900" color={COLORS.textDark} ls={-1}>Settings</H1>
+            <SizableText size="$2" color={COLORS.textMid} fow="600">Manage your app experience</SizableText>
+          </YStack>
+          <Circle size={48} bg="white" bw={1} bc={COLORS.sandMid} elevation={3}>
+            <Settings size={22} color={COLORS.royalBlue} />
+          </Circle>
+        </XStack>
+      </YStack>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+        {/* App Preferences */}
+        <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.2} mb="$3" ml="$1">App Preferences</SizableText>
+        <Card bg="white" br={24} p="$2" px="$5" mb="$6" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+          <SettingRow icon={<Bell size={18} color={COLORS.royalBlue} />} title="Notifications" description="Daily reminders for exercises">
+            <Switch size="$3" bg={notifications ? COLORS.royalBlue : COLORS.sandMid} checked={notifications} onCheckedChange={setNotifications}>
+              <Switch.Thumb bg="white" />
+            </Switch>
+          </SettingRow>
+          <Separator bc={COLORS.sandLight} />
+          <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Save History" description="Store recordings on this device">
+            <Switch size="$3" bg={saveHistory ? COLORS.royalBlue : COLORS.sandMid} checked={saveHistory} onCheckedChange={setSaveHistory}>
+              <Switch.Thumb bg="white" />
+            </Switch>
+          </SettingRow>
+          <Separator bc={COLORS.sandLight} />
+          <SettingRow icon={<Smartphone size={18} color={COLORS.royalBlue} />} title="Vibration Feedback" description="Tactile response on click">
+            <Switch size="$3" bg={vibrationFeedback ? COLORS.royalBlue : COLORS.sandMid} checked={vibrationFeedback} onCheckedChange={setVibrationFeedback}>
+              <Switch.Thumb bg="white" />
+            </Switch>
+          </SettingRow>
+        </Card>
+
+        {/* Audio Engine */}
+        <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.2} mb="$3" ml="$1">Audio Engine</SizableText>
+        <Card bg="white" br={24} p="$2" px="$5" mb="$6" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+          <SliderSetting icon={<Volume2 size={18} color={COLORS.royalBlue} />} title="Voice Volume" value={voiceVolume} onValueChange={setVoiceVolume} />
+          <Separator bc={COLORS.sandLight} />
+          <SliderSetting icon={<Mic size={18} color={COLORS.royalBlue} />} title="Mic Sensitivity" value={micSensitivity} onValueChange={setMicSensitivity} />
+        </Card>
+
+        {/* Data & Security */}
+        <SizableText size="$2" fow="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.2} mb="$3" ml="$1">Data & Security</SizableText>
+        <Card bg="white" br={24} p="$2" px="$5" mb="$6" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+          <Button
+            unstyled
+            onPress={handleClearHistory}
+          >
+            <SettingRow icon={<Trash2 size={18} color="#DC2626" />} title="Clear Local Data" description="Permanently delete all storage">
+              <ChevronRight size={18} color={COLORS.sandMid} />
+            </SettingRow>
+          </Button>
+          <Separator bc={COLORS.sandLight} />
+          <Button
+            unstyled
+            onPress={() => Alert.alert("Privacy Policy", "Articulink follows strict data privacy laws...")}
+          >
+            <SettingRow icon={<ShieldCheck size={18} color={COLORS.royalBlue} />} title="Privacy Policy" description="How we handle your data">
+              <ChevronRight size={18} color={COLORS.sandMid} />
+            </SettingRow>
+          </Button>
+        </Card>
+
+        {/* About */}
+        <YStack ai="center" mt="$2" gap="$2">
+          <SizableText size="$2" color={COLORS.textMid} fow="600">Articulink v1.0.4 PRO</SizableText>
+          <Paragraph size="$1" color={COLORS.textMid} opacity={0.5}>Created with ❤️ for Articulation Support</Paragraph>
+        </YStack>
+
+        <Button
+          mt="$8"
+          bg="rgba(220,38,38,0.08)"
+          h={56}
+          br={16}
+          bw={1}
+          bc="rgba(220,38,38,0.2)"
+          onPress={() => Alert.alert("Logout", "Are you sure?", [{ text: "Cancel" }, { text: "Logout", style: "destructive" }])}
+          icon={<LogOut size={18} color="#DC2626" />}
+          pressStyle={{ scale: 0.98, bg: "rgba(220,38,38,0.15)" }}
         >
-          <View style={styles.sectionContent}>
-            <SliderItem
-              title="Voice Volume"
-              value={voiceVolume}
-              onValueChange={setVoiceVolume}
-            />
-            <SliderItem
-              title="Microphone Sensitivity"
-              value={micSensitivity}
-              onValueChange={setMicSensitivity}
-            />
-          </View>
-        </SettingItem>
-
-        {/* Translation Settings Section */}
-        <SettingItem
-          icon="flash"
-          title="Translation Settings"
-          description="Configure how translations work"
-        >
-          <View style={styles.sectionContent}>
-            <View style={styles.switchItem}>
-              <Text style={styles.switchLabel}>Auto-confirm translations</Text>
-              <Switch
-                value={autoConfirm}
-                onValueChange={setAutoConfirm}
-                trackColor={{ false: '#374151', true: '#10B98150' }}
-                thumbColor={autoConfirm ? '#10B981' : '#9CA3AF'}
-              />
-            </View>
-            <View style={styles.switchItem}>
-              <Text style={styles.switchLabel}>Save to history</Text>
-              <Switch
-                value={saveHistory}
-                onValueChange={setSaveHistory}
-                trackColor={{ false: '#374151', true: '#10B98150' }}
-                thumbColor={saveHistory ? '#10B981' : '#9CA3AF'}
-              />
-            </View>
-            <View style={styles.switchItem}>
-              <Text style={styles.switchLabel}>Vibration feedback</Text>
-              <Switch
-                value={vibrationFeedback}
-                onValueChange={setVibrationFeedback}
-                trackColor={{ false: '#374151', true: '#10B98150' }}
-                thumbColor={vibrationFeedback ? '#10B981' : '#9CA3AF'}
-              />
-            </View>
-          </View>
-        </SettingItem>
-
-        {/* Notifications Section */}
-        <SettingItem
-          icon="notifications"
-          title="Notifications"
-          description="Manage app notifications"
-        >
-          <View style={styles.sectionContent}>
-            <View style={styles.switchItem}>
-              <Text style={styles.switchLabel}>Push notifications</Text>
-              <Switch
-                value={notifications}
-                onValueChange={setNotifications}
-                trackColor={{ false: '#374151', true: '#10B98150' }}
-                thumbColor={notifications ? '#10B981' : '#9CA3AF'}
-              />
-            </View>
-          </View>
-        </SettingItem>
-
-        {/* Data Management Section */}
-        <SettingItem
-          icon="trash"
-          title="Data Management"
-          description="Manage your app data"
-        >
-          <View style={styles.sectionContent}>
-            <TouchableOpacity style={styles.dangerButton} onPress={handleClearHistory}>
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
-              <Text style={styles.dangerButtonText}>Clear Translation History</Text>
-            </TouchableOpacity>
-          </View>
-        </SettingItem>
-
-        {/* About Section */}
-        <SettingItem
-          icon="information-circle"
-          title="About Articulink"
-          description="App information and support"
-        >
-          <View style={styles.sectionContent}>
-            <View style={styles.aboutItem}>
-              <Text style={styles.aboutLabel}>Version</Text>
-              <Text style={styles.aboutValue}>1.0.0</Text>
-            </View>
-            <View style={styles.aboutItem}>
-              <Text style={styles.aboutLabel}>Build</Text>
-              <Text style={styles.aboutValue}>2024.03.01</Text>
-            </View>
-            <TouchableOpacity style={styles.linkButton}>
-              <Text style={styles.linkButtonText}>Privacy Policy</Text>
-              <Ionicons name="chevron-forward" size={16} color="#10B981" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.linkButton}>
-              <Text style={styles.linkButtonText}>Terms of Service</Text>
-              <Ionicons name="chevron-forward" size={16} color="#10B981" />
-            </TouchableOpacity>
-          </View>
-        </SettingItem>
-
-        <View style={{ height: 50 }} />
+          <SizableText color="#DC2626" fow="800" size="$4">Logout from Account</SizableText>
+        </Button>
       </ScrollView>
-    </LinearGradient>
+    </YStack>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-    padding: 20,
-  },
-  backgroundEffects: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  backgroundOrb: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-  },
-  settingItem: {
-    backgroundColor: '#1F2937E0',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#10B98130',
-  },
-  settingHeader: {
-    marginBottom: 16,
-  },
-  settingTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  settingTextContainer: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  sectionContent: {
-    gap: 16,
-  },
-  sliderContainer: {
-    gap: 8,
-  },
-  sliderWrapper: {
-    marginTop: 8,
-  },
-  sliderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sliderTitle: {
-    fontSize: 16,
-    color: '#D1D5DB',
-  },
-  sliderValue: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '600',
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -8,
-  },
-  sliderLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  switchItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  switchLabel: {
-    fontSize: 16,
-    color: '#D1D5DB',
-    flex: 1,
-  },
-  dangerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EF444420',
-    borderColor: '#EF4444',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  dangerButtonText: {
-    color: '#EF4444',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  aboutItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  aboutLabel: {
-    fontSize: 16,
-    color: '#D1D5DB',
-  },
-  aboutValue: {
-    fontSize: 16,
-    color: '#10B981',
-    fontWeight: '600',
-  },
-  linkButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  linkButtonText: {
-    fontSize: 16,
-    color: '#10B981',
-    fontWeight: '600',
-  },
-});
 
 export default SettingsScreen;

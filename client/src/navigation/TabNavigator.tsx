@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import { Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
+import { YStack, XStack, SizableText, Button, Circle, Theme } from "tamagui";
 import HomeScreen from "../screens/HomeScreen";
 import HistoryScreen from "../screens/tabs/HistoryScreen";
 import ProfileScreen from "../screens/tabs/ProfileScreen";
@@ -9,7 +10,16 @@ import SettingsScreen from "../screens/tabs/SettingsScreen";
 import MapScreen from "../screens/tabs/MapScreen";
 import EditProfileScreen from '../screens/Extras/EditProfileScreen';
 import ChatbotScreen from '../screens/Extras/ChatbotScreen';
-import { Ionicons } from "@expo/vector-icons";
+import TamaguiDemoScreen from "../screens/TamaguiDemoScreen";
+import {
+  Home,
+  History,
+  MapPin,
+  User,
+  Settings,
+  Layers,
+  MessageCircle,
+} from "@tamagui/lucide-icons";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -56,12 +66,12 @@ const HomeStack = () => (
       options={({ navigation }) => ({
         title: "Articulink",
         headerRight: () => (
-          <Ionicons
-            name="chatbubble-ellipses-outline"
-            size={22}
-            color={COLORS.royalBlue}
-            style={{ marginRight: 16 }}
+          <Button
+            chromeless
+            icon={<MessageCircle size={22} color={COLORS.royalBlue} />}
             onPress={() => navigation.navigate("Chatbot")}
+            mr="$3"
+            pressStyle={{ scale: 0.95 }}
           />
         ),
       })}
@@ -79,23 +89,33 @@ const ProfileStack = () => (
 );
 
 // ─── Tab Config ──────────────────────────────────────────────────
-const TAB_CONFIG: { name: string; label: string; iconFocused: string; iconOutline: string }[] = [
-  { name: "Home", label: "Home", iconFocused: "home", iconOutline: "home-outline" },
-  { name: "History", label: "History", iconFocused: "time", iconOutline: "time-outline" },
-  { name: "Map", label: "Map", iconFocused: "map", iconOutline: "map-outline" },
-  { name: "Profile", label: "Profile", iconFocused: "person", iconOutline: "person-outline" },
-  { name: "Settings", label: "Settings", iconFocused: "settings", iconOutline: "settings-outline" },
+const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
+  { name: "Home", label: "Home", icon: Home },
+  { name: "History", label: "History", icon: History },
+  { name: "Map", label: "Map", icon: MapPin },
+  { name: "Profile", label: "Profile", icon: User },
+  { name: "Settings", label: "Settings", icon: Settings },
+  { name: "Demo", label: "Tamagui", icon: Layers },
 ];
 
 // ─── Custom Tab Bar ──────────────────────────────────────────────
 const CustomTabBar = ({ state, descriptors, navigation }: any) => (
-  <View style={tabBarStyles.container}>
-    <View style={tabBarStyles.inner}>
+  <YStack
+    bg="white"
+    bt={1}
+    btc={COLORS.sandMid}
+    pb={Platform.OS === "ios" ? 24 : 8}
+    pt={6}
+    elevation={8}
+    shadowColor={COLORS.deepNavy}
+    shadowOffset={{ width: 0, height: -4 }}
+    shadowOpacity={0.06}
+    shadowRadius={12}
+  >
+    <XStack jc="space-around" ai="center">
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
         const config = TAB_CONFIG.find(t => t.name === route.name)!;
-        const iconName = isFocused ? config.iconFocused : config.iconOutline;
-
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!isFocused && !event.defaultPrevented) {
@@ -104,107 +124,60 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => (
         };
 
         return (
-          <TouchableOpacity
+          <YStack
             key={route.key}
+            f={1}
+            ai="center"
+            jc="center"
+            py="$1"
+            pos="relative"
             onPress={onPress}
-            activeOpacity={0.7}
-            style={tabBarStyles.tab}
           >
-            {/* Active pill */}
-            {isFocused && <View style={tabBarStyles.activePill} />}
+            {/* Active pill indicator */}
+            {isFocused && (
+                <YStack
+                    pos="absolute"
+                    t={0}
+                    w={48}
+                    h={48}
+                    br={14}
+                    bg={`${COLORS.royalBlue}0A`}
+                    bw={1}
+                    bc={`${COLORS.royalBlue}12`}
+                />
+            )}
 
-            <View style={[tabBarStyles.iconWrap, isFocused && tabBarStyles.iconWrapActive]}>
-              <Ionicons
-                name={iconName as any}
-                size={isFocused ? 22 : 20}
+            <YStack
+                w={32}
+                h={28}
+                jc="center"
+                ai="center"
+                {...(isFocused && { y: -1 })}
+            >
+              {React.createElement(config.icon, {
+                size: isFocused ? 22 : 20,
+                color: isFocused ? COLORS.royalBlue : COLORS.textMid,
+              })}
+            </YStack>
+
+            <SizableText
+                size="$1"
+                fow={isFocused ? "800" : "600"}
+                mt={2}
+                ls={0.2}
                 color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-              />
-            </View>
-
-            <Text style={[
-              tabBarStyles.label,
-              { color: isFocused ? COLORS.royalBlue : COLORS.textMid },
-              isFocused && tabBarStyles.labelActive,
-            ]}>
+            >
               {config.label}
-            </Text>
+            </SizableText>
 
             {/* Active dot indicator */}
-            {isFocused && <View style={tabBarStyles.activeDot} />}
-          </TouchableOpacity>
+            {isFocused && <Circle size={4} bg={COLORS.royalBlue} mt={3} />}
+          </YStack>
         );
       })}
-    </View>
-  </View>
+    </XStack>
+  </YStack>
 );
-
-// ─── Tab Bar Styles ──────────────────────────────────────────────
-const tabBarStyles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.sandMid,
-    paddingBottom: Platform.OS === "ios" ? 24 : 8,
-    paddingTop: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: COLORS.deepNavy,
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.06,
-        shadowRadius: 12,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  inner: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 4,
-    position: "relative",
-  },
-  activePill: {
-    position: "absolute",
-    top: 0,
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: `${COLORS.royalBlue}0A`,
-    borderWidth: 1,
-    borderColor: `${COLORS.royalBlue}12`,
-  },
-  iconWrap: {
-    width: 32,
-    height: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconWrapActive: {
-    transform: [{ translateY: -1 }],
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 2,
-    letterSpacing: 0.2,
-  },
-  labelActive: {
-    fontWeight: "800",
-    fontSize: 10.5,
-  },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.royalBlue,
-    marginTop: 3,
-  },
-});
 
 // ─── Tab Navigator ───────────────────────────────────────────────
 const TabNavigator = () => (
@@ -217,6 +190,7 @@ const TabNavigator = () => (
     <Tab.Screen name="Map" component={MapScreen} options={{ title: "Nearby Centers" }} />
     <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
     <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
+    <Tab.Screen name="Demo" component={TamaguiDemoScreen} options={{ title: "Tamagui Demo" }} />
   </Tab.Navigator>
 );
 

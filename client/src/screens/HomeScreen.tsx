@@ -1,17 +1,27 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
   StyleSheet,
   Alert,
   StatusBar,
   Platform,
   Animated,
   useWindowDimensions,
-  ActivityIndicator,
 } from "react-native";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  TextArea,
+  Card,
+  Spinner,
+  Theme,
+  AnimatePresence,
+} from "tamagui";
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import {
@@ -21,11 +31,11 @@ import {
   Trash2,
   ChevronRight,
   FileText,
-} from "lucide-react-native";
+} from "@tamagui/lucide-icons";
 import baseURL from "./../utils/baseurl";
 import { getToken } from "./../utils/authToken";
 
-// ─── Brand Palette (matches StartUpScreen / ProfileScreen) ────────
+// ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
   cream: '#FAF8F4',
   warmWhite: '#F5F1EA',
@@ -44,7 +54,7 @@ const COLORS = {
   white: '#FFFFFF',
 };
 
-// ─── Soft Orb (animated background element) ───────────────────────
+// ─── Soft Orb (adapted for Tamagui/Animated) ──────────────────────
 interface SoftOrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
 
 const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay }) => {
@@ -73,14 +83,14 @@ const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay })
       opacity: 0.5,
       transform: [{ translateY }, { scale }],
     }}>
-      <View style={{
-        position: 'absolute',
-        top: size * 0.15, left: size * 0.15,
-        width: size * 0.7, height: size * 0.7,
-        borderRadius: size * 0.35,
-        backgroundColor: COLORS.white,
-        opacity: 0.35,
-      }} />
+      <Circle
+        pos="absolute"
+        t={size * 0.15}
+        l={size * 0.15}
+        size={size * 0.7}
+        bg="white"
+        opacity={0.35}
+      />
     </Animated.View>
   );
 };
@@ -105,7 +115,7 @@ const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
   }, []);
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+    <XStack ai="flex-end">
       {barHeights.map((h, i) => {
         const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
         return (
@@ -119,11 +129,11 @@ const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
           }} />
         );
       })}
-    </View>
+    </XStack>
   );
 };
 
-// ─── Pulse Ring (recording animation) ─────────────────────────────
+// ─── Pulse Ring ──────────────────────────────────────────────────
 const PulseRing: React.FC<{ active: boolean }> = ({ active }) => {
   const pulse1 = useRef(new Animated.Value(0)).current;
   const pulse2 = useRef(new Animated.Value(0)).current;
@@ -231,19 +241,14 @@ const HomeScreen: React.FC = () => {
     setLoading(false);
   }
 
-  // 📤 Upload Audio to FastAPI
+  // 📤 Upload Audio
   async function uploadAudio(uri: string) {
     const formData = new FormData();
-
-    // ─── Determine Extension & Mime Type ───
     const uriParts = uri.split(".");
     const uriExtension = uriParts[uriParts.length - 1].toLowerCase();
-
-    // Default to wav if extension looks weird or missing
     const extension = ["wav", "m4a", "caf", "3gp", "mp4"].includes(uriExtension) ? uriExtension : "wav";
     const fileName = `speech.${extension}`;
 
-    // Better mime mapping
     let type = "audio/wav";
     if (extension === "m4a") type = "audio/mp4";
     else if (extension === "3gp") type = "audio/3gpp";
@@ -272,17 +277,14 @@ const HomeScreen: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Server Error:", data);
         Alert.alert("Transcription Error", data.detail || data.error || "Server failed to process audio");
         setTranscript("");
         return;
       }
 
       setTranscript(data.transcript || data.text || "");
-      // You could also store data.audio_url or data.id if needed elsewhere
     } catch (err: any) {
-      console.error("Fetch Error:", err);
-      Alert.alert("Network Error", "Could not connect to the transcription server. Please check your connection and IP address.");
+      Alert.alert("Network Error", "Could not connect to the transcription server.");
     }
   }
 
@@ -292,7 +294,6 @@ const HomeScreen: React.FC = () => {
       Alert.alert("Nothing to speak");
       return;
     }
-
     Speech.stop();
     Speech.speak(transcript, {
       language: "fil-PH",
@@ -311,380 +312,183 @@ const HomeScreen: React.FC = () => {
   const statusText = loading ? "Processing your speech..." : isRecording ? "Listening..." : "Tap the mic to start";
 
   return (
-    <View style={styles.container}>
+    <YStack f={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       {/* ── Layered Background ── */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.cream }]} />
-
-        {/* Warm bloom — top right */}
-        <View style={{
-          position: 'absolute', top: -height * 0.08, right: -width * 0.15,
-          width: width * 0.9, height: width * 0.9, borderRadius: width * 0.45,
-          backgroundColor: COLORS.orbSand, opacity: 0.5,
-        }} />
-
-        {/* Cool bloom — bottom left */}
-        <View style={{
-          position: 'absolute', bottom: -height * 0.06, left: -width * 0.2,
-          width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4,
-          backgroundColor: COLORS.orbBlue, opacity: 0.25,
-        }} />
-
-        {/* Animated soft orbs */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <YStack fullscreen bg={COLORS.cream} />
+        
+        {/* Orbs */}
         {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
 
         {/* Subtle dot grid */}
         {dotGrid.map((d, i) => (
-          <View key={i} style={{
-            position: 'absolute', width: 2, height: 2, borderRadius: 1,
-            backgroundColor: COLORS.royalBlue, opacity: 0.04,
-            left: d.left, top: d.top,
-          }} />
+          <Circle
+            key={i}
+            pos="absolute"
+            size={2}
+            bg={COLORS.royalBlue}
+            opacity={0.04}
+            l={d.left}
+            t={d.top}
+          />
         ))}
 
         {/* Corner brackets */}
-        <View style={{
-          position: 'absolute', top: 58, left: 22, width: 34, height: 34,
-          borderTopWidth: 1.5, borderLeftWidth: 1.5,
-          borderColor: `${COLORS.royalBlue}25`, borderTopLeftRadius: 6,
-        }} />
-        <View style={{
-          position: 'absolute', bottom: 60, right: 22, width: 34, height: 34,
-          borderBottomWidth: 1.5, borderRightWidth: 1.5,
-          borderColor: `${COLORS.teal}25`, borderBottomRightRadius: 6,
-        }} />
-      </View>
-
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <Text style={styles.tagline}>SPEECH CLARITY ENGINE</Text>
-        <Text style={styles.title}>Articulink</Text>
-        <Text style={styles.subtitle}>Tap, speak, and let AI understand you</Text>
-      </View>
-
-      {/* ── Recording Section ── */}
-      <View style={styles.recordingSection}>
-        {/* Mic Button */}
-        <View style={styles.micArea}>
-          <PulseRing active={isRecording} />
-
-          {/* Halo glow when recording */}
-          {isRecording && (
-            <View style={styles.micHalo} />
-          )}
-
-          <TouchableOpacity
-            style={[styles.micButton, isRecording && styles.micButtonActive]}
-            onPress={isRecording ? stopRecording : startRecording}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator size="large" color={COLORS.white} />
-            ) : isRecording ? (
-              <Square size={28} color={COLORS.white} fill={COLORS.white} />
-            ) : (
-              <Mic size={32} color={COLORS.white} strokeWidth={2} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Status Text */}
-        <Text style={[styles.statusText, isRecording && styles.statusTextActive]}>
-          {statusText}
-        </Text>
-
-        {/* Mini waveform when recording */}
-        {isRecording && (
-          <View style={styles.recordingWaveform}>
-            <AnimatedWaveform color={COLORS.teal} />
-          </View>
-        )}
-      </View>
-
-      {/* ── Transcript Card ── */}
-      <View style={styles.transcriptCard}>
-        {/* Top accent bar */}
-        <View style={styles.cardTopBar} />
-        {/* Top glow */}
-        <View style={styles.cardTopGlow} />
-
-        {/* Section Header */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionIconWrap}>
-            <FileText size={14} color={COLORS.royalBlue} />
-          </View>
-          <Text style={styles.sectionTitle}>Transcript</Text>
-          <View style={styles.sectionLine} />
-          {transcript.length > 0 && (
-            <View style={styles.charBadge}>
-              <Text style={styles.charBadgeText}>{transcript.length}</Text>
-            </View>
-          )}
-        </View>
-
-        <TextInput
-          style={styles.textbox}
-          multiline
-          value={transcript}
-          onChangeText={setTranscript}
-          placeholder="Your speech will appear here..."
-          placeholderTextColor={`${COLORS.textMid}55`}
+        <YStack
+          pos="absolute" t={58} l={22} w={34} h={34}
+          borderTopWidth={1.5} borderLeftWidth={1.5}
+          borderColor={`${COLORS.royalBlue}25`}
+          br={6}
+          borderBottomWidth={0} borderRightWidth={0}
         />
+        <YStack
+          pos="absolute" b={60} r={22} w={34} h={34}
+          borderBottomWidth={1.5} borderRightWidth={1.5}
+          borderColor={`${COLORS.teal}25`}
+          br={6}
+          borderTopWidth={0} borderLeftWidth={0}
+        />
+      </ZStack>
 
-        {/* Bottom waveform decoration */}
-        <View style={styles.cardWaveform}>
-          <AnimatedWaveform color={COLORS.royalBlue} />
-        </View>
-      </View>
+      {/* ── Main Content ── */}
+      <YStack f={1} px="$5" pt={Platform.OS === "android" ? 48 : 60} pb={Platform.OS === "android" ? 20 : 30} gap="$4">
+        
+        {/* Header */}
+        <YStack ai="center" gap="$1">
+          <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={2.5} tt="uppercase">
+            SPEECH CLARITY ENGINE
+          </SizableText>
+          <H1 fow="900" size="$10" color={COLORS.textDark} ls={-0.5}>
+            Articulink
+          </H1>
+          <SizableText size="$3" color={COLORS.textMid} fow="500">
+            Tap, speak, and let AI understand you
+          </SizableText>
+        </YStack>
 
-      {/* ── Action Buttons ── */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.speakButton, !transcript && styles.buttonDisabled]}
-          onPress={speakText}
-          disabled={!transcript}
-          activeOpacity={0.88}
-        >
-          <View style={styles.btnShimmer} />
-          <Volume2 size={18} color={COLORS.white} />
-          <Text style={styles.speakButtonText}>Speak</Text>
-          <View style={{ flex: 1 }} />
-          <ChevronRight size={18} color="rgba(255,255,255,0.5)" />
-        </TouchableOpacity>
+        {/* Recording Section */}
+        <YStack ai="center" gap="$2">
+          <YStack w={120} h={120} jc="center" ai="center">
+            <PulseRing active={isRecording} />
+            {isRecording && (
+              <Circle pos="absolute" size={120} bg={COLORS.teal} opacity={0.12} />
+            )}
+            
+            <Button
+              size={88}
+              br={44}
+              bg={isRecording ? '#DC2626' : COLORS.teal}
+              onPress={isRecording ? stopRecording : startRecording}
+              disabled={loading}
+              pressStyle={{ scale: 0.92 }}
+              elevation={10}
+              shadowColor={isRecording ? '#DC2626' : '#2A8FA0'}
+              icon={loading ? <Spinner size="large" color="white" /> : (isRecording ? <Square size={28} color="white" fill="white" /> : <Mic size={32} color="white" />)}
+            />
+          </YStack>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.clearButton, !transcript && styles.buttonDisabled]}
-          onPress={clearTranscript}
-          disabled={!transcript}
-          activeOpacity={0.88}
-        >
-          <Trash2 size={16} color="#DC2626" />
-          <Text style={styles.clearButtonText}>Clear</Text>
-          <View style={{ flex: 1 }} />
-          <ChevronRight size={18} color="rgba(220,38,38,0.35)" />
-        </TouchableOpacity>
-      </View>
-    </View>
+          <SizableText size="$3" fow="600" color={isRecording ? '#DC2626' : COLORS.textMid}>
+            {statusText}
+          </SizableText>
+
+          {isRecording && (
+            <YStack mt="$2">
+              <AnimatedWaveform color={COLORS.teal} />
+            </YStack>
+          )}
+        </YStack>
+
+        {/* Transcript Card */}
+        <Card f={1} bg="white" br={22} elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid} ov="hidden">
+           {/* Top accent */}
+          <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
+          <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${COLORS.royalBlue}07`} />
+
+          <YStack f={1} p="$4">
+            <XStack ai="center" gap="$2" mb="$2">
+              <YStack w={30} h={30} br={9} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+                <FileText size={14} color={COLORS.royalBlue} />
+              </YStack>
+              <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
+                Transcript
+              </SizableText>
+              <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.7} />
+              {transcript.length > 0 && (
+                <YStack bg={`${COLORS.teal}14`} px="$2" py="$1" br={8}>
+                  <SizableText fow="700" size="$1" color={COLORS.teal}>
+                    {transcript.length}
+                  </SizableText>
+                </YStack>
+              )}
+            </XStack>
+
+            <TextArea
+              flex={1}
+              bg={`${COLORS.royalBlue}04`}
+              borderColor={COLORS.sandMid}
+              br={14}
+              p="$3"
+              size="$4"
+              fontWeight="500"
+              color={COLORS.textDark}
+              value={transcript}
+              onChangeText={setTranscript}
+              placeholder="Your speech will appear here..."
+              placeholderTextColor={COLORS.textMid as any}
+              borderWidth={1.5}
+            />
+
+            <YStack pos="absolute" b={12} r={14}>
+              <AnimatedWaveform color={COLORS.royalBlue} />
+            </YStack>
+          </YStack>
+        </Card>
+
+        {/* Action Buttons */}
+        <YStack gap="$2">
+          <Button
+            size="$5"
+            bg={COLORS.teal}
+            br={18}
+            onPress={speakText}
+            disabled={!transcript}
+            opacity={!transcript ? 0.45 : 1}
+            pressStyle={{ scale: 0.98 }}
+            icon={<Volume2 size={18} color="white" />}
+            iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.5)" />}
+            elevation={6}
+            shadowColor="#2A8FA0"
+          >
+            <SizableText fow="800" size="$4" color="white" ml="$2">
+              Speak
+            </SizableText>
+          </Button>
+
+          <Button
+            size="$5"
+            bg="white"
+            br={18}
+            onPress={clearTranscript}
+            disabled={!transcript}
+            opacity={!transcript ? 0.45 : 1}
+            pressStyle={{ scale: 0.98 }}
+            borderWidth={1}
+            borderColor="rgba(220,38,38,0.18)"
+            icon={<Trash2 size={16} color="#DC2626" />}
+            iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.35)" />}
+            elevation={5}
+            shadowColor="#8A96A4"
+          >
+            <SizableText fow="800" size="$4" color="#DC2626" ml="$2">
+              Clear
+            </SizableText>
+          </Button>
+        </YStack>
+      </YStack>
+    </YStack>
   );
 };
 
 export default HomeScreen;
-
-// ─── Styles ───────────────────────────────────────────────────────
-const CARD_SHADOW = Platform.select({
-  ios: { shadowColor: '#8A96A4', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 22 },
-  android: { elevation: 5 },
-}) as any;
-
-const BTN_SHADOW = Platform.select({
-  ios: { shadowColor: '#2A8FA0', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 14 },
-  android: { elevation: 6 },
-}) as any;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.cream,
-    paddingHorizontal: 22,
-    paddingTop: Platform.OS === "android" ? 48 : 60,
-    paddingBottom: Platform.OS === "android" ? 20 : 30,
-  },
-
-  /* Header */
-  header: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  tagline: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.teal,
-    letterSpacing: 2.5,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "900",
-    color: COLORS.textDark,
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: COLORS.textMid,
-    fontWeight: '500',
-    letterSpacing: -0.1,
-  },
-
-  /* Recording Section */
-  recordingSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  micArea: {
-    width: 120,
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  micHalo: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: COLORS.teal,
-    opacity: 0.12,
-  },
-  micButton: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: COLORS.teal,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: { shadowColor: '#2A8FA0', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18 },
-      android: { elevation: 10 },
-    }),
-  },
-  micButtonActive: {
-    backgroundColor: '#DC2626',
-    ...Platform.select({
-      ios: { shadowColor: '#DC2626', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18 },
-      android: { elevation: 10 },
-    }),
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textMid,
-    letterSpacing: -0.1,
-  },
-  statusTextActive: {
-    color: '#DC2626',
-    fontWeight: '700',
-  },
-  recordingWaveform: {
-    marginTop: 10,
-  },
-
-  /* Transcript Card */
-  transcriptCard: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 22,
-    marginBottom: 14,
-    overflow: 'hidden',
-    ...CARD_SHADOW,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-  },
-  cardTopBar: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    height: 3,
-    backgroundColor: COLORS.royalBlue,
-    borderTopLeftRadius: 22, borderTopRightRadius: 22,
-  },
-  cardTopGlow: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 50,
-    backgroundColor: `${COLORS.royalBlue}07`,
-    borderTopLeftRadius: 22, borderTopRightRadius: 22,
-  },
-  sectionHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingTop: 14, paddingBottom: 10,
-    gap: 8,
-  },
-  sectionIconWrap: {
-    width: 30, height: 30, borderRadius: 9,
-    backgroundColor: `${COLORS.royalBlue}0C`,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 13, fontWeight: '800',
-    color: COLORS.textDark, letterSpacing: -0.2,
-  },
-  sectionLine: {
-    flex: 1, height: 1,
-    backgroundColor: COLORS.sandMid, opacity: 0.7,
-  },
-  charBadge: {
-    backgroundColor: `${COLORS.teal}14`,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  charBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.teal,
-  },
-  textbox: {
-    flex: 1,
-    backgroundColor: `${COLORS.royalBlue}04`,
-    borderWidth: 1.5,
-    borderColor: COLORS.sandMid,
-    borderRadius: 14,
-    padding: 14,
-    minHeight: 100,
-    color: COLORS.textDark,
-    fontSize: 15,
-    fontWeight: '500',
-    lineHeight: 23,
-    textAlignVertical: "top",
-  },
-  cardWaveform: {
-    position: 'absolute', bottom: 12, right: 14,
-  },
-
-  /* Action Buttons */
-  actionRow: {
-    gap: 10,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  speakButton: {
-    backgroundColor: COLORS.teal,
-    ...BTN_SHADOW,
-  },
-  btnShimmer: {
-    position: 'absolute', top: 0, left: 0, width: '45%', height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.1)', borderBottomRightRadius: 70,
-  },
-  speakButtonText: {
-    color: COLORS.white,
-    fontWeight: "800",
-    marginLeft: 10,
-    fontSize: 15,
-    letterSpacing: -0.1,
-  },
-  clearButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: 'rgba(220,38,38,0.18)',
-    ...CARD_SHADOW,
-  },
-  clearButtonText: {
-    color: "#DC2626",
-    fontWeight: "800",
-    marginLeft: 10,
-    fontSize: 15,
-    letterSpacing: -0.1,
-  },
-  buttonDisabled: {
-    opacity: 0.45,
-  },
-});

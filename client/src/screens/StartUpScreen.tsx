@@ -1,47 +1,45 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
   StyleSheet,
   Animated,
   StatusBar,
-  Image,
-  FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Platform,
   useWindowDimensions,
+  FlatList,
+  Image as RNImage,
 } from 'react-native';
-import { ArrowRight, ChevronRight } from 'lucide-react-native';
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  Card,
+  Theme,
+} from 'tamagui';
+import { ArrowRight, ChevronRight } from '@tamagui/lucide-icons';
 
 // ─── Brand Palette ───────────────────────────────────────────────
-// Warm cream base — navy logo pops cleanly, professional & approachable
 const COLORS = {
-  // Backgrounds
   cream: '#FAF8F4',
   warmWhite: '#F5F1EA',
   sandLight: '#EDE8DF',
   sandMid: '#DDD6C8',
-
-  // Brand blues
   deepNavy: '#0F2847',
   royalBlue: '#1A4480',
   mediumBlue: '#2A5FA8',
-
-  // Warm teal accent
   teal: '#2A8FA0',
   tealLight: '#3DAFC4',
-
-  // Soft orb tints (very pale — background depth only)
   orbBlue: '#C8D8EE',
   orbTeal: '#BEE4EC',
   orbSand: '#E8E0D0',
-
-  // Text
   textDark: '#1C2B3A',
   textMid: '#4A5A6A',
-
   white: '#FFFFFF',
 };
 
@@ -151,20 +149,22 @@ const WaveformDecoration: React.FC<WaveformProps> = ({ color, scrollX, index, wi
   }, []);
 
   return (
-    <Animated.View style={[styles.waveformContainer, { opacity, transform: [{ translateY }] }]}>
-      {barHeights.map((h, i) => {
-        const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
-        return (
-          <Animated.View key={i} style={{
-            width: 3, height: h,
-            backgroundColor: color,
-            borderRadius: 2,
-            marginHorizontal: 2,
-            opacity: 0.4,
-            transform: [{ scaleY }],
-          }} />
-        );
-      })}
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      <XStack ai="center" jc="center" mt="$4" h={48}>
+        {barHeights.map((h, i) => {
+          const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
+          return (
+            <Animated.View key={i} style={{
+              width: 3, height: h,
+              backgroundColor: color,
+              borderRadius: 2,
+              marginHorizontal: 2,
+              opacity: 0.4,
+              transform: [{ scaleY }],
+            }} />
+          );
+        })}
+      </XStack>
     </Animated.View>
   );
 };
@@ -198,14 +198,7 @@ const SoftOrb: React.FC<OrbProps> = ({ color, size, x, y, duration, delay }) => 
       opacity: 0.5,
       transform: [{ translateY }, { scale }],
     }}>
-      <View style={{
-        position: 'absolute',
-        top: size * 0.15, left: size * 0.15,
-        width: size * 0.7, height: size * 0.7,
-        borderRadius: size * 0.35,
-        backgroundColor: COLORS.white,
-        opacity: 0.35,
-      }} />
+      <Circle pos="absolute" t={size * 0.15} l={size * 0.15} size={size * 0.7} bg="white" opacity={0.35} />
     </Animated.View>
   );
 };
@@ -214,7 +207,7 @@ const SoftOrb: React.FC<OrbProps> = ({ color, size, x, y, duration, delay }) => 
 const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { width, height } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<any>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const currentSlide = slides[activeIndex];
@@ -243,167 +236,110 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleSkip = useCallback(() => navigation.navigate('Login'), [navigation]);
 
-  // ─── Render slide ─────────────────────────────────────────────
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
     const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
     const isWelcome = item.id === 'welcome';
-
     const cardOpacity = scrollX.interpolate({ inputRange, outputRange: [0, 1, 0], extrapolate: 'clamp' });
     const cardTranslateY = scrollX.interpolate({ inputRange, outputRange: [70, 0, 70], extrapolate: 'clamp' });
     const cardScale = scrollX.interpolate({ inputRange, outputRange: [0.84, 1, 0.84], extrapolate: 'clamp' });
     const orbs = orbData[index];
 
     return (
-      <View style={{ width, height, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+      <YStack w={width} h={height} jc="center" ai="center" ov="hidden">
+        {/* Background */}
+        <ZStack pos="absolute" fullscreen pointerEvents="none">
+          <YStack fullscreen bg={COLORS.cream} />
+          <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
+          <Circle pos="absolute" b={-height * 0.06} l={-width * 0.2} size={width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
+          {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
 
-        {/* Warm cream base */}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.cream }]} />
-
-        {/* Warm sand bloom — top right */}
-        <View style={{
-          position: 'absolute', top: -height * 0.1, right: -width * 0.15,
-          width: width * 0.95, height: width * 0.95, borderRadius: width * 0.475,
-          backgroundColor: COLORS.sandLight, opacity: 0.55,
-        }} />
-
-        {/* Warm sand swell — bottom left */}
-        <View style={{
-          position: 'absolute', bottom: -height * 0.06, left: -width * 0.2,
-          width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4,
-          backgroundColor: COLORS.sandMid, opacity: 0.22,
-        }} />
-
-        {/* Tinted soft orbs */}
-        {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-
-        {/* Subtle dot grid */}
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          {/* Dot grid */}
           {Array.from({ length: 9 }).map((_, row) =>
             Array.from({ length: 6 }).map((_, col) => (
-              <View key={`${row}-${col}`} style={{
-                position: 'absolute',
-                width: 2, height: 2, borderRadius: 1,
-                backgroundColor: item.accentColor,
-                opacity: 0.055,
-                left: (width / 6) * col + (width / 12),
-                top: (height / 9) * row + (height / 18),
-              }} />
+              <Circle
+                key={`${row}-${col}`}
+                pos="absolute"
+                size={2}
+                bg={item.accentColor}
+                opacity={0.055}
+                l={(width / 6) * col + (width / 12)}
+                t={(height / 9) * row + (height / 18)}
+              />
             ))
           )}
-        </View>
 
-        {/* Corner bracket — top left */}
-        <View style={{
-          position: 'absolute', top: 58, left: 22, width: 34, height: 34,
-          borderTopWidth: 1.5, borderLeftWidth: 1.5,
-          borderColor: `${item.accentColor}28`, borderTopLeftRadius: 6,
-        }} />
+          {/* Brackets */}
+          <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${item.accentColor}28`} br={6} />
+          <YStack pos="absolute" b={118} r={22} w={34} h={34} borderBottomWidth={1.5} borderRightWidth={1.5} bc={`${item.waveColor}28`} br={6} />
+        </ZStack>
 
-        {/* Corner bracket — bottom right */}
-        <View style={{
-          position: 'absolute', bottom: 118, right: 22, width: 34, height: 34,
-          borderBottomWidth: 1.5, borderRightWidth: 1.5,
-          borderColor: `${item.waveColor}28`, borderBottomRightRadius: 6,
-        }} />
+        {/* Card */}
+        <Animated.View style={{
+          opacity: cardOpacity,
+          transform: [{ translateY: cardTranslateY }, { scale: cardScale }],
+          width: width - 40,
+        }}>
+          <Card br={28} bw={1} bc={COLORS.sandMid} py="$6" px="$5" ai="center" ov="hidden" bg="white" elevation={8} shadowColor="#8A96A4">
+            <YStack pos="absolute" t={0} l={0} r={0} h={65} bg={`${item.accentColor}07`} />
+            
+            <YStack ai="center" jc="center" mb="$3">
+               <Circle pos="absolute" size={150} bg={item.orbTint} opacity={0.5} />
+               <RNImage
+                source={item.image}
+                style={{
+                  width: isWelcome ? 200 : Math.min(width * 0.52, 230),
+                  height: isWelcome ? 96 : Math.min(width * 0.38, 170),
+                }}
+                resizeMode="contain"
+               />
+            </YStack>
 
-        {/* ── White card ── */}
-        <Animated.View style={[
-          styles.card,
-          {
-            opacity: cardOpacity,
-            transform: [{ translateY: cardTranslateY }, { scale: cardScale }],
-            width: width - 40,
-            maxWidth: 440,
-          }
-        ]}>
-          {/* Subtle top accent glow */}
-          <View style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 65,
-            backgroundColor: `${item.accentColor}07`,
-            borderTopLeftRadius: 28, borderTopRightRadius: 28,
-          }} />
+            <XStack ai="center" py="$1" px="$3" br={20} bw={1} bc={`${item.accentColor}20`} bg={`${item.accentColor}0C`} mb="$3" gap="$2">
+              <Circle size={5} bg={item.accentColor} />
+              <SizableText size="$1" fow="800" ls={2.2} tt="uppercase" color={item.accentColor}>{item.tag}</SizableText>
+            </XStack>
 
-          {/* Image + soft halo */}
-          <View style={styles.imageWrapper}>
-            <View style={[styles.imageHalo, { backgroundColor: item.orbTint }]} />
-            <Image
-              source={item.image}
-              style={isWelcome
-                ? styles.logoImage
-                : [styles.slideImage, {
-                  width: Math.min(width * 0.52, 230),
-                  height: Math.min(width * 0.38, 170),
-                }]
-              }
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Tag pill */}
-          <View style={[styles.tagPill, {
-            borderColor: `${item.accentColor}20`,
-            backgroundColor: `${item.accentColor}0C`,
-          }]}>
-            <View style={[styles.tagDot, { backgroundColor: item.accentColor }]} />
-            <Text style={[styles.tag, { color: item.accentColor }]}>{item.tag}</Text>
-          </View>
-
-          {/* Title */}
-          {isWelcome ? (
-            <Text style={styles.cardTitle}>
-              {item.title}{'\n'}
-              <Text style={{ color: item.accentColor }}>{item.highlightedTitle}</Text>
-            </Text>
-          ) : (
-            <Text style={styles.cardTitle}>
+            <SizableText size="$9" fow="800" color={COLORS.textDark} ta="center" lh={35} mb="$3" ls={-0.4}>
               {item.title}
-              {item.highlightedTitle
-                ? <Text style={{ color: item.accentColor }}>{'\n'}{item.highlightedTitle}</Text>
-                : null}
-            </Text>
-          )}
+              {item.highlightedTitle && <SizableText color={item.accentColor}>{'\n'}{item.highlightedTitle}</SizableText>}
+            </SizableText>
 
-          {/* Divider with mini waveform */}
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: COLORS.sandMid }]} />
-            {[5, 9, 15, 9, 5].map((h, i) => (
-              <View key={i} style={{
-                width: 3, height: h, borderRadius: 1.5,
-                backgroundColor: item.waveColor, opacity: 0.45,
-                marginHorizontal: 1.5,
-              }} />
-            ))}
-            <View style={[styles.dividerLine, { backgroundColor: COLORS.sandMid }]} />
-          </View>
+            <XStack ai="center" w="85%" mb="$3" gap="$1">
+              <YStack f={1} h={1} bg={COLORS.sandMid} />
+              {[5, 9, 15, 9, 5].map((h, i) => (
+                <YStack key={i} w={3} h={h} br={1.5} bg={item.waveColor} opacity={0.45} marginHorizontal={1.5} />
+              ))}
+              <YStack f={1} h={1} bg={COLORS.sandMid} />
+            </XStack>
 
-          <Text style={styles.cardDescription}>{item.description}</Text>
+            <SizableText size="$4" color={COLORS.textMid} ta="center" lh={22} ls={0.15} maxWidth={290}>
+              {item.description}
+            </SizableText>
 
-          {/* Bottom accent bar */}
-          <View style={[styles.cardBottomBar, { backgroundColor: item.accentColor }]} />
+            <YStack pos="absolute" b={0} l={0} r={0} h={3} bg={item.accentColor} />
+          </Card>
         </Animated.View>
 
-        {/* Waveform below card */}
         <WaveformDecoration color={item.waveColor} scrollX={scrollX} index={index} width={width} />
-
-      </View>
+      </YStack>
     );
   };
 
-  // ─── Pagination ──────────────────────────────────────────────
   const Pagination = () => (
-    <View style={styles.pagination}>
+    <XStack jc="center" ai="center" mb="$4" gap="$2">
       {slides.map((slide, i) => {
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
         const dotWidth = scrollX.interpolate({ inputRange, outputRange: [7, 32, 7], extrapolate: 'clamp' });
         const dotOpacity = scrollX.interpolate({ inputRange, outputRange: [0.25, 1, 0.25], extrapolate: 'clamp' });
         return (
-          <Animated.View key={i} style={[styles.dot, {
+          <Animated.View key={i} style={{
+            height: 7, borderRadius: 3.5,
             width: dotWidth, opacity: dotOpacity,
             backgroundColor: slide.accentColor,
-          }]} />
+          }} />
         );
       })}
-    </View>
+    </XStack>
   );
 
   const buttonBg = scrollX.interpolate({
@@ -412,16 +348,20 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     extrapolate: 'clamp',
   });
 
-  // ─── Render ──────────────────────────────────────────────────
   return (
-    <View style={styles.container}>
+    <YStack f={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
-        <View style={[styles.skipInner, { borderColor: `${currentSlide.accentColor}28` }]}>
-          <Text style={[styles.skipText, { color: currentSlide.accentColor }]}>Skip</Text>
-        </View>
-      </TouchableOpacity>
+      <Button
+        pos="absolute" t={52} r={20} zIndex={20}
+        br={20} bw={1} bc={`${currentSlide.accentColor}28`}
+        bg="rgba(255,255,255,0.75)"
+        onPress={handleSkip}
+        pressStyle={{ scale: 0.95 }}
+        elevation={2}
+      >
+        <SizableText size="$2" fow="600" ls={0.4} color={currentSlide.accentColor}>Skip</SizableText>
+      </Button>
 
       <Animated.FlatList
         ref={flatListRef}
@@ -430,151 +370,30 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         renderItem={renderSlide}
         horizontal pagingEnabled
         showsHorizontalScrollIndicator={false}
-        bounces={false}
         onMomentumScrollEnd={onMomentumScrollEnd}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false },
         )}
         scrollEventThrottle={16}
-        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
       />
 
-      <View style={styles.bottomSection}>
+      <YStack pos="absolute" b={0} l={0} r={0} px="$6" pb="$10" pt="$2">
         <Pagination />
-        <Animated.View style={[styles.primaryButton, { backgroundColor: buttonBg }, BTN_SHADOW]}>
-          <TouchableOpacity style={styles.primaryButtonInner} onPress={handleNext} activeOpacity={0.88}>
-            <View style={styles.buttonShimmer} />
-            <Text style={styles.primaryButtonText}>{isLastSlide ? 'Get Started' : 'Continue'}</Text>
-            {isLastSlide
-              ? <ArrowRight size={20} color={COLORS.white} strokeWidth={2.5} />
-              : <ChevronRight size={20} color={COLORS.white} strokeWidth={2.5} />}
-          </TouchableOpacity>
+        <Animated.View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: buttonBg }}>
+           <Button
+            bg="transparent"
+            h={64}
+            onPress={handleNext}
+            pressStyle={{ scale: 0.98 }}
+            iconAfter={isLastSlide ? <ArrowRight size={20} color="white" /> : <ChevronRight size={20} color="white" />}
+           >
+            <SizableText color="white" fow="700" size="$5">{isLastSlide ? 'Get Started' : 'Continue'}</SizableText>
+           </Button>
         </Animated.View>
-      </View>
-    </View>
+      </YStack>
+    </YStack>
   );
 };
-
-// ─── Styles ──────────────────────────────────────────────────────
-const CARD_SHADOW = Platform.select({
-  ios: {
-    shadowColor: '#8A96A4',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-  },
-  android: { elevation: 8 },
-}) as any;
-
-const BTN_SHADOW = Platform.select({
-  ios: {
-    shadowColor: '#1A4480',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-  },
-  android: { elevation: 10 },
-}) as any;
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.cream },
-
-  skipButton: { position: 'absolute', top: 52, right: 20, zIndex: 20 },
-  skipInner: {
-    paddingVertical: 7, paddingHorizontal: 16,
-    borderRadius: 20, borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
-      android: { elevation: 2 },
-    }),
-  },
-  skipText: { fontSize: 13, fontWeight: '600', letterSpacing: 0.4 },
-
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-    paddingVertical: 26, paddingHorizontal: 22,
-    alignItems: 'center', overflow: 'hidden',
-    ...CARD_SHADOW,
-  },
-  cardBottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    height: 3,
-    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
-  },
-
-  imageWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  imageHalo: {
-    position: 'absolute',
-    width: 150, height: 150, borderRadius: 75,
-    opacity: 0.5,
-  },
-  logoImage: { width: 200, height: 96 },
-  slideImage: {},
-
-  tagPill: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 5, paddingHorizontal: 12,
-    borderRadius: 20, borderWidth: 1,
-    marginBottom: 12, gap: 6,
-  },
-  tagDot: { width: 5, height: 5, borderRadius: 2.5 },
-  tag: { fontSize: 10, fontWeight: '800', letterSpacing: 2.2, textTransform: 'uppercase' },
-
-  cardTitle: {
-    fontSize: 27, fontWeight: '800',
-    color: COLORS.textDark,
-    textAlign: 'center', lineHeight: 35,
-    marginBottom: 12, letterSpacing: -0.4,
-  },
-
-  dividerRow: {
-    flexDirection: 'row', alignItems: 'center',
-    width: '85%', marginBottom: 12, gap: 4,
-  },
-  dividerLine: { flex: 1, height: 1 },
-
-  cardDescription: {
-    fontSize: 14.5, color: COLORS.textMid,
-    textAlign: 'center', lineHeight: 22,
-    letterSpacing: 0.15, maxWidth: 290,
-  },
-
-  waveformContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 18, height: 48,
-  },
-
-  bottomSection: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: 24, paddingBottom: 44, paddingTop: 8,
-  },
-  pagination: {
-    flexDirection: 'row', justifyContent: 'center',
-    alignItems: 'center', marginBottom: 18, gap: 7,
-  },
-  dot: { height: 7, borderRadius: 3.5 },
-
-  primaryButton: { borderRadius: 16, overflow: 'hidden' },
-  primaryButtonInner: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', paddingVertical: 18, gap: 8,
-  },
-  buttonShimmer: {
-    position: 'absolute', top: 0, left: 0,
-    width: '45%', height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderBottomRightRadius: 80,
-  },
-  primaryButtonText: {
-    color: COLORS.white, fontSize: 17,
-    fontWeight: '700', letterSpacing: 0.3,
-  },
-});
 
 export default StartUpScreen;

@@ -1,21 +1,28 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
     StyleSheet,
     Alert,
-    ScrollView,
     Dimensions,
     Animated,
     StatusBar,
-    ActivityIndicator,
-    Image,
-    Linking,
+    Platform,
 } from "react-native";
+import {
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Input,
+    SizableText,
+    H1,
+    Card,
+    Circle,
+    ScrollView,
+    Spinner,
+    Theme,
+} from "tamagui";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react-native";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "@tamagui/lucide-icons";
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +36,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     const { login } = useContext(AuthContext) as AuthContextType;
 
-    React.useEffect(() => {
+    useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -52,13 +59,11 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const formatDeactivationMessage = (errorDetail: string) => {
         const timeMatch = errorDetail.match(/Available in (\d+) days/);
         const reasonMatch = errorDetail.match(/Reason: (.+)$/);
-
         let message = "";
         let title = "Account Deactivated";
 
         if (errorDetail.includes("temporarily deactivated")) {
             title = "Account Temporarily Deactivated";
-
             if (timeMatch) {
                 const days = timeMatch[1];
                 const daysNum = parseInt(days);
@@ -66,22 +71,17 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             } else {
                 message = "Your account is temporarily deactivated. Please try again later.";
             }
-
             if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
                 message += `\n\nReason: ${reasonMatch[1]}`;
             }
-
         } else if (errorDetail.includes("Account deactivated")) {
             title = "Account Permanently Deactivated";
             message = "Your account has been permanently deactivated.";
-
             if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
                 message += `\n\nReason: ${reasonMatch[1]}`;
             }
-
             message += "\n\nPlease contact support for more information.";
         }
-
         return { title, message };
     };
 
@@ -90,38 +90,26 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             Alert.alert("Error", "Please fill in all fields");
             return;
         }
-
         if (!validateEmail(email)) {
             Alert.alert("Error", "Please enter a valid email address");
             return;
         }
-
         if (password.length < 6) {
             Alert.alert("Error", "Password must be at least 6 characters");
             return;
         }
 
         setIsLoading(true);
-
         try {
-            console.log("Attempting login...");
-
             await login({
                 email: email.toLowerCase().trim(),
                 password: password.trim()
             });
-
-            console.log("Login successful!");
-
             setEmail("");
             setPassword("");
-
         } catch (err: any) {
-            console.error("Login error:", err);
-
             let errorMessage = "Invalid credentials";
             let errorTitle = "Login Failed";
-
             if (err.detail) {
                 if (err.detail.includes("deactivated")) {
                     const { title, message } = formatDeactivationMessage(err.detail);
@@ -132,10 +120,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 }
             } else if (err.message) {
                 errorMessage = err.message;
-            } else if (err.error) {
-                errorMessage = err.error;
             }
-
             Alert.alert(errorTitle, errorMessage);
         } finally {
             setIsLoading(false);
@@ -143,383 +128,187 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <YStack f={1} bg="#fafafa">
             <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
 
             {/* Background Orbs */}
-            <View style={styles.backgroundOrbs}>
-                <View style={[styles.orb, styles.orb1]} />
-                <View style={[styles.orb, styles.orb2]} />
-            </View>
+            <ZStack pos="absolute" fullscreen pointerEvents="none">
+                <Circle
+                    pos="absolute"
+                    size={width * 0.7}
+                    br={500}
+                    opacity={0.6}
+                    bg="#dbeafe"
+                    t={-width * 0.3}
+                    r={-width * 0.2}
+                />
+                <Circle
+                    pos="absolute"
+                    size={width * 0.5}
+                    br={500}
+                    opacity={0.6}
+                    bg="#f0f9ff"
+                    b={-width * 0.2}
+                    l={-width * 0.1}
+                />
+            </ZStack>
 
-            <ScrollView
-                contentContainerStyle={styles.scrollContainer}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-            >
-                <Animated.View style={[
-                    styles.content,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }]
-                    }
-                ]}>
+            <ScrollView f={1} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                    <YStack px="$6" py="$10" gap="$8">
+                        
+                        {/* Header */}
+                        <YStack ai="center" gap="$4">
+                            <XStack ai="center" gap="$3">
+                                <YStack
+                                    w={44} h={44} br={22} bg="white"
+                                    jc="center" ai="center"
+                                    elevation={3} shadowColor="#000" shadowOffset={{ width: 0, height: 2 }} shadowOpacity={0.1} shadowRadius={8}
+                                >
+                                    <Shield size={28} color="#2563eb" />
+                                </YStack>
+                                <SizableText size="$8" fow="700" color="#1e293b" ls={-0.5}>
+                                    Articulink
+                                </SizableText>
+                            </XStack>
+                            <YStack ai="center" gap="$1">
+                                <H1 size="$9" fow="700" color="#0f172a" ls={-0.5} ta="center">
+                                    Welcome Back
+                                </H1>
+                                <SizableText size="$4" color="#64748b" ta="center" lh={22} maxWidth={280}>
+                                    Sign in to continue your communication journey
+                                </SizableText>
+                            </YStack>
+                        </YStack>
 
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <View style={styles.logoContainer}>
-                            <View style={styles.logoCircle}>
-                                <Shield size={28} color="#2563eb" />
-                            </View>
-                            <Text style={styles.logoText}>Articulink</Text>
-                        </View>
-                        <Text style={styles.welcomeTitle}>Welcome Back</Text>
-                        <Text style={styles.welcomeSubtitle}>
-                            Sign in to continue your communication journey
-                        </Text>
-                    </View>
+                        {/* Form Card */}
+                        <Card p="$6" br={24} bg="white" elevation={8} shadowColor="#000" shadowOpacity={0.08} shadowRadius={16} border borderColor="#f1f5f9">
+                            <YStack gap="$4">
+                                {/* Email Input */}
+                                <XStack ai="center" bg="#f8fafc" br={16} bw={1} bc="#e2e8f0" ov="hidden">
+                                    <YStack p="$3" pl="$4">
+                                        <Mail size={20} color="#64748b" />
+                                    </YStack>
+                                    <Input
+                                        f={1}
+                                        placeholder="Email address"
+                                        bg="transparent"
+                                        bw={0}
+                                        h={56}
+                                        size="$4"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        autoCapitalize="none"
+                                        keyboardType="email-address"
+                                        placeholderTextColor="#94a3b8"
+                                        disabled={isLoading}
+                                        autoCorrect={false}
+                                        returnKeyType="next"
+                                    />
+                                </XStack>
 
-                    {/* Form */}
-                    <View style={styles.formContainer}>
-                        {/* Email Input */}
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputIcon}>
-                                <Mail size={20} color="#64748b" />
-                            </View>
-                            <TextInput
-                                placeholder="Email address"
-                                style={styles.input}
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                placeholderTextColor="#94a3b8"
-                                editable={!isLoading}
-                                autoCorrect={false}
-                                returnKeyType="next"
-                            />
-                        </View>
+                                {/* Password Input */}
+                                <XStack ai="center" bg="#f8fafc" br={16} bw={1} bc="#e2e8f0" ov="hidden">
+                                    <YStack p="$3" pl="$4">
+                                        <Lock size={20} color="#64748b" />
+                                    </YStack>
+                                    <Input
+                                        f={1}
+                                        placeholder="Password"
+                                        secureTextEntry={!showPassword}
+                                        bg="transparent"
+                                        bw={0}
+                                        h={56}
+                                        size="$4"
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        placeholderTextColor="#94a3b8"
+                                        disabled={isLoading}
+                                        autoCorrect={false}
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleLogin}
+                                    />
+                                    <Button
+                                        bg="transparent"
+                                        p="$3"
+                                        pr="$4"
+                                        chromeless
+                                        onPress={() => setShowPassword(!showPassword)}
+                                        disabled={isLoading}
+                                        icon={showPassword ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+                                    />
+                                </XStack>
 
-                        {/* Password Input */}
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputIcon}>
-                                <Lock size={20} color="#64748b" />
-                            </View>
-                            <TextInput
-                                placeholder="Password"
-                                style={styles.input}
-                                secureTextEntry={!showPassword}
-                                value={password}
-                                onChangeText={setPassword}
-                                placeholderTextColor="#94a3b8"
-                                editable={!isLoading}
-                                autoCorrect={false}
-                                returnKeyType="done"
-                                onSubmitEditing={handleLogin}
-                            />
-                            <TouchableOpacity
-                                style={styles.eyeIcon}
-                                onPress={() => setShowPassword(!showPassword)}
-                                disabled={isLoading}
+                                {/* Login Button */}
+                                <Button
+                                    size="$5"
+                                    bg="#2563eb"
+                                    br={16}
+                                    mt="$2"
+                                    mb="$4"
+                                    onPress={handleLogin}
+                                    disabled={isLoading}
+                                    pressStyle={{ scale: 0.98 }}
+                                    elevation={8}
+                                    shadowColor="#2563eb"
+                                    iconAfter={isLoading ? <Spinner color="white" /> : <ArrowRight size={20} color="white" />}
+                                >
+                                    <SizableText fow="600" size="$4" color="white" ls={0.5}>
+                                        {isLoading ? "" : "Sign In"}
+                                    </SizableText>
+                                </Button>
+
+                                <XStack ai="center" gap="$3" mb="$4">
+                                    <YStack f={1} h={1} bg="#e2e8f0" />
+                                    <SizableText size="$2" color="#94a3b8" fow="500" ls={0.5}>
+                                        or
+                                    </SizableText>
+                                    <YStack f={1} h={1} bg="#e2e8f0" />
+                                </XStack>
+
+                                {/* Register Link */}
+                                <XStack jc="center" onPress={() => navigation.navigate("Register")}>
+                                    <SizableText color="#64748b" size="$4">
+                                        Don't have an account?{" "}
+                                        <SizableText color="#2563eb" fow="600" ls={0.3}>
+                                            Create one
+                                        </SizableText>
+                                    </SizableText>
+                                </XStack>
+                            </YStack>
+                        </Card>
+
+                        {/* Security Info */}
+                        <XStack ai="center" jc="center" bg="#f8fafc" br={16} bw={1} bc="#e2e8f0" p="$4" gap="$2">
+                            <Shield size={16} color="#64748b" opacity={0.7} />
+                            <SizableText size="$2" color="#64748b" fow="500" ls={0.3}>
+                                Your data is securely encrypted and protected
+                            </SizableText>
+                        </XStack>
+
+                        {/* Footer Links */}
+                        <XStack jc="center" ai="center" gap="$2" mt="$4">
+                            <Button
+                                chromeless
+                                onPress={() => navigation.navigate('SecurityPrivacy')}
+                                padding={0}
                             >
-                                {showPassword ?
-                                    <EyeOff size={20} color="#64748b" /> :
-                                    <Eye size={20} color="#64748b" />
-                                }
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Login Button */}
-                        <TouchableOpacity
-                            style={[
-                                styles.loginButton,
-                                isLoading && styles.loginButtonDisabled
-                            ]}
-                            onPress={handleLogin}
-                            disabled={isLoading}
-                            activeOpacity={0.9}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <>
-                                    <Text style={styles.loginButtonText}>Sign In</Text>
-                                    <View style={styles.buttonIcon}>
-                                        <ArrowRight size={20} color="white" />
-                                    </View>
-                                </>
-                            )}
-                        </TouchableOpacity>
-
-                        {/* Divider */}
-                        <View style={styles.divider}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>or</Text>
-                            <View style={styles.dividerLine} />
-                        </View>
-
-                        {/* Register Link */}
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("Register")}
-                            style={styles.registerContainer}
-                            disabled={isLoading}
-                        >
-                            <Text style={styles.registerText}>
-                                Don't have an account?{" "}
-                                <Text style={styles.registerLink}>Create one</Text>
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Security Info */}
-                    <View style={styles.securityInfo}>
-                        <View style={styles.securityIcon}>
-                            <Shield size={16} color="#64748b" />
-                        </View>
-                        <Text style={styles.securityText}>
-                            Your data is securely encrypted and protected
-                        </Text>
-                    </View>
-
-                    {/* Footer Links */}
-                    <View style={styles.footerLinks}>
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('SecurityPrivacy')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={styles.footerLinkText}>Privacy & Security</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.footerDot}>·</Text>
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('About')}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={styles.footerLinkText}>About</Text>
-                        </TouchableOpacity>
-                    </View>
+                                <SizableText size="$2" color="#94a3b8" fow="500">Privacy & Security</SizableText>
+                            </Button>
+                            <SizableText size="$2" color="#cbd5e1" fow="700">·</SizableText>
+                            <Button
+                                chromeless
+                                onPress={() => navigation.navigate('About')}
+                                padding={0}
+                            >
+                                <SizableText size="$2" color="#94a3b8" fow="500">About</SizableText>
+                            </Button>
+                        </XStack>
+                    </YStack>
                 </Animated.View>
             </ScrollView>
-        </View>
+        </YStack>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fafafa',
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        justifyContent: 'center',
-    },
-    backgroundOrbs: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-    },
-    orb: {
-        position: 'absolute',
-        borderRadius: 500,
-        opacity: 0.6,
-    },
-    orb1: {
-        width: width * 0.7,
-        height: width * 0.7,
-        top: -width * 0.3,
-        right: -width * 0.2,
-        backgroundColor: '#dbeafe',
-    },
-    orb2: {
-        width: width * 0.5,
-        height: width * 0.5,
-        bottom: -width * 0.2,
-        left: -width * 0.1,
-        backgroundColor: '#f0f9ff',
-    },
-    content: {
-        paddingHorizontal: 24,
-        paddingVertical: 40,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
-    logoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    logoCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'white',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    logoText: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1e293b',
-        letterSpacing: -0.5,
-    },
-    welcomeTitle: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#0f172a',
-        marginBottom: 8,
-        textAlign: 'center',
-        letterSpacing: -0.5,
-    },
-    welcomeSubtitle: {
-        fontSize: 16,
-        color: '#64748b',
-        textAlign: 'center',
-        lineHeight: 22,
-        maxWidth: 280,
-    },
-    formContainer: {
-        backgroundColor: 'white',
-        borderRadius: 24,
-        padding: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        elevation: 8,
-        borderWidth: 1,
-        borderColor: '#f1f5f9',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc',
-        borderRadius: 16,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        overflow: 'hidden',
-    },
-    inputIcon: {
-        padding: 16,
-        paddingRight: 12,
-    },
-    input: {
-        flex: 1,
-        height: 56,
-        fontSize: 16,
-        color: '#0f172a',
-        paddingRight: 16,
-    },
-    eyeIcon: {
-        padding: 16,
-        paddingLeft: 12,
-    },
-    loginButton: {
-        backgroundColor: '#2563eb',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 16,
-        marginTop: 8,
-        marginBottom: 24,
-        shadowColor: '#2563eb',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    loginButtonDisabled: {
-        backgroundColor: '#94a3b8',
-        shadowOpacity: 0,
-        elevation: 0,
-    },
-    loginButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '600',
-        marginRight: 8,
-        letterSpacing: 0.5,
-    },
-    buttonIcon: {
-        opacity: 0.9,
-    },
-    divider: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#e2e8f0',
-    },
-    dividerText: {
-        color: '#94a3b8',
-        fontSize: 14,
-        fontWeight: '500',
-        marginHorizontal: 16,
-        letterSpacing: 0.5,
-    },
-    registerContainer: {
-        alignItems: 'center',
-    },
-    registerText: {
-        color: '#64748b',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    registerLink: {
-        color: '#2563eb',
-        fontWeight: '600',
-        letterSpacing: 0.3,
-    },
-    securityInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 32,
-        padding: 16,
-        backgroundColor: '#f8fafc',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    securityIcon: {
-        marginRight: 8,
-        opacity: 0.7,
-    },
-    securityText: {
-        color: '#64748b',
-        fontSize: 14,
-        fontWeight: '500',
-        letterSpacing: 0.3,
-    },
-    footerLinks: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 20,
-        gap: 8,
-    },
-    footerLinkText: {
-        color: '#94a3b8',
-        fontSize: 13,
-        fontWeight: '500',
-    },
-    footerDot: {
-        color: '#cbd5e1',
-        fontSize: 16,
-        fontWeight: '700',
-    },
-});
 
 export default LoginScreen;

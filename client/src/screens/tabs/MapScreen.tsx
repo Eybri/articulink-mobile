@@ -1,9 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Linking, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Linking, Platform, StatusBar } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
-import { styles } from "../../styles/SpeechMaps";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  Card,
+  Image,
+  ScrollView,
+  Spinner,
+  Theme,
+  AnimatePresence,
+} from "tamagui";
+import {
+  Map as MapIcon,
+  Navigation,
+  Phone,
+  LocateFixed,
+  RefreshCw,
+  Search,
+  ChevronRight,
+  Car,
+  Footprints,
+  Bike,
+  Clock,
+  MapPin,
+  AlertCircle,
+  Activity,
+  Trash2,
+} from "@tamagui/lucide-icons";
+
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+  cream: '#FAF8F4',
+  warmWhite: '#F5F1EA',
+  sandLight: '#EDE8DF',
+  sandMid: '#DDD6C8',
+  deepNavy: '#0F2847',
+  royalBlue: '#1A4480',
+  mediumBlue: '#2A5FA8',
+  teal: '#2A8FA0',
+  tealLight: '#3DAFC4',
+  orbBlue: '#C8D8EE',
+  orbTeal: '#BEE4EC',
+  orbSand: '#E8E0D0',
+  textDark: '#1C2B3A',
+  textMid: '#4A5A6A',
+  white: '#FFFFFF',
+};
 
 interface Center {
   id: string;
@@ -55,13 +105,13 @@ const SpeechTherapyMaps: React.FC = () => {
       voice: ['Voice Disorders', 'Resonance Therapy', 'Nasal Speech Treatment', 'Articulation'],
       school: ['Special Education', 'Speech Therapy', 'Language Development', 'Communication Skills'],
       pwd: ['Disability Support', 'Speech Services', 'Communication Therapy', 'Rehabilitation']
-    };
+    } as any;
     const typeMap = {
       speech: 'speech-therapy',
       voice: 'voice-clinic',
       school: 'sped-school',
       pwd: 'pwd-center'
-    };
+    } as any;
 
     for (const term of terms) {
       try {
@@ -211,7 +261,6 @@ const SpeechTherapyMaps: React.FC = () => {
             duration: `${Math.ceil(r.duration / 60)} mins`,
             geometry: r.geometry
           });
-          // This would be called via window.ReactNativeWebView.postMessage in a real WebView
         }
       }
     } catch (e) {
@@ -255,7 +304,7 @@ const SpeechTherapyMaps: React.FC = () => {
 
     const safe = JSON.stringify(centers || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/'/g, '\\u0027').replace(/"/g, '\\u0022').replace(/&/g, '\\u0026').replace(/\//g, '\\/');
 
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>#map{height:100vh;width:100%;position:absolute;top:0;left:0}body{margin:0;padding:0;font-family:Arial;height:100vh}.user-marker,.facility-icon{font-size:24px}.facility-icon{font-size:20px}.route-popup{padding:10px;max-width:250px}</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script></head><body><div id="map"></div><script>let map,routeLayer=null;try{map=L.map('map').setView([${location.latitude},${location.longitude}],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);L.circle([${location.latitude},${location.longitude}],{color:'#2E8B57',fillColor:'#2E8B57',fillOpacity:0.1,radius:${SEARCH_RADIUS}}).addTo(map);L.marker([${location.latitude},${location.longitude}],{icon:L.divIcon({className:'user-marker',html:'📍',iconSize:[30,30],iconAnchor:[15,30]})}).addTo(map).bindPopup('<b>Your Location</b><br>You are here<br><small>Search radius: ${SEARCH_RADIUS / 1000}km</small>').openPopup();let centers=JSON.parse('${safe}');centers.forEach(c=>{try{const m=L.marker([c.latitude,c.longitude],{icon:L.divIcon({className:'facility-icon',html:c.icon||'🗣️',iconSize:[25,25],iconAnchor:[12,25]})}).addTo(map);const typeLabel=c.type==='speech-therapy'?'Speech Therapy Center':c.type==='voice-clinic'?'Voice & Speech Clinic':c.type==='sped-school'?'SPED School':c.type==='pwd-center'?'PWD Center':'Speech Therapy Center';m.bindPopup('<div class="route-popup"><strong>'+(c.name||'Speech Therapy Center')+'</strong><br/><em style="color:#2E8B57;">'+typeLabel+'</em><br/><small>'+(c.fullAddress||'Address not available')+'</small><br/><small style="color:#666;">'+c.distance.toFixed(1)+' km away</small><br/><button onclick="window.selectCenter('+c.latitude+','+c.longitude+')" style="background:#2E8B57;color:white;border:none;padding:5px 10px;border-radius:3px;margin-top:5px;cursor:pointer;width:100%">Show Route</button></div>')}catch(e){console.error('Marker error:',e)}});window.showRoute=(g,c)=>{try{if(routeLayer)map.removeLayer(routeLayer);if(g?.coordinates){const ll=g.coordinates.map(co=>[co[1],co[0]]);routeLayer=L.polyline(ll,{color:'#2E8B57',weight:5,opacity:0.7,dashArray:'10, 10'}).addTo(map);map.fitBounds(routeLayer.getBounds())}}catch(e){console.error('Route error:',e)}};window.selectCenter=(lat,lng)=>{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'CENTER_SELECT',center:{latitude:lat,longitude:lng}}))};window.addEventListener('message',e=>{try{const d=JSON.parse(e.data);if(d.type==='SHOW_ROUTE')window.showRoute(d.route,d.center)}catch(er){console.error('Message error:',er)}});if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_LOADED',centerCount:centers.length}))}catch(e){console.error('Map error:',e);if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_ERROR',error:e.toString()}))}</script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>#map{height:100vh;width:100%;position:absolute;top:0;left:0}body{margin:0;padding:0;font-family:Arial;height:100vh}.user-marker,.facility-icon{font-size:24px}.facility-icon{font-size:20px}.route-popup{padding:10px;max-width:250px}</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script></head><body><div id="map"></div><script>let map,routeLayer=null;try{map=L.map('map').setView([${location.latitude},${location.longitude}],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);L.circle([${location.latitude},${location.longitude}],{color:'#1A4480',fillColor:'#1A4480',fillOpacity:0.1,radius:${SEARCH_RADIUS}}).addTo(map);L.marker([${location.latitude},${location.longitude}],{icon:L.divIcon({className:'user-marker',html:'📍',iconSize:[30,30],iconAnchor:[15,30]})}).addTo(map).bindPopup('<b>Your Location</b><br>You are here<br><small>Search radius: ${SEARCH_RADIUS / 1000}km</small>').openPopup();let centers=JSON.parse('${safe}');centers.forEach(c=>{try{const m=L.marker([c.latitude,c.longitude],{icon:L.divIcon({className:'facility-icon',html:c.icon||'🗣️',iconSize:[25,25],iconAnchor:[12,25]})}).addTo(map);const typeLabel=c.type==='speech-therapy'?'Speech Therapy Center':c.type==='voice-clinic'?'Voice & Speech Clinic':c.type==='sped-school'?'SPED School':c.type==='pwd-center'?'PWD Center':'Speech Therapy Center';m.bindPopup('<div class="route-popup"><strong>'+(c.name||'Speech Therapy Center')+'</strong><br/><em style="color:#1A4480;">'+typeLabel+'</em><br/><small>'+(c.fullAddress||'Address not available')+'</small><br/><small style="color:#666;">'+c.distance.toFixed(1)+' km away</small><br/><button onclick="window.selectCenter('+c.latitude+','+c.longitude+')" style="background:#1A4480;color:white;border:none;padding:5px 10px;border-radius:3px;margin-top:5px;cursor:pointer;width:100%">Show Route</button></div>')}catch(e){console.error('Marker error:',e)}});window.showRoute=(g,c)=>{try{if(routeLayer)map.removeLayer(routeLayer);if(g?.coordinates){const ll=g.coordinates.map(co=>[co[1],co[0]]);routeLayer=L.polyline(ll,{color:'#1A4480',weight:5,opacity:0.7,dashArray:'10, 10'}).addTo(map);map.fitBounds(routeLayer.getBounds())}}catch(e){console.error('Route error:',e)}};window.selectCenter=(lat,lng)=>{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'CENTER_SELECT',center:{latitude:lat,longitude:lng}}))};window.addEventListener('message',e=>{try{const d=JSON.parse(e.data);if(d.type==='SHOW_ROUTE')window.showRoute(d.route,d.center)}catch(er){console.error('Message error:',er)}});if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_LOADED',centerCount:centers.length}))}catch(e){console.error('Map error:',e);if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_ERROR',error:e.toString()}))}</script></body></html>`;
   };
 
   const handleWebViewMessage = (e: any) => {
@@ -285,153 +334,197 @@ const SpeechTherapyMaps: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2E8B57" />
-          <Text style={styles.loadingText}>Finding nearby speech therapy centers within 10km...</Text>
-          <Text style={styles.loadingSubtext}>Searching your immediate area</Text>
-        </View>
-      </View>
+      <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$6">
+        <Spinner size="large" color={COLORS.royalBlue} mb="$4" />
+        <SizableText size="$5" fow="700" color={COLORS.textDark} ta="center">Finding nearby speech centers...</SizableText>
+        <SizableText size="$2" color={COLORS.textMid} ta="center" mt="$2">Searching your immediate area within 10km</SizableText>
+      </YStack>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Location Access Needed</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.alternativeButton} onPress={openGoogleMaps}>
-            <Text style={styles.alternativeButtonText}>Open in Google Maps</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <YStack flex={1} jc="center" ai="center" bg={COLORS.cream} p="$6" gap="$4">
+        <Circle size={80} bg="rgba(239,68,68,0.1)" jc="center" ai="center">
+          <AlertCircle size={40} color="#EF4444" />
+        </Circle>
+        <YStack ai="center">
+          <SizableText size="$6" fontWeight="800" color={COLORS.textDark} ta="center">Location Choice Needed</SizableText>
+          <SizableText size="$3" color={COLORS.textMid} ta="center" mt="$2">{error}</SizableText>
+        </YStack>
+        <YStack w="100%" gap="$3">
+          <Button bg={COLORS.royalBlue} col="white" fontWeight="700" br={16} h={54} onPress={handleRetry}>Try Again</Button>
+          <Button bw={1} bc={COLORS.sandMid} bg="transparent" col={COLORS.textDark} fontWeight="700" br={16} h={54} onPress={openGoogleMaps}>Open in Google Maps</Button>
+        </YStack>
+      </YStack>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.mapContainer}>
+    <YStack flex={1} bg={COLORS.cream}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
+      {/* Map Header */}
+      <YStack pt={Platform.OS === 'android' ? 50 : 60} px="$4" pb="$3" bg="white" borderBottomWidth={1} bc={COLORS.sandMid}>
+        <XStack ai="center" jc="space-between" mb="$2">
+          <YStack>
+            <H1 size="$8" fow="900" color={COLORS.textDark} ls={-0.8}>Articulink Maps</H1>
+            <SizableText size="$1" color={COLORS.textMid} fow="600">Speech & Voice Clinics Nearby</SizableText>
+          </YStack>
+          <Button size="$3" circular bg={COLORS.white} bw={1} bc={COLORS.sandMid} icon={<RefreshCw size={16} color={COLORS.royalBlue} />} onPress={handleRetry} />
+        </XStack>
+      </YStack>
+
+      <ZStack f={1}>
         <WebView
           key={webViewKey}
           source={{ html: generateMapHTML() }}
-          style={styles.map}
+          style={{ flex: 1 }}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           startInLoadingState={true}
           onMessage={handleWebViewMessage}
           onLoadEnd={() => setMapLoading(false)}
         />
+        
         {mapLoading && (
-          <View style={styles.mapOverlay}>
-            <ActivityIndicator size="large" color="#2E8B57" />
-            <Text style={styles.loadingText}>Loading nearby places...</Text>
-          </View>
+          <YStack fullscreen jc="center" ai="center" bg="rgba(255,255,255,0.7)">
+            <Spinner size="large" color={COLORS.royalBlue} />
+            <SizableText mt="$2" color={COLORS.royalBlue} fow="700">Loading map data...</SizableText>
+          </YStack>
         )}
-        <TouchableOpacity
-          style={styles.myLocationButton}
-          onPress={() => {
-            if (location) {
-              setWebViewKey(p => p + 1);
-            }
-          }}
-        >
-          <Ionicons name="locate" size={24} color="#2E8B57" />
-        </TouchableOpacity>
-      </View>
 
-      {selectedCenter && (
-        <View style={styles.routePanel}>
-          <View style={styles.routeHeader}>
-            <Text style={styles.routePanelIcon}>{selectedCenter.icon || '🏫'}</Text>
-            <View style={styles.routeTitleContainer}>
-              <Text style={styles.routeTitle}>{selectedCenter.name}</Text>
-              <Text style={styles.routeDistance}>{selectedCenter.distance.toFixed(1)} km away</Text>
-            </View>
-          </View>
-          {routeInfo ? (
-            <View style={styles.routeInfo}>
-              <View style={styles.routeDetail}>
-                <Ionicons name="navigate" size={16} color="#666" />
-                <Text style={styles.routeLabel}>Distance:</Text>
-                <Text style={styles.routeValue}>{routeInfo.distance}</Text>
-              </View>
-              <View style={styles.routeDetail}>
-                <Ionicons name="time" size={16} color="#666" />
-                <Text style={styles.routeLabel}>Time:</Text>
-                <Text style={styles.routeValue}>{routeInfo.duration}</Text>
-              </View>
-              <View style={styles.travelModes}>
-                <Text style={styles.modeLabel}>Travel Mode:</Text>
-                <View style={styles.modeButtons}>
-                  {['driving', 'walking', 'bicycling'].map(m => (
-                    <TouchableOpacity key={m} style={[styles.modeButton, travelMode === m && styles.modeButtonActive]} onPress={() => changeTravelMode(m as 'driving' | 'walking' | 'bicycling')}>
-                      <Ionicons name={m === 'driving' ? 'car' : m === 'walking' ? 'walk' : 'bicycle'} size={16} color={travelMode === m ? '#fff' : '#666'} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.loadingRoute}>
-              <ActivityIndicator size="small" color="#2E8B57" />
-              <Text style={styles.loadingRouteText}>Calculating route...</Text>
-            </View>
-          )}
-          <View style={styles.routeActions}>
-            <TouchableOpacity style={styles.directionsButton} onPress={() => openDirections(selectedCenter)}>
-              <Ionicons name="navigate" size={20} color="#fff" />
-              <Text style={styles.directionsButtonText}>Directions</Text>
-            </TouchableOpacity>
-            {selectedCenter.phone && (
-              <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL(`tel:${selectedCenter.phone}`)}>
-                <Ionicons name="call" size={20} color="#fff" />
-                <Text style={styles.callButtonText}>Call</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      )}
+        <Button
+          pos="absolute"
+          t={20}
+          r={20}
+          size="$4"
+          circular
+          bg="white"
+          elevation={5}
+          shadowColor="#000"
+          icon={<LocateFixed size={20} color={COLORS.royalBlue} />}
+          onPress={() => setWebViewKey(p => p + 1)}
+        />
+      </ZStack>
 
-      <View style={[styles.infoPanel, selectedCenter && styles.infoPanelWithRoute]}>
-        <View style={styles.infoHeader}>
-          <Ionicons name="mic" size={20} color="#2E8B57" />
-          <Text style={styles.infoTitle}>Nearby Centers (10km)</Text>
-          <View style={styles.counterBadge}>
-            <Text style={styles.counterText}>{centers.length}</Text>
-          </View>
-        </View>
-        <Text style={styles.infoText}>
-          {centers.length > 0 ? `Found ${centers.length} place${centers.length !== 1 ? 's' : ''} within 10km` : 'No speech therapy centers found within 10km. Try expanding your search.'}
-        </Text>
-        {centers.length > 0 && (
-          <ScrollView style={styles.centersList} horizontal showsHorizontalScrollIndicator={false}>
+      {/* Selected Center Overly */}
+      <AnimatePresence>
+        {selectedCenter && (
+          <YStack pos="absolute" b={120} l={20} r={20} zi={100}>
+            <Card bg="white" br={24} p="$4" elevation={10} shadowColor="#000" bw={1} bc={COLORS.sandMid}>
+              <XStack gap="$3" ai="center" mb="$3">
+                <Circle size={44} bg={`${COLORS.royalBlue}0C`} bw={1} bc={`${COLORS.royalBlue}15`} jc="center" ai="center">
+                  <SizableText size="$5">{selectedCenter.icon}</SizableText>
+                </Circle>
+                <YStack f={1}>
+                  <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3}>{selectedCenter.name}</SizableText>
+                  <SizableText size="$1" color={COLORS.textMid} fow="700" textTransform="uppercase">{selectedCenter.distance.toFixed(1)} km away</SizableText>
+                </YStack>
+                <Button size="$3" circular icon={<Trash2 size={16} color={COLORS.textMid} />} unstyled onPress={() => setSelectedCenter(null)} />
+              </XStack>
+
+              {routeInfo ? (
+                <YStack gap="$3" mb="$4" bg={COLORS.warmWhite} p="$3" br={16}>
+                  <XStack jc="space-around">
+                    <XStack ai="center" gap="$1.5">
+                      <Navigation size={14} color={COLORS.textMid} />
+                      <SizableText size="$2" fow="700" color={COLORS.textDark}>{routeInfo.distance}</SizableText>
+                    </XStack>
+                    <XStack ai="center" gap="$1.5">
+                      <Clock size={14} color={COLORS.textMid} />
+                      <SizableText size="$2" fow="700" color={COLORS.textDark}>{routeInfo.duration}</SizableText>
+                    </XStack>
+                  </XStack>
+                  
+                  <XStack jc="center" gap="$2">
+                    {[
+                      { mode: 'driving', icon: <Car size={16} /> },
+                      { mode: 'walking', icon: <Footprints size={16} /> },
+                      { mode: 'bicycling', icon: <Bike size={16} /> }
+                    ].map(m => (
+                      <Button
+                        key={m.mode}
+                        size="$3"
+                        circular
+                        bg={travelMode === m.mode ? COLORS.royalBlue : "white"}
+                        col={travelMode === m.mode ? "white" : COLORS.textMid}
+                        bw={1}
+                        bc={COLORS.sandMid}
+                        icon={m.icon}
+                        onPress={() => changeTravelMode(m.mode as any)}
+                        elevation={travelMode === m.mode ? 2 : 0}
+                      />
+                    ))}
+                  </XStack>
+                </YStack>
+              ) : (
+                <XStack jc="center" ai="center" py="$4" gap="$2">
+                  <Spinner color={COLORS.royalBlue} />
+                  <SizableText size="$2" fow="600" color={COLORS.textMid}>Calculating route...</SizableText>
+                </XStack>
+              )}
+
+              <XStack gap="$3">
+                <Button f={1} bg={COLORS.royalBlue} col="white" br={14} icon={<Navigation size={18} color="white" />} onPress={() => openDirections(selectedCenter)}>Directions</Button>
+                {selectedCenter.phone && (
+                  <Button circular bg={COLORS.teal} icon={<Phone size={18} color="white" />} onPress={() => Linking.openURL(`tel:${selectedCenter.phone}`)} />
+                )}
+              </XStack>
+            </Card>
+          </YStack>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Info Bar */}
+      <YStack bg="white" borderTopLeftRadius={30} borderTopRightRadius={30} p="$4" pb={Platform.OS === 'android' ? 20 : 35} elevation={8} shadowColor="#000" bw={1} bc={COLORS.sandMid}>
+        <XStack ai="center" jc="space-between" mb="$3">
+          <XStack ai="center" gap="$2">
+            <MapPin size={18} color={COLORS.royalBlue} />
+            <SizableText size="$4" fow="800" color={COLORS.textDark}>Nearby Centers</SizableText>
+          </XStack>
+          <YStack bg={`${COLORS.royalBlue}14`} px="$3" py={4} br={20}>
+            <SizableText size="$1" fow="800" color={COLORS.royalBlue}>{centers.length} Found</SizableText>
+          </YStack>
+        </XStack>
+
+        {centers.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
             {centers.map(c => (
-              <TouchableOpacity key={c.id} style={[styles.centerChip, selectedCenter?.id === c.id && styles.centerChipSelected]} onPress={() => handleCenterSelect(c)}>
-                <View style={styles.chipHeader}>
-                  <Text style={styles.chipIcon}>{c.icon || '🏫'}</Text>
-                  <Text style={styles.centerChipText} numberOfLines={1}>{c.name}</Text>
-                </View>
-                <Text style={styles.centerChipDistance}>{c.distance ? `${c.distance.toFixed(1)} km away` : 'Nearby'}</Text>
-                {c.services?.length > 0 && <Text style={styles.centerChipServices} numberOfLines={1}>{c.services.slice(0, 2).join(' • ')}</Text>}
-              </TouchableOpacity>
+              <Card
+                key={c.id}
+                w={180}
+                p="$3"
+                br={20}
+                bw={2}
+                bc={selectedCenter?.id === c.id ? COLORS.royalBlue : COLORS.sandMid}
+                bg={selectedCenter?.id === c.id ? `${COLORS.royalBlue}05` : "white"}
+                onPress={() => handleCenterSelect(c)}
+                pressStyle={{ scale: 0.95 }}
+              >
+                <XStack ai="center" gap="$2" mb="$2">
+                  <SizableText size="$5">{c.icon || '🏫'}</SizableText>
+                  <SizableText f={1} size="$2" fow="800" color={COLORS.textDark} numberOfLines={1}>{c.name}</SizableText>
+                </XStack>
+                <SizableText size="$1" color={COLORS.textMid} fow="600" mb="$1">{c.distance.toFixed(1)} km away</SizableText>
+                {c.services?.length > 0 && (
+                  <SizableText size="$1" color={COLORS.teal} fow="700" numberOfLines={1}>
+                    {c.services.slice(0, 1).join(' • ')}
+                  </SizableText>
+                )}
+              </Card>
             ))}
           </ScrollView>
+        ) : (
+          <SizableText size="$2" color={COLORS.textMid} ta="center" py="$4">No centers found within 10km.</SizableText>
         )}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.googleMapsButton} onPress={openGoogleMaps}>
-            <Ionicons name="map" size={20} color="#fff" />
-            <Text style={styles.googleMapsButtonText}>Find More</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.refreshButton} onPress={handleRetry}>
-            <Ionicons name="refresh" size={20} color="#2E8B57" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+
+        <XStack mt="$4" gap="$3">
+          <Button f={1} bg={COLORS.mediumBlue} col="white" br={16} icon={<Search size={16} color="white" />} onPress={openGoogleMaps}>Find More on Google</Button>
+          <Button circular bg="white" bw={1} bc={COLORS.sandMid} icon={<RefreshCw size={18} color={COLORS.textMid} />} onPress={handleRetry} />
+        </XStack>
+      </YStack>
+    </YStack>
   );
 };
 

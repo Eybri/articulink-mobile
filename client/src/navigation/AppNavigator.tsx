@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { View, ActivityIndicator } from "react-native";
+import { YStack, Spinner } from "tamagui";
 import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
@@ -11,9 +11,9 @@ const AppNavigator = () => {
     // Show loading screen while checking authentication
     if (loading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#1e90ff" />
-            </View>
+            <YStack f={1} jc="center" ai="center" bg="#FAF8F4">
+                <Spinner size="large" color="#1A4480" />
+            </YStack>
         );
     }
 

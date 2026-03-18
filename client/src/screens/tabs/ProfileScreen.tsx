@@ -1,42 +1,46 @@
 import React, { useState, useContext, useCallback, useRef, useEffect, useMemo } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   Alert,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  RefreshControl,
   Platform,
   StatusBar,
   Animated,
   useWindowDimensions,
-  UIManager,
-  LayoutAnimation
+  LayoutAnimation,
+  RefreshControl,
+  Image as RNImage,
 } from "react-native";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  Card,
+  ScrollView,
+  Spinner,
+  Theme,
+  AnimatePresence,
+} from "tamagui";
 import {
   User,
   Mail,
   Cake,
   Shield,
-  Edit,
+  Edit3,
   LogOut,
   ChevronDown,
   ChevronRight,
   CheckCircle,
   AlertTriangle,
-
-} from "lucide-react-native";
+} from "@tamagui/lucide-icons";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { useFocusEffect } from '@react-navigation/native';
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-// ─── Brand Palette (matches StartUpScreen) ────────────────────────
+// ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
   cream: '#FAF8F4',
   warmWhite: '#F5F1EA',
@@ -55,7 +59,7 @@ const COLORS = {
   white: '#FFFFFF',
 };
 
-// ─── Soft Orb (from StartUpScreen) ────────────────────────────────
+// ─── Soft Orb ─────────────────────────────────────────────────────
 interface SoftOrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
 
 const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay }) => {
@@ -84,14 +88,7 @@ const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay })
       opacity: 0.5,
       transform: [{ translateY }, { scale }],
     }}>
-      <View style={{
-        position: 'absolute',
-        top: size * 0.15, left: size * 0.15,
-        width: size * 0.7, height: size * 0.7,
-        borderRadius: size * 0.35,
-        backgroundColor: COLORS.white,
-        opacity: 0.35,
-      }} />
+      <Circle pos="absolute" t={size * 0.15} l={size * 0.15} size={size * 0.7} bg="white" opacity={0.35} />
     </Animated.View>
   );
 };
@@ -116,7 +113,7 @@ const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
   }, []);
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+    <XStack ai="flex-end" gap="$1">
       {barHeights.map((h, i) => {
         const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
         return (
@@ -125,12 +122,12 @@ const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
             borderRadius: 1.5,
             backgroundColor: color,
             opacity: 0.18,
-            marginHorizontal: 2,
+            marginHorizontal: 1,
             transform: [{ scaleY }],
           }} />
         );
       })}
-    </View>
+    </XStack>
   );
 };
 
@@ -157,53 +154,70 @@ const Accordion: React.FC<AccordionProps> = ({ icon, title, tagText, children, d
   const rotation = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] });
 
   return (
-    <View style={styles.accordion}>
-      {/* Top accent bar */}
-      <View style={[styles.accordionTopBar, { backgroundColor: accentColor }]} />
-      {/* Subtle top glow */}
-      <View style={[styles.accordionTopGlow, { backgroundColor: `${accentColor}07` }]} />
-      <TouchableOpacity style={styles.accordionHeader} onPress={toggle} activeOpacity={0.7}>
-        <View style={styles.accordionLeft}>
-          <View style={[styles.accordionIcon, { backgroundColor: `${accentColor}0C` }]}>{icon}</View>
-          <View style={styles.accordionTitleWrap}>
-            <Text style={styles.accordionTitle}>{title}</Text>
+    <YStack bg="white" br={22} mb="$3" ov="hidden" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+      {/* Top accent */}
+      <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={22} />
+      <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${accentColor}07`} br={22} />
+      
+      <XStack ai="center" jc="space-between" p="$4" onPress={toggle}>
+        <XStack ai="center" gap="$3" f={1}>
+          <YStack w={36} h={36} br={11} bg={`${accentColor}0C`} jc="center" ai="center">
+            {icon}
+          </YStack>
+          <XStack ai="center" gap="$2" fw="wrap" f={1}>
+            <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
+              {title}
+            </SizableText>
             {tagText && (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{tagText}</Text>
-              </View>
+              <YStack bg={`${COLORS.royalBlue}0A`} px="$2" py="$1" br={6}>
+                <SizableText size="$1" fow="800" color={COLORS.royalBlue} tt="uppercase" ls={0.6}>
+                  {tagText}
+                </SizableText>
+              </YStack>
             )}
-          </View>
-        </View>
+          </XStack>
+        </XStack>
         <Animated.View style={{ transform: [{ rotate: rotation }] }}>
           <ChevronDown size={18} color={COLORS.textMid} />
         </Animated.View>
-      </TouchableOpacity>
-      {expanded && <View style={styles.accordionBody}>{children}</View>}
-    </View>
+      </XStack>
+      
+      {expanded && (
+        <YStack px="$4" pb="$4" pt="$1" borderTopWidth={1} borderTopColor={COLORS.sandLight}>
+          {children}
+        </YStack>
+      )}
+    </YStack>
   );
 };
 
 // ─── Sub Components ───────────────────────────────────────────────
-const Bullet: React.FC<{ text: string; color?: string }> = ({ text, color = COLORS.royalBlue }) => (
-  <View style={styles.bulletRow}>
-    <View style={[styles.bullet, { backgroundColor: color }]} />
-    <Text style={styles.bulletText}>{text}</Text>
-  </View>
+const Bullet: React.FC<{ text: string | undefined; color?: string }> = ({ text, color = COLORS.royalBlue }) => (
+  <XStack ai="flex-start" mb="$2" gap="$2">
+    <Circle size={5} mt={7} bg={color} />
+    <SizableText f={1} size="$3" color={COLORS.textMid} lh={20} fow="500">
+      {text}
+    </SizableText>
+  </XStack>
 );
 
 const SubHeading: React.FC<{ text: string }> = ({ text }) => (
-  <View style={styles.subHeadingRow}>
-    <Text style={styles.subHeading}>{text}</Text>
-  </View>
+  <YStack mt="$3" mb="$2">
+    <SizableText size="$1" fow="800" color={COLORS.royalBlue} tt="uppercase" ls={1.2} opacity={0.75}>
+      {text}
+    </SizableText>
+  </YStack>
 );
 
 const InfoBox: React.FC<{ text: string; type?: "info" | "warning" }> = ({ text, type = "info" }) => (
-  <View style={[styles.infoBox, type === "warning" && styles.infoBoxWarning]}>
+  <XStack ai="flex-start" bg={type === "warning" ? '#FFFDF0' : `${COLORS.royalBlue}05`} p="$3" br={12} mt="$3" bw={1} bc={type === "warning" ? '#FFF1B8' : `${COLORS.royalBlue}10`} gap="$2">
     {type === "warning"
-      ? <AlertTriangle size={12} color="#D97706" style={{ marginRight: 8 }} />
-      : <CheckCircle size={12} color={COLORS.royalBlue} style={{ marginRight: 8 }} />}
-    <Text style={[styles.infoBoxText, type === "warning" && styles.infoBoxTextWarning]}>{text}</Text>
-  </View>
+      ? <AlertTriangle size={12} color="#D97706" mt={3} />
+      : <CheckCircle size={12} color={COLORS.royalBlue} mt={3} />}
+    <SizableText f={1} size="$2" color={type === "warning" ? "#B45309" : COLORS.royalBlue} lh={18} fow="600">
+      {text}
+    </SizableText>
+  </XStack>
 );
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -214,24 +228,11 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [error, setError] = useState<string | null>(null);
   const { width, height } = useWindowDimensions();
 
-  // SoftOrbs — matching StartUpScreen's layered feel
   const orbs = useMemo(() => ([
     { color: COLORS.orbBlue, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
     { color: COLORS.orbTeal, size: width * 0.5, x: width * 0.1, y: height * 0.48, duration: 7200, delay: 1000 },
     { color: COLORS.orbSand, size: width * 0.38, x: width * 0.62, y: height * 0.8, duration: 5500, delay: 500 },
   ]), [width, height]);
-
-  // Dot grid — matching StartUpScreen
-  const dotGrid = useMemo(() => {
-    const items: { left: number; top: number }[] = [];
-    for (let row = 0; row < 9; row++)
-      for (let col = 0; col < 6; col++)
-        items.push({
-          left: (width / 6) * col + (width / 12),
-          top: (height / 9) * row + (height / 18),
-        });
-    return items;
-  }, [width, height]);
 
   const loadProfile = async () => {
     try {
@@ -248,8 +249,6 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     if (error.message?.includes("Session expired") || error.response?.status === 401) {
       setError("Session expired");
       Alert.alert("Session Expired", "Please log in again", [{ text: "OK", onPress: () => logout() }]);
-    } else if (error.message?.includes("deactivated")) {
-      setError("Account deactivated");
     } else {
       setError("Failed to load profile");
     }
@@ -259,46 +258,35 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const onRefresh = () => { setRefreshing(true); loadProfile(); };
 
-  const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to logout?')) logout();
-    } else {
-      Alert.alert("Logout", "Are you sure?", [
-        { text: "Cancel" },
-        { text: "Logout", onPress: async () => await logout() }
-      ]);
-    }
-  };
-
   if (authLoading || (refreshing && !user)) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.royalBlue} />
-        <Text style={{ color: COLORS.textMid, marginTop: 10 }}>Loading...</Text>
-      </View>
+      <YStack f={1} jc="center" ai="center" bg={COLORS.cream}>
+        <Spinner size="large" color={COLORS.royalBlue} />
+        <SizableText color={COLORS.textMid} mt="$2">Loading...</SizableText>
+      </YStack>
     );
   }
 
   if (error && !user) {
     return (
-      <View style={styles.centered}>
+      <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$5">
         <AlertTriangle size={50} color="#FF3B30" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
-          <Text style={styles.buttonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+        <SizableText color="#DC2626" fow="600" ta="center" mt="$4">{error}</SizableText>
+        <Button bg={COLORS.royalBlue} mt="$4" onPress={loadProfile}>
+            <SizableText color="white" fow="800">Retry</SizableText>
+        </Button>
+      </YStack>
     );
   }
 
   if (!user) {
     return (
-      <View style={styles.centered}>
-        <Text style={{ color: COLORS.textMid, marginBottom: 20 }}>No profile data</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => logout()}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-      </View>
+      <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$5">
+        <SizableText color={COLORS.textMid} mb="$4">No profile data</SizableText>
+        <Button bg={COLORS.royalBlue} onPress={() => logout()}>
+            <SizableText color="white" fow="800">Login</SizableText>
+        </Button>
+      </YStack>
     );
   }
 
@@ -311,109 +299,88 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     : null;
 
   return (
-    <View style={styles.container}>
+    <YStack f={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* ── Layered Background (matches StartUpScreen) ── */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {/* Cream base */}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.cream }]} />
-
-        {/* Warm sand bloom — top right */}
-        <View style={{
-          position: 'absolute', top: -height * 0.1, right: -width * 0.15,
-          width: width * 0.95, height: width * 0.95, borderRadius: width * 0.475,
-          backgroundColor: COLORS.sandLight, opacity: 0.55,
-        }} />
-
-        {/* Warm sand swell — bottom left */}
-        <View style={{
-          position: 'absolute', bottom: -height * 0.06, left: -width * 0.2,
-          width: width * 0.8, height: width * 0.8, borderRadius: width * 0.4,
-          backgroundColor: COLORS.sandMid, opacity: 0.22,
-        }} />
-
-        {/* Animated soft orbs */}
+      {/* Background Orbs */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
+        <Circle pos="absolute" b={-height * 0.06} l={-width * 0.2} size={width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
         {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-
-        {/* Subtle dot grid */}
-        {dotGrid.map((d, i) => (
-          <View key={i} style={{
-            position: 'absolute', width: 2, height: 2, borderRadius: 1,
-            backgroundColor: COLORS.royalBlue, opacity: 0.055,
-            left: d.left, top: d.top,
-          }} />
-        ))}
-
-        {/* Corner bracket — top left */}
-        <View style={{
-          position: 'absolute', top: 58, left: 22, width: 34, height: 34,
-          borderTopWidth: 1.5, borderLeftWidth: 1.5,
-          borderColor: `${COLORS.royalBlue}28`, borderTopLeftRadius: 6,
-        }} />
-        {/* Corner bracket — bottom right */}
-        <View style={{
-          position: 'absolute', bottom: 60, right: 22, width: 34, height: 34,
-          borderBottomWidth: 1.5, borderRightWidth: 1.5,
-          borderColor: `${COLORS.teal}28`, borderBottomRightRadius: 6,
-        }} />
-      </View>
-
-
+        
+        {/* Corner Brackets */}
+        <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${COLORS.royalBlue}28`} br={6} />
+        <YStack pos="absolute" b={60} r={22} w={34} h={34} borderBottomWidth={1.5} borderRightWidth={1.5} bc={`${COLORS.teal}28`} br={6} />
+      </ZStack>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        f={1}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 60, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.royalBlue} />}
       >
         {/* ── Identity Banner ── */}
-        <View style={styles.identityBanner}>
-          {/* Left accent bar */}
-          <View style={styles.bannerAccentBar} />
-          {/* Subtle top glow */}
-          <View style={styles.bannerTopGlow} />
-          <View style={styles.bannerContent}>
-            <View style={styles.bannerTopRow}>
-              {/* Avatar with halo */}
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatarHalo} />
-                <View style={styles.bannerAvatar}>
+        <Card bg="white" br={24} bw={1} bc={COLORS.sandMid} mb="$4" flexDirection="row" ov="hidden" elevation={5} shadowColor="#8A96A4">
+          <YStack w={4} bg={COLORS.royalBlue} />
+          <YStack pos="absolute" t={0} l={0} r={0} h={65} bg={`${COLORS.royalBlue}07`} br={24} />
+          
+          <YStack f={1} p="$4" pt="$5">
+            <XStack ai="center" jc="space-between" mb="$3">
+              <YStack w={68} h={68} jc="center" ai="center">
+                <Circle pos="absolute" size={68} bg={COLORS.orbBlue} opacity={0.5} />
+                <YStack w={56} h={56} br={16} bg={`${COLORS.royalBlue}10`} bw={2} bc={`${COLORS.royalBlue}22`} jc="center" ai="center" ov="hidden">
                   {user.profile_pic ? (
-                    <Image source={{ uri: user.profile_pic }} style={styles.bannerAvatarImage} />
+                    <RNImage 
+                      key={user.profile_pic}
+                      source={{ uri: user.profile_pic }} 
+                      style={{ width: 56, height: 56, borderRadius: 14 }}
+                      resizeMode="cover"
+                    />
                   ) : (
-                    <Text style={styles.bannerInitialsText}>
+                    <SizableText size="$6" fow="900" color={COLORS.royalBlue} ls={-0.5}>
                       {user.first_name?.[0] ?? ''}{user.last_name?.[0] ?? ''}
-                    </Text>
+                    </SizableText>
                   )}
-                </View>
-              </View>
-              <View style={[styles.statusChip, { backgroundColor: user.status === "active" ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.1)' }]}>
-                <View style={[styles.statusDot, { backgroundColor: user.status === "active" ? '#22C55E' : '#EF4444' }]} />
-                <Text style={[styles.statusChipText, { color: user.status === "active" ? '#15803D' : '#DC2626' }]}>
+                </YStack>
+              </YStack>
+              
+              <XStack ai="center" bg={user.status === "active" ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.1)'} px="$3" py="$1" br={20} gap="$2">
+                <Circle size={6} bg={user.status === "active" ? '#22C55E' : '#EF4444'} />
+                <SizableText size="$1" fow="800" color={user.status === "active" ? '#15803D' : '#DC2626'} ls={0.4}>
                   {user.status === "active" ? "Active" : "Inactive"}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.bannerName}>{fullName}</Text>
-            <View style={styles.bannerMeta}>
-              <View style={styles.rolePill}>
-                <Text style={styles.rolePillText}>{user.role || "User"}</Text>
-              </View>
+                </SizableText>
+              </XStack>
+            </XStack>
+
+            <SizableText size="$7" fow="900" color={COLORS.textDark} ls={-0.5} mb="$2">
+              {fullName}
+            </SizableText>
+
+            <XStack ai="center" gap="$2" fw="wrap">
+              <YStack bg={`${COLORS.royalBlue}0E`} bw={1} bc={`${COLORS.royalBlue}18`} px="$3" py="$1" br={10}>
+                <SizableText size="$1" fow="800" color={COLORS.royalBlue} tt="uppercase" ls={0.8}>
+                  {user.role || "User"}
+                </SizableText>
+              </YStack>
               {user.email && (
-                <Text style={styles.bannerEmail} numberOfLines={1}>{user.email}</Text>
+                <SizableText size="$3" color={COLORS.textMid} fow="500" f={1} numberOfLines={1}>
+                  {user.email}
+                </SizableText>
               )}
-            </View>
+            </XStack>
+
             {memberSince && (
-              <Text style={styles.memberSince}>{memberSince}</Text>
+              <SizableText size="$2" color={COLORS.textMid} fow="600" mt="$3" opacity={0.7} ls={0.2}>
+                {memberSince}
+              </SizableText>
             )}
-          </View>
-          {/* Animated waveform decoration */}
-          <View style={styles.bannerWave}>
-            <AnimatedWaveform color={COLORS.royalBlue} />
-          </View>
-          {/* Bottom accent bar */}
-          <View style={styles.bannerBottomBar} />
-        </View>
+
+            <YStack pos="absolute" b={16} r={16}>
+              <AnimatedWaveform color={COLORS.royalBlue} />
+            </YStack>
+          </YStack>
+          <YStack pos="absolute" b={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
+        </Card>
 
         {/* ── Sections ── */}
         <Accordion icon={<User size={16} color={COLORS.royalBlue} />} title="Personal Information" defaultOpen accentColor={COLORS.royalBlue}>
@@ -432,248 +399,45 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </Accordion>
 
         {/* ── Actions ── */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => navigation.navigate("EditProfile", { user })} activeOpacity={0.88}>
-            <View style={styles.btnShimmer} />
-            <Edit size={16} color={COLORS.white} />
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-            <View style={{ flex: 1 }} />
-            <ChevronRight size={18} color="rgba(255,255,255,0.6)" />
-          </TouchableOpacity>
+        <YStack gap="$3" mt="$2">
+          <Button
+            size="$5"
+            bg={COLORS.royalBlue}
+            br={18}
+            onPress={() => navigation.navigate("EditProfile", { user })}
+            pressStyle={{ scale: 0.98 }}
+            icon={<Edit3 size={16} color="white" />}
+            iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.6)" />}
+            elevation={6}
+            shadowColor="#1A4480"
+          >
+            <SizableText color="white" fow="800" size="$4" ml="$2">Edit Profile</SizableText>
+          </Button>
 
-          <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={handleLogout} activeOpacity={0.88}>
-            <LogOut size={16} color="#DC2626" />
-            <Text style={styles.logoutButtonText}>Logout</Text>
-            <View style={{ flex: 1 }} />
-            <ChevronRight size={18} color="rgba(220,38,38,0.4)" />
-          </TouchableOpacity>
-        </View>
-
-
+          <Button
+            size="$5"
+            bg="white"
+            br={18}
+            onPress={() => {
+                Alert.alert("Logout", "Are you sure?", [
+                    { text: "Cancel" },
+                    { text: "Logout", onPress: async () => await logout() }
+                ]);
+            }}
+            pressStyle={{ scale: 0.98 }}
+            icon={<LogOut size={16} color="#DC2626" />}
+            iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.4)" />}
+            bw={1}
+            bc="rgba(220,38,38,0.18)"
+            elevation={5}
+            shadowColor="#8A96A4"
+          >
+            <SizableText color="#DC2626" fow="800" size="$4" ml="$2">Logout</SizableText>
+          </Button>
+        </YStack>
       </ScrollView>
-    </View>
+    </YStack>
   );
 };
-
-// ─── Styles ──────────────────────────────────────────────────────
-const CARD_SHADOW = Platform.select({
-  ios: { shadowColor: '#8A96A4', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 22 },
-  android: { elevation: 5 },
-}) as any;
-
-const BTN_SHADOW = Platform.select({
-  ios: { shadowColor: '#1A4480', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 14 },
-  android: { elevation: 6 },
-}) as any;
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.cream },
-
-
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 60, paddingTop: 8 },
-
-  /* Identity Banner */
-  identityBanner: {
-    backgroundColor: COLORS.white,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-    marginBottom: 14,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    ...CARD_SHADOW,
-  },
-  bannerAccentBar: {
-    width: 4,
-    backgroundColor: COLORS.royalBlue,
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-  },
-  bannerTopGlow: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 65,
-    backgroundColor: `${COLORS.royalBlue}07`,
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-  },
-  bannerContent: {
-    flex: 1,
-    paddingVertical: 22,
-    paddingHorizontal: 18,
-  },
-  bannerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  avatarContainer: {
-    position: 'relative',
-    width: 68, height: 68,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  avatarHalo: {
-    position: 'absolute',
-    width: 68, height: 68, borderRadius: 20,
-    backgroundColor: COLORS.orbBlue,
-    opacity: 0.5,
-  },
-  bannerAvatar: {
-    width: 56, height: 56, borderRadius: 16,
-    backgroundColor: `${COLORS.royalBlue}10`,
-    borderWidth: 2,
-    borderColor: `${COLORS.royalBlue}22`,
-    justifyContent: 'center', alignItems: 'center',
-    overflow: 'hidden',
-  },
-  bannerAvatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  bannerInitialsText: {
-    fontSize: 20, fontWeight: '900',
-    color: COLORS.royalBlue, letterSpacing: -0.5,
-  },
-  statusChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 20, gap: 5,
-  },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusChipText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
-
-  bannerName: {
-    fontSize: 24, fontWeight: '900',
-    color: COLORS.textDark, letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  bannerMeta: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-  },
-  rolePill: {
-    backgroundColor: `${COLORS.royalBlue}0E`,
-    borderWidth: 1, borderColor: `${COLORS.royalBlue}18`,
-    paddingHorizontal: 10, paddingVertical: 3,
-    borderRadius: 10,
-  },
-  rolePillText: {
-    fontSize: 10, fontWeight: '800',
-    color: COLORS.royalBlue, textTransform: 'uppercase', letterSpacing: 0.8,
-  },
-  bannerEmail: {
-    fontSize: 13, color: COLORS.textMid, fontWeight: '500', flex: 1,
-  },
-  memberSince: {
-    fontSize: 12, color: COLORS.textMid, fontWeight: '600',
-    marginTop: 10, opacity: 0.7, letterSpacing: 0.2,
-  },
-  bannerWave: {
-    position: 'absolute', bottom: 16, right: 16,
-  },
-  bannerBottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    height: 3,
-    backgroundColor: COLORS.royalBlue,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
-  },
-
-  /* Accordion */
-  accordion: {
-    backgroundColor: COLORS.white,
-    borderRadius: 22,
-    marginBottom: 12,
-    overflow: "hidden",
-    ...CARD_SHADOW,
-    borderWidth: 1,
-    borderColor: COLORS.sandMid,
-  },
-  accordionTopBar: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    height: 3,
-    borderTopLeftRadius: 22, borderTopRightRadius: 22,
-  },
-  accordionTopGlow: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 50,
-    borderTopLeftRadius: 22, borderTopRightRadius: 22,
-  },
-  accordionHeader: {
-    flexDirection: "row", alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 16, paddingHorizontal: 18,
-  },
-  accordionLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
-  accordionIcon: {
-    width: 36, height: 36, borderRadius: 11,
-    justifyContent: "center", alignItems: "center", marginRight: 14,
-  },
-  accordionTitleWrap: {
-    flex: 1, flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap",
-  },
-  accordionTitle: {
-    fontSize: 14, fontWeight: "800",
-    color: COLORS.textDark, letterSpacing: -0.2,
-  },
-  tag: {
-    backgroundColor: `${COLORS.royalBlue}0A`,
-    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6,
-  },
-  tagText: {
-    fontSize: 9, fontWeight: "800",
-    color: COLORS.royalBlue, textTransform: 'uppercase', letterSpacing: 0.6,
-  },
-  accordionBody: {
-    paddingHorizontal: 18, paddingBottom: 18, paddingTop: 4,
-    borderTopWidth: 1, borderTopColor: COLORS.sandLight,
-  },
-
-  bulletRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8 },
-  bullet: { width: 5, height: 5, borderRadius: 2.5, marginTop: 7, marginRight: 10 },
-  bulletText: { flex: 1, fontSize: 14, color: COLORS.textMid, lineHeight: 20, fontWeight: "500" },
-
-  subHeadingRow: { marginTop: 14, marginBottom: 10 },
-  subHeading: {
-    fontSize: 10, fontWeight: "800",
-    color: COLORS.royalBlue, textTransform: "uppercase",
-    letterSpacing: 1.2, opacity: 0.75,
-  },
-
-  infoBox: {
-    flexDirection: "row", alignItems: "flex-start",
-    backgroundColor: `${COLORS.royalBlue}05`,
-    padding: 12, borderRadius: 12, marginTop: 14,
-    borderWidth: 1, borderColor: `${COLORS.royalBlue}10`,
-  },
-  infoBoxWarning: { backgroundColor: '#FFFDF0', borderColor: '#FFF1B8' },
-  infoBoxText: { flex: 1, fontSize: 12.5, color: COLORS.royalBlue, lineHeight: 18, fontWeight: "600" },
-  infoBoxTextWarning: { color: "#B45309" },
-
-  /* Actions */
-  actionContainer: { marginTop: 6, gap: 10 },
-  actionButton: {
-    flexDirection: "row", alignItems: "center",
-    paddingVertical: 17, paddingHorizontal: 18, borderRadius: 18, overflow: 'hidden',
-  },
-  editButton: {
-    backgroundColor: COLORS.royalBlue,
-    ...BTN_SHADOW,
-  },
-  btnShimmer: {
-    position: 'absolute', top: 0, left: 0, width: '45%', height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.1)', borderBottomRightRadius: 70,
-  },
-  editButtonText: { color: COLORS.white, fontWeight: "800", marginLeft: 10, fontSize: 15, letterSpacing: -0.1 },
-  logoutButton: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: 'rgba(220,38,38,0.18)',
-    ...CARD_SHADOW,
-  },
-  logoutButtonText: { color: "#DC2626", fontWeight: "800", marginLeft: 10, fontSize: 15, letterSpacing: -0.1 },
-
-  /* Helpers */
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: COLORS.cream },
-  errorText: { color: "#DC2626", marginVertical: 20, textAlign: "center", fontWeight: "600" },
-  retryButton: { backgroundColor: COLORS.royalBlue, paddingHorizontal: 30, paddingVertical: 12, borderRadius: 12, marginTop: 10 },
-  buttonText: { color: COLORS.white, fontWeight: "800" },
-
-
-});
 
 export default ProfileScreen;
