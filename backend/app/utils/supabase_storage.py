@@ -41,12 +41,20 @@ async def upload_audio(file_bytes: bytes, user_id: str, extension: str = ".wav")
     # Map extension to MIME type
     mime_types = {
         ".wav": "audio/wav",
-        ".m4a": "audio/mp4",
+        ".m4a": "audio/x-m4a",
+        ".mp3": "audio/mpeg",
         ".mp4": "audio/mp4",
         ".3gp": "audio/3gpp",
         ".caf": "audio/x-caf",
+        ".webm": "audio/webm",
+        ".aac": "audio/aac",
+        ".ogg": "audio/ogg",
     }
-    content_type = mime_types.get(extension.lower(), "audio/wav")
+    content_type = mime_types.get(extension.lower(), "application/octet-stream")
+    
+    # If the extension wasn't found, try to guess the content type or default to audio/wav if it's likely audio
+    if content_type == "application/octet-stream" and extension:
+        content_type = "audio/wav"  # Fallback for unknown audio extensions
 
     print(f"Uploading {len(file_bytes)} bytes to {url} with Content-Type: {content_type}")
 

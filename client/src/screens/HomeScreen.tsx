@@ -250,10 +250,12 @@ const HomeScreen: React.FC = () => {
     const fileName = `speech.${extension}`;
 
     let type = "audio/wav";
-    if (extension === "m4a") type = "audio/mp4";
+    if (extension === "m4a") type = "audio/x-m4a";
     else if (extension === "3gp") type = "audio/3gpp";
     else if (extension === "caf") type = "audio/x-caf";
     else if (extension === "mp4") type = "audio/mp4";
+    else if (extension === "webm") type = "audio/webm";
+    else if (extension === "mp3") type = "audio/mpeg";
 
     formData.append("file", {
       uri,

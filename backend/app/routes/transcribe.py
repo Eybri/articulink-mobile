@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends
 import torch
 import librosa
+import soundfile as sf
 import tempfile
 import os
 import traceback
@@ -64,12 +65,29 @@ async def transcribe_audio(
             os.remove(tmp_path)
             tmp_path = None
         
-        # 3. Start Whisper transcription (Compute bound, run in thread)
-        # We use gather to wait for BOTH the upload and the transcription results
+        # 3. Normalize to a standard WAV for the upload (Ensures playability everywhere)
+        # We use a second temp file for the clean wav export
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav", mode='wb') as clean_tmp:
+            clean_wav_path = clean_tmp.name
+            # Re-save the normalized audio we loaded (16kHz, float) as a standard wav
+            sf.write(clean_wav_path, audio, sr)
+        
+        with open(clean_wav_path, 'rb') as f:
+            clean_content = f.read()
+
+        # 4. Start Whisper transcription (Compute bound) and Upload in parallel
+        # We upload the normalized clean_content (always .wav) instead of raw bytes
         text_result, audio_url = await asyncio.gather(
             asyncio.to_thread(run_transcription_sync, audio, sr),
-            upload_task
+            upload_audio(clean_content, user_id, ".wav")
         )
+        
+        # Clean up both temp files
+        for p in [tmp_path, clean_wav_path]:
+            if p and os.path.exists(p):
+                os.remove(p)
+        tmp_path = None
+        clean_wav_path = None
         
         text = text_result.strip()
         duration = float(len(audio) / sr)
