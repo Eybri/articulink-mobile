@@ -60,17 +60,61 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [typedLine1, setTypedLine1] = useState("");
+    const [typedLine2, setTypedLine2] = useState("");
 
     const { login } = useContext(AuthContext) as AuthContextType;
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideHeight = useRef(new Animated.Value(height * 0.4)).current;
+    const textFade = useRef(new Animated.Value(1)).current;
+    const logoFade = useRef(new Animated.Value(0)).current;
+    const logoScale = useRef(new Animated.Value(0.8)).current;
     const orbAnims = useRef([
         new Animated.Value(0),
         new Animated.Value(0),
         new Animated.Value(0)
     ]).current;
+
+    // Typewriter → then crossfade to logo
+    useEffect(() => {
+        const line1 = "Welcome";
+        const line2 = "Back!";
+        let i = 0;
+        let j = 0;
+        const delay = setTimeout(() => {
+            // Type line 1 first
+            const timer1 = setInterval(() => {
+                if (i < line1.length) {
+                    setTypedLine1(line1.slice(0, i + 1));
+                    i++;
+                } else {
+                    clearInterval(timer1);
+                    // Then type line 2
+                    const timer2 = setInterval(() => {
+                        if (j < line2.length) {
+                            setTypedLine2(line2.slice(0, j + 1));
+                            j++;
+                        } else {
+                            clearInterval(timer2);
+                            // Pause, then fade out text and fade in logo
+                            setTimeout(() => {
+                                Animated.sequence([
+                                    Animated.timing(textFade, { toValue: 0, duration: 400, useNativeDriver: true }),
+                                    Animated.parallel([
+                                        Animated.timing(logoFade, { toValue: 1, duration: 600, useNativeDriver: true }),
+                                        Animated.spring(logoScale, { toValue: 1, tension: 40, friction: 7, useNativeDriver: true }),
+                                    ]),
+                                ]).start();
+                            }, 600);
+                        }
+                    }, 65);
+                }
+            }, 65);
+        }, 300);
+        return () => clearTimeout(delay);
+    }, []);
 
     useEffect(() => {
         Animated.parallel([
@@ -119,13 +163,25 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <YStack f={1} bg={COLORS.royalBlue}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <RNImage 
-                    source={require('../../assets/images/bg.jpg')} 
+                <RNImage
+                    source={require('../../assets/images/bg.jpg')}
                     style={{ width: '100%', height: '100%', position: 'absolute' }}
                     resizeMode="cover"
                 />
                 <YStack fullscreen bg="black" opacity={0.2} />
-                <YStack pos="absolute" t="18%" w="100%" px="$8" gap={0}><SizableText size="$10" fow="900" color="white" ls={-1}>Welcome Back!</SizableText></YStack>
+                <Animated.View style={{ opacity: textFade, position: 'absolute', top: '18%', width: '100%', paddingHorizontal: 32 }}>
+                    <SizableText size="$10" fow="900" color="white" ls={-1}>{typedLine1}</SizableText>
+                    {typedLine2.length > 0 && <SizableText size="$10" fow="900" color="white" ls={-1}>{typedLine2}</SizableText>}
+                </Animated.View>
+                <YStack pos="absolute" t={0} l={0} r={0} h={height * 0.42} jc="center" ai="center">
+                    <Animated.View style={{ opacity: logoFade, transform: [{ scale: logoScale }] }}>
+                        <RNImage
+                            source={require('../../assets/images/whitelogo.png')}
+                            style={{ width: 122, height: 122 }}
+                            resizeMode="contain"
+                        />
+                    </Animated.View>
+                </YStack>
             </ZStack>
             <ScrollView
                 f={1}
