@@ -1,13 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
-  StyleSheet,
   Animated,
   StatusBar,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Platform,
   useWindowDimensions,
-  FlatList,
   Image as RNImage,
 } from 'react-native';
 import {
@@ -16,13 +13,11 @@ import {
   ZStack,
   Button,
   Circle,
-  Paragraph,
-  H1,
   SizableText,
   Card,
-  Theme,
+  AnimatePresence,
 } from 'tamagui';
-import { ArrowRight, ChevronRight } from '@tamagui/lucide-icons';
+import { ArrowRight, ChevronRight, Speaker } from '@tamagui/lucide-icons';
 
 // ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
@@ -119,87 +114,65 @@ const slides: Slide[] = [
   },
 ];
 
-// ─── Animated Waveform ───────────────────────────────────────────
-interface WaveformProps {
-  color: string;
-  scrollX: Animated.Value;
-  index: number;
-  width: number;
-}
-
-const WaveformDecoration: React.FC<WaveformProps> = ({ color, scrollX, index, width }) => {
-  const barHeights = [6, 14, 26, 18, 36, 24, 10, 30, 20, 40, 26, 12, 32, 16, 8, 28, 22, 38, 14, 8];
-  const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
-  const opacity = scrollX.interpolate({ inputRange, outputRange: [0, 1, 0], extrapolate: 'clamp' });
-  const translateY = scrollX.interpolate({ inputRange, outputRange: [16, 0, 16], extrapolate: 'clamp' });
-  const barAnims = useRef(barHeights.map(() => new Animated.Value(0))).current;
-
-  useEffect(() => {
-    const animations = barAnims.map((anim, i) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(i * 70),
-          Animated.timing(anim, { toValue: 1, duration: 550 + (i % 5) * 110, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 550 + (i % 5) * 110, useNativeDriver: true }),
-        ])
-      )
-    );
-    animations.forEach(a => a.start());
-    return () => animations.forEach(a => a.stop());
-  }, []);
+// ─── Animated Background Layer ──────────────────────────────────
+const MorphingBackground = ({ scrollX, width, height }: { scrollX: Animated.Value, width: number, height: number }) => {
+  // Interpolate main background color based on scrollX
+  const bgColor = scrollX.interpolate({
+    inputRange: slides.map((_, i) => i * width),
+    outputRange: slides.map(s => s.orbTint),
+    extrapolate: 'clamp',
+  });
 
   return (
-    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <XStack ai="center" jc="center" mt="$4" h={48}>
-        {barHeights.map((h, i) => {
-          const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] });
-          return (
-            <Animated.View key={i} style={{
-              width: 3, height: h,
-              backgroundColor: color,
-              borderRadius: 2,
-              marginHorizontal: 2,
-              opacity: 0.4,
-              transform: [{ scaleY }],
-            }} />
-          );
-        })}
-      </XStack>
-    </Animated.View>
-  );
-};
+    <ZStack pos="absolute" fullscreen pointerEvents="none" zIndex={-1}>
+      <Animated.View style={{ 
+        position: 'absolute', 
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: COLORS.cream 
+      }} />
+      
+      {/* Morphing Orbs that follow scroll with parallax */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: width * 1.5,
+        height: width * 1.5,
+        borderRadius: width * 0.75,
+        backgroundColor: bgColor,
+        opacity: 0.15,
+        top: -width * 0.4,
+        right: -width * 0.3,
+        transform: [
+          { translateX: Animated.multiply(scrollX, -0.2) },
+          { scale: 1.1 }
+        ]
+      }} />
 
-// ─── Soft Background Orb ─────────────────────────────────────────
-interface OrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
+      <Animated.View style={{
+        position: 'absolute',
+        width: width * 1.2,
+        height: width * 1.2,
+        borderRadius: width * 0.6,
+        backgroundColor: bgColor,
+        opacity: 0.1,
+        bottom: -width * 0.3,
+        left: -width * 0.3,
+        transform: [
+          { translateX: Animated.multiply(scrollX, 0.1) },
+          { scale: 0.9 }
+        ]
+      }} />
 
-const SoftOrb: React.FC<OrbProps> = ({ color, size, x, y, duration, delay }) => {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -18] });
-  const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.92, 1, 0.92] });
-
-  return (
-    <Animated.View style={{
-      position: 'absolute',
-      left: x - size / 2, top: y - size / 2,
-      width: size, height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-      opacity: 0.5,
-      transform: [{ translateY }, { scale }],
-    }}>
-      <Circle pos="absolute" t={size * 0.15} l={size * 0.15} size={size * 0.7} bg="white" opacity={0.35} />
-    </Animated.View>
+      {/* Decorative Dots Pattern */}
+      <YStack fullscreen opacity={0.03}>
+         {Array.from({ length: 12 }).map((_, row) => (
+           <XStack key={row} jc="space-around" w="100%" h={height / 12}>
+             {Array.from({ length: 8 }).map((_, col) => (
+               <Circle key={col} size={4} bg={COLORS.deepNavy} />
+             ))}
+           </XStack>
+         ))}
+      </YStack>
+    </ZStack>
   );
 };
 
@@ -213,12 +186,6 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const currentSlide = slides[activeIndex];
   const isLastSlide = activeIndex === slides.length - 1;
 
-  const orbData = useMemo(() => slides.map(slide => ([
-    { color: slide.orbTint, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
-    { color: slide.orbTint, size: width * 0.5, x: width * 0.1, y: height * 0.48, duration: 7200, delay: 1000 },
-    { color: slide.orbTint, size: width * 0.38, x: width * 0.62, y: height * 0.8, duration: 5500, delay: 500 },
-  ])), [width, height]);
-
   const onMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       setActiveIndex(Math.round(e.nativeEvent.contentOffset.x / width));
@@ -226,8 +193,9 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 
   const handleNext = useCallback(() => {
-    if (isLastSlide) { navigation.navigate('Login'); }
-    else {
+    if (isLastSlide) {
+      navigation.navigate('Login');
+    } else {
       const next = activeIndex + 1;
       flatListRef.current?.scrollToIndex({ index: next, animated: true });
       setActiveIndex(next);
@@ -239,102 +207,125 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
     const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
     const isWelcome = item.id === 'welcome';
+    
+    // Smooth scroll-linked animations
     const cardOpacity = scrollX.interpolate({ inputRange, outputRange: [0, 1, 0], extrapolate: 'clamp' });
-    const cardTranslateY = scrollX.interpolate({ inputRange, outputRange: [70, 0, 70], extrapolate: 'clamp' });
-    const cardScale = scrollX.interpolate({ inputRange, outputRange: [0.84, 1, 0.84], extrapolate: 'clamp' });
-    const orbs = orbData[index];
+    const cardScale = scrollX.interpolate({ inputRange, outputRange: [0.9, 1, 0.9], extrapolate: 'clamp' });
+    const imageTranslateY = scrollX.interpolate({ inputRange, outputRange: [20, 0, 20], extrapolate: 'clamp' });
+    const contentTranslateY = scrollX.interpolate({ inputRange, outputRange: [40, 0, 40], extrapolate: 'clamp' });
 
     return (
-      <YStack w={width} h={height} jc="center" ai="center" ov="hidden">
-        {/* Background */}
-        <ZStack pos="absolute" fullscreen pointerEvents="none">
-          <YStack fullscreen bg={COLORS.cream} />
-          <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
-          <Circle pos="absolute" b={-height * 0.06} l={-width * 0.2} size={width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
-          {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-
-          {/* Dot grid */}
-          {Array.from({ length: 9 }).map((_, row) =>
-            Array.from({ length: 6 }).map((_, col) => (
-              <Circle
-                key={`${row}-${col}`}
-                pos="absolute"
-                size={2}
-                bg={item.accentColor}
-                opacity={0.055}
-                l={(width / 6) * col + (width / 12)}
-                t={(height / 9) * row + (height / 18)}
-              />
-            ))
-          )}
-
-          {/* Brackets */}
-          <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${item.accentColor}28`} br={6} />
-          <YStack pos="absolute" b={118} r={22} w={34} h={34} borderBottomWidth={1.5} borderRightWidth={1.5} bc={`${item.waveColor}28`} br={6} />
-        </ZStack>
-
-        {/* Card */}
+      <YStack w={width} h={height} jc="center" ai="center" px="$6">
         <Animated.View style={{
           opacity: cardOpacity,
-          transform: [{ translateY: cardTranslateY }, { scale: cardScale }],
-          width: width - 40,
+          transform: [{ scale: cardScale }],
+          width: '100%',
+          maxWidth: 340,
         }}>
-          <Card br={28} bw={1} bc={COLORS.sandMid} py="$6" px="$5" ai="center" ov="hidden" bg="white" elevation={8} shadowColor="#8A96A4">
-            <YStack pos="absolute" t={0} l={0} r={0} h={65} bg={`${item.accentColor}07`} />
-            
-            <YStack ai="center" jc="center" mb="$3">
-               <Circle pos="absolute" size={150} bg={item.orbTint} opacity={0.5} />
-               <RNImage
-                source={item.image}
-                style={{
-                  width: isWelcome ? 200 : Math.min(width * 0.52, 230),
-                  height: isWelcome ? 96 : Math.min(width * 0.38, 170),
-                }}
-                resizeMode="contain"
-               />
+          <Card 
+            br={24} 
+            padding="$5" 
+            ai="center" 
+            bg={COLORS.white} 
+            elevation={6} 
+            shadowColor="rgba(15, 40, 71, 0.08)"
+            bw={1}
+            bc={COLORS.sandMid}
+            ov="hidden"
+          >
+            {/* Header Tag */}
+            <XStack 
+              ai="center" 
+              py="$1" 
+              px="$2.5" 
+              br={16} 
+              bg={`${item.accentColor}08`} 
+              mb="$4" 
+              gap="$1.5"
+            >
+              <Circle size={4} bg={item.accentColor} />
+              <SizableText 
+                size="$1" 
+                fow="700" 
+                ls={1.2} 
+                tt="uppercase" 
+                color={item.accentColor}
+              >
+                {item.tag}
+              </SizableText>
+            </XStack>
+
+            {/* Illustration */}
+            <YStack ai="center" jc="center" h={160} mb="$4">
+               <Circle pos="absolute" size={130} bg={item.orbTint} opacity={0.35} />
+               <Animated.View style={{ transform: [{ translateY: imageTranslateY }] }}>
+                  <RNImage
+                    source={item.image}
+                    style={{
+                      width: isWelcome ? 180 : 160,
+                      height: isWelcome ? 90 : 130,
+                    }}
+                    resizeMode="contain"
+                  />
+               </Animated.View>
             </YStack>
 
-            <XStack ai="center" py="$1" px="$3" br={20} bw={1} bc={`${item.accentColor}20`} bg={`${item.accentColor}0C`} mb="$3" gap="$2">
-              <Circle size={5} bg={item.accentColor} />
-              <SizableText size="$1" fow="800" ls={2.2} tt="uppercase" color={item.accentColor}>{item.tag}</SizableText>
-            </XStack>
+            {/* Text Content */}
+            <Animated.View style={{ transform: [{ translateY: contentTranslateY }], width: '100%', alignItems: 'center' }}>
+              <SizableText 
+                size="$6" 
+                fow="800" 
+                color={COLORS.textDark} 
+                ta="center" 
+                lh={24} 
+                mb="$2"
+                ls={-0.2}
+              >
+                {item.title}
+                {item.highlightedTitle && (
+                  <SizableText color={item.accentColor}>{'\n'}{item.highlightedTitle}</SizableText>
+                )}
+              </SizableText>
 
-            <SizableText size="$9" fow="800" color={COLORS.textDark} ta="center" lh={35} mb="$3" ls={-0.4}>
-              {item.title}
-              {item.highlightedTitle && <SizableText color={item.accentColor}>{'\n'}{item.highlightedTitle}</SizableText>}
-            </SizableText>
+              {/* Decorative Accent */}
+              <XStack ai="center" gap="$1" mb="$3" opacity={0.3}>
+                <YStack w={16} h={1} bg={item.accentColor} />
+                <Speaker size={10} color={item.accentColor} />
+                <YStack w={16} h={1} bg={item.accentColor} />
+              </XStack>
 
-            <XStack ai="center" w="85%" mb="$3" gap="$1">
-              <YStack f={1} h={1} bg={COLORS.sandMid} />
-              {[5, 9, 15, 9, 5].map((h, i) => (
-                <YStack key={i} w={3} h={h} br={1.5} bg={item.waveColor} opacity={0.45} marginHorizontal={1.5} />
-              ))}
-              <YStack f={1} h={1} bg={COLORS.sandMid} />
-            </XStack>
+              <SizableText 
+                size="$3" 
+                color={COLORS.textMid} 
+                ta="center" 
+                lh={18} 
+                fow="400"
+                maxWidth="90%"
+              >
+                {item.description}
+              </SizableText>
+            </Animated.View>
 
-            <SizableText size="$4" color={COLORS.textMid} ta="center" lh={22} ls={0.15} maxWidth={290}>
-              {item.description}
-            </SizableText>
-
+            {/* Bottom accent line */}
             <YStack pos="absolute" b={0} l={0} r={0} h={3} bg={item.accentColor} />
           </Card>
         </Animated.View>
-
-        <WaveformDecoration color={item.waveColor} scrollX={scrollX} index={index} width={width} />
       </YStack>
     );
   };
 
   const Pagination = () => (
-    <XStack jc="center" ai="center" mb="$4" gap="$2">
+    <XStack jc="center" ai="center" mb="$4" gap="$1.5">
       {slides.map((slide, i) => {
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-        const dotWidth = scrollX.interpolate({ inputRange, outputRange: [7, 32, 7], extrapolate: 'clamp' });
-        const dotOpacity = scrollX.interpolate({ inputRange, outputRange: [0.25, 1, 0.25], extrapolate: 'clamp' });
+        const dotWidth = scrollX.interpolate({ inputRange, outputRange: [5, 20, 5], extrapolate: 'clamp' });
+        const dotOpacity = scrollX.interpolate({ inputRange, outputRange: [0.2, 1, 0.2], extrapolate: 'clamp' });
         return (
           <Animated.View key={i} style={{
-            height: 7, borderRadius: 3.5,
-            width: dotWidth, opacity: dotOpacity,
+            height: 5, 
+            borderRadius: 2.5,
+            width: dotWidth, 
+            opacity: dotOpacity,
             backgroundColor: slide.accentColor,
           }} />
         );
@@ -352,16 +343,31 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     <YStack f={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <Button
-        pos="absolute" t={52} r={20} zIndex={20}
-        br={20} bw={1} bc={`${currentSlide.accentColor}28`}
-        bg="rgba(255,255,255,0.75)"
-        onPress={handleSkip}
-        pressStyle={{ scale: 0.95 }}
-        elevation={2}
-      >
-        <SizableText size="$2" fow="600" ls={0.4} color={currentSlide.accentColor}>Skip</SizableText>
-      </Button>
+      {/* Floating Morphing Background */}
+      <MorphingBackground scrollX={scrollX} width={width} height={height} />
+
+      {/* Skip Button */}
+      <AnimatePresence>
+        {!isLastSlide && (
+          <Button
+            pos="absolute" t={50} r={16} zIndex={20}
+            br={16} 
+            bg="rgba(255,255,255,0.6)"
+            onPress={handleSkip}
+            pressStyle={{ scale: 0.95 }}
+            animation="quick"
+            enterStyle={{ opacity: 0, y: -5 }}
+            exitStyle={{ opacity: 0, y: -5 }}
+            elevation={1}
+            bw={1}
+            bc={COLORS.sandMid}
+            px="$3"
+            h={30}
+          >
+            <SizableText size="$1" fow="600" ls={0.4} color={currentSlide.accentColor}>SKIP</SizableText>
+          </Button>
+        )}
+      </AnimatePresence>
 
       <Animated.FlatList
         ref={flatListRef}
@@ -378,20 +384,34 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         scrollEventThrottle={16}
       />
 
-      <YStack pos="absolute" b={0} l={0} r={0} px="$6" pb="$10" pt="$2">
+      <YStack pos="absolute" b={0} l={0} r={0} px="$10" pb="$8">
         <Pagination />
-        <Animated.View style={{ borderRadius: 16, overflow: 'hidden', backgroundColor: buttonBg }}>
+        
+        <Animated.View style={{ 
+          borderRadius: 12, 
+          overflow: 'hidden', 
+          backgroundColor: buttonBg,
+          elevation: 3,
+        }}>
            <Button
             bg="transparent"
-            h={64}
+            h={50}
             onPress={handleNext}
-            pressStyle={{ scale: 0.98 }}
-            iconAfter={isLastSlide ? <ArrowRight size={20} color="white" /> : <ChevronRight size={20} color="white" />}
+            pressStyle={{ scale: 0.98, opacity: 0.85 }}
+            iconAfter={
+              <XStack animation="bouncy" x={0} enterStyle={{ x: 3, opacity: 0 }}>
+                {isLastSlide ? <ArrowRight size={16} color="white" /> : <ChevronRight size={16} color="white" />}
+              </XStack>
+            }
            >
-            <SizableText color="white" fow="700" size="$5">{isLastSlide ? 'Get Started' : 'Continue'}</SizableText>
+            <SizableText color="white" fow="700" size="$3" ls={0.2}>
+              {isLastSlide ? 'Get Started' : 'Continue'}
+            </SizableText>
            </Button>
         </Animated.View>
       </YStack>
+
+
     </YStack>
   );
 };
