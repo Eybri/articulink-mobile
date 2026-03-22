@@ -6,6 +6,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     Alert,
+    Image as RNImage,
 } from "react-native";
 import {
     YStack,
@@ -116,76 +117,16 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     return (
         <YStack f={1} bg={COLORS.royalBlue}>
-            <StatusBar barStyle="light-content" backgroundColor={COLORS.royalBlue} />
-
-            {/* Background Composition */}
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <YStack fullscreen bg={COLORS.royalBlue} />
-
-                {/* Blobs from inspiration image */}
-                <Circle
-                    size={width * 1.2}
-                    bg={COLORS.mediumBlue}
-                    opacity={0.3}
-                    t={-width * 0.4}
-                    r={-width * 0.4}
-                    br={width * 0.6}
+                <RNImage 
+                    source={require('../../assets/images/bg.jpg')} 
+                    style={{ width: '100%', height: '100%', position: 'absolute' }}
+                    resizeMode="cover"
                 />
-                <Circle
-                    size={width}
-                    bg={COLORS.teal}
-                    opacity={0.2}
-                    t={-width * 0.2}
-                    l={-width * 0.3}
-                    br={width * 0.5}
-                />
-
-                {/* Floating Orbs (Glass Spheres) */}
-                {orbAnims.map((anim, i) => {
-                    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15 - i * 5] });
-                    const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] });
-                    const positions = [
-                        { t: '15%', r: '10%', size: 80, tint: COLORS.orbBlue },
-                        { t: '50%', l: '5%', size: 60, tint: COLORS.orbTeal },
-                        { t: '5%', l: '10%', size: 100, tint: COLORS.orbSand },
-                    ];
-                    return (
-                        <Animated.View key={i} style={{
-                            position: 'absolute',
-                            top: positions[i].t as any,
-                            left: positions[i].l as any,
-                            right: positions[i].r as any,
-                            transform: [{ translateY }, { scale }]
-                        }}>
-                            <Circle
-                                size={positions[i].size}
-                                bg={positions[i].tint}
-                                opacity={0.6}
-                                shadowColor="rgba(0,0,0,0.2)"
-                                shadowRadius={10}
-                                shadowOffset={{ width: 4, height: 4 }}
-                                shadowOpacity={0.3}
-                            >
-                                <Circle
-                                    size={positions[i].size * 0.8}
-                                    bg="white"
-                                    opacity={0.2}
-                                    t={positions[i].size * 0.05}
-                                    l={positions[i].size * 0.05}
-                                />
-                            </Circle>
-                        </Animated.View>
-                    );
-                })}
-
-                {/* Welcome Back Header (On top of background) */}
-                <YStack pos="absolute" t="18%" w="100%" px="$8" gap="$1">
-                    <SizableText size="$10" fow="900" color="white" ls={-1}>
-                        Welcome Back!
-                    </SizableText>
-                </YStack>
+                <YStack fullscreen bg="black" opacity={0.2} />
+                <YStack pos="absolute" t="18%" w="100%" px="$8" gap={0}><SizableText size="$10" fow="900" color="white" ls={-1}>Welcome Back!</SizableText></YStack>
             </ZStack>
-
             <ScrollView
                 f={1}
                 contentContainerStyle={{ flexGrow: 1 }}
@@ -194,7 +135,6 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             >
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
                     <Animated.View style={{ flex: 1, transform: [{ translateY: slideHeight }], justifyContent: 'flex-end' }}>
-                        {/* The White Login Card */}
                         <YStack
                             bg={COLORS.white}
                             borderTopLeftRadius={40}
@@ -213,9 +153,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     <SizableText size="$7" fow="800" color={COLORS.royalBlue}>Get Started</SizableText>
                                     <YStack w={30} h={3} bg={COLORS.teal} br={1.5} />
                                 </YStack>
-
                                 <YStack gap="$3">
-                                    {/* Email Input Group */}
                                     <YStack gap="$1.5">
                                         <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Email address</SizableText>
                                         <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
@@ -236,13 +174,10 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                         </XStack>
                                     </YStack>
 
-                                    {/* Password Input Group */}
                                     <YStack gap="$1.5">
                                         <XStack jc="space-between" ai="center">
                                             <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Password</SizableText>
-                                            <Button chromeless p={0} h="auto" onPress={() => { }}>
-                                                <SizableText size="$1" fow="700" color={COLORS.teal}>Forgot?</SizableText>
-                                            </Button>
+                                            <Button chromeless p={0} h="auto" onPress={() => { }}><SizableText size="$1" fow="700" color={COLORS.teal}>Forgot?</SizableText></Button>
                                         </XStack>
                                         <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
                                             <Lock size={16} color={COLORS.royalBlue} opacity={0.5} />
@@ -266,8 +201,6 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                             />
                                         </XStack>
                                     </YStack>
-
-                                    {/* Sign In Button */}
                                     <Button
                                         bg={COLORS.royalBlue}
                                         h={52}
@@ -282,59 +215,21 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     >
                                         <SizableText color="white" fow="700" size="$3" ls={0.5}>SIGN IN</SizableText>
                                     </Button>
-
-                                    {/* Social Sign In */}
                                     <YStack ai="center" gap="$3" mt="$1">
                                         <XStack ai="center" gap="$3" w="100%">
                                             <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
                                             <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.6}>OR SIGN IN WITH</SizableText>
                                             <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
                                         </XStack>
-
                                         <XStack gap="$4" jc="center" ai="center">
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}>
-                                                <Facebook size={16} color="#1877F2" />
-                                            </Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}>
-                                                <Twitter size={16} color="#1DA1F2" />
-                                            </Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}>
-                                                <Globe size={16} color={COLORS.deepNavy} />
-                                            </Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}>
-                                                <Github size={16} color={COLORS.deepNavy} />
-                                            </Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Facebook size={16} color="#1877F2" /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Twitter size={16} color="#1DA1F2" /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Globe size={16} color={COLORS.deepNavy} /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Github size={16} color={COLORS.deepNavy} /></Circle>
                                         </XStack>
                                     </YStack>
-
-                                    {/* Sign Up Link */}
-                                    <XStack jc="center" ai="center" gap="$2" mt="$1">
-                                        <SizableText color={COLORS.textMid} size="$2">Don't have an account?</SizableText>
-                                        <Button chromeless p={0} h="auto" onPress={() => navigation.navigate("Register")}>
-                                            <SizableText color={COLORS.royalBlue} fow="700" size="$2" textDecorationLine="underline">Sign up</SizableText>
-                                        </Button>
-                                    </XStack>
-
-                                    {/* Footer Links */}
-                                    <XStack jc="center" ai="center" gap="$3" mt="$2" opacity={0.5}>
-                                        <Button
-                                            chromeless
-                                            onPress={() => navigation.navigate('SecurityPrivacy')}
-                                            padding={0}
-                                            h="auto"
-                                        >
-                                            <SizableText size="$1" color={COLORS.textMid} fow="600">Privacy & Security</SizableText>
-                                        </Button>
-                                        <Circle size={3} bg={COLORS.sandMid} />
-                                        <Button
-                                            chromeless
-                                            onPress={() => navigation.navigate('About')}
-                                            padding={0}
-                                            h="auto"
-                                        >
-                                            <SizableText size="$1" color={COLORS.textMid} fow="600">About</SizableText>
-                                        </Button>
-                                    </XStack>
+                                    <XStack jc="center" ai="center" gap="$2" mt="$1"><SizableText color={COLORS.textMid} size="$2">Don't have an account?</SizableText><Button chromeless p={0} h="auto" onPress={() => navigation.navigate("Register")}><SizableText color={COLORS.royalBlue} fow="700" size="$2" textDecorationLine="underline">Sign up</SizableText></Button></XStack>
+                                    <XStack jc="center" ai="center" gap="$3" mt="$2" opacity={0.5}><Button chromeless onPress={() => navigation.navigate('SecurityPrivacy')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">Privacy & Security</SizableText></Button><Circle size={3} bg={COLORS.sandMid} /><Button chromeless onPress={() => navigation.navigate('About')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">About</SizableText></Button></XStack>
                                 </YStack>
                             </YStack>
                         </YStack>

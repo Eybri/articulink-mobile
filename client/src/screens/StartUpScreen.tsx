@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   Animated,
   StatusBar,
@@ -18,8 +18,9 @@ import {
   AnimatePresence,
 } from 'tamagui';
 import { ArrowRight, ChevronRight, Speaker } from '@tamagui/lucide-icons';
+import Svg, { Path } from 'react-native-svg';
 
-// ─── Brand Palette ───────────────────────────────────────────────
+// ─── Brand Palette (synced with BrandIntroScreen) ────────────────
 const COLORS = {
   cream: '#FAF8F4',
   warmWhite: '#F5F1EA',
@@ -48,7 +49,6 @@ interface Slide {
   description: string;
   accentColor: string;
   orbTint: string;
-  waveColor: string;
 }
 
 const slides: Slide[] = [
@@ -62,7 +62,6 @@ const slides: Slide[] = [
       'Breaking communication barriers for those with speech differences through advanced AI technology.',
     accentColor: COLORS.royalBlue,
     orbTint: COLORS.orbBlue,
-    waveColor: COLORS.teal,
   },
   {
     id: 'understand',
@@ -74,7 +73,6 @@ const slides: Slide[] = [
       'Advanced AI that accurately interprets nasal and lisp speech patterns with remarkable precision.',
     accentColor: COLORS.teal,
     orbTint: COLORS.orbTeal,
-    waveColor: COLORS.teal,
   },
   {
     id: 'correction',
@@ -86,7 +84,6 @@ const slides: Slide[] = [
       'Intelligent auto-correction powered by contextual understanding for clearer communication.',
     accentColor: COLORS.royalBlue,
     orbTint: COLORS.orbBlue,
-    waveColor: COLORS.mediumBlue,
   },
   {
     id: 'translation',
@@ -98,7 +95,6 @@ const slides: Slide[] = [
       'Seamless English ↔ Tagalog translation in seconds — talk naturally in either language.',
     accentColor: COLORS.teal,
     orbTint: COLORS.orbSand,
-    waveColor: COLORS.tealLight,
   },
   {
     id: 'voice',
@@ -110,71 +106,8 @@ const slides: Slide[] = [
       'Crystal-clear, natural-sounding speech output in both English and Tagalog.',
     accentColor: COLORS.royalBlue,
     orbTint: COLORS.orbTeal,
-    waveColor: COLORS.teal,
   },
 ];
-
-// ─── Animated Background Layer ──────────────────────────────────
-const MorphingBackground = ({ scrollX, width, height }: { scrollX: Animated.Value, width: number, height: number }) => {
-  // Interpolate main background color based on scrollX
-  const bgColor = scrollX.interpolate({
-    inputRange: slides.map((_, i) => i * width),
-    outputRange: slides.map(s => s.orbTint),
-    extrapolate: 'clamp',
-  });
-
-  return (
-    <ZStack pos="absolute" fullscreen pointerEvents="none" zIndex={-1}>
-      <Animated.View style={{ 
-        position: 'absolute', 
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: COLORS.cream 
-      }} />
-      
-      {/* Morphing Orbs that follow scroll with parallax */}
-      <Animated.View style={{
-        position: 'absolute',
-        width: width * 1.5,
-        height: width * 1.5,
-        borderRadius: width * 0.75,
-        backgroundColor: bgColor,
-        opacity: 0.15,
-        top: -width * 0.4,
-        right: -width * 0.3,
-        transform: [
-          { translateX: Animated.multiply(scrollX, -0.2) },
-          { scale: 1.1 }
-        ]
-      }} />
-
-      <Animated.View style={{
-        position: 'absolute',
-        width: width * 1.2,
-        height: width * 1.2,
-        borderRadius: width * 0.6,
-        backgroundColor: bgColor,
-        opacity: 0.1,
-        bottom: -width * 0.3,
-        left: -width * 0.3,
-        transform: [
-          { translateX: Animated.multiply(scrollX, 0.1) },
-          { scale: 0.9 }
-        ]
-      }} />
-
-      {/* Decorative Dots Pattern */}
-      <YStack fullscreen opacity={0.03}>
-         {Array.from({ length: 12 }).map((_, row) => (
-           <XStack key={row} jc="space-around" w="100%" h={height / 12}>
-             {Array.from({ length: 8 }).map((_, col) => (
-               <Circle key={col} size={4} bg={COLORS.deepNavy} />
-             ))}
-           </XStack>
-         ))}
-      </YStack>
-    </ZStack>
-  );
-};
 
 // ─── Main Component ───────────────────────────────────────────────
 const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -194,7 +127,7 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleNext = useCallback(() => {
     if (isLastSlide) {
-      navigation.navigate('Login');
+      navigation.navigate('BrandIntro');
     } else {
       const next = activeIndex + 1;
       flatListRef.current?.scrollToIndex({ index: next, animated: true });
@@ -202,85 +135,56 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   }, [activeIndex, isLastSlide, navigation]);
 
-  const handleSkip = useCallback(() => navigation.navigate('Login'), [navigation]);
+  const handleSkip = useCallback(() => navigation.navigate('BrandIntro'), [navigation]);
 
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
     const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
     const isWelcome = item.id === 'welcome';
-    
-    // Smooth scroll-linked animations
     const cardOpacity = scrollX.interpolate({ inputRange, outputRange: [0, 1, 0], extrapolate: 'clamp' });
-    const cardScale = scrollX.interpolate({ inputRange, outputRange: [0.9, 1, 0.9], extrapolate: 'clamp' });
-    const imageTranslateY = scrollX.interpolate({ inputRange, outputRange: [20, 0, 20], extrapolate: 'clamp' });
-    const contentTranslateY = scrollX.interpolate({ inputRange, outputRange: [40, 0, 40], extrapolate: 'clamp' });
+    const cardScale = scrollX.interpolate({ inputRange, outputRange: [0.92, 1, 0.92], extrapolate: 'clamp' });
+    const imageTranslateY = scrollX.interpolate({ inputRange, outputRange: [15, 0, 15], extrapolate: 'clamp' });
+    const contentTranslateY = scrollX.interpolate({ inputRange, outputRange: [25, 0, 25], extrapolate: 'clamp' });
 
     return (
-      <YStack w={width} h={height} jc="center" ai="center" px="$6">
+      <YStack w={width} h={height * 0.74} jc="center" ai="center" px="$6">
         <Animated.View style={{
           opacity: cardOpacity,
           transform: [{ scale: cardScale }],
           width: '100%',
           maxWidth: 340,
         }}>
-          <Card 
-            br={24} 
-            padding="$5" 
-            ai="center" 
-            bg={COLORS.white} 
-            elevation={6} 
-            shadowColor="rgba(15, 40, 71, 0.08)"
+          <Card
+            br={28}
+            padding="$5"
+            ai="center"
+            bg={COLORS.white}
+            elevation={8}
+            shadowColor="rgba(15, 40, 71, 0.06)"
             bw={1}
             bc={COLORS.sandMid}
             ov="hidden"
           >
             {/* Header Tag */}
-            <XStack 
-              ai="center" 
-              py="$1" 
-              px="$2.5" 
-              br={16} 
-              bg={`${item.accentColor}08`} 
-              mb="$4" 
-              gap="$1.5"
-            >
+            <XStack ai="center" py="$1" px="$2.5" br={16} bg={`${item.accentColor}08`} mb="$3" gap="$1.5">
               <Circle size={4} bg={item.accentColor} />
-              <SizableText 
-                size="$1" 
-                fow="700" 
-                ls={1.2} 
-                tt="uppercase" 
-                color={item.accentColor}
-              >
-                {item.tag}
-              </SizableText>
+              <SizableText size="$1" fow="700" ls={1.2} tt="uppercase" color={item.accentColor}>{item.tag}</SizableText>
             </XStack>
 
             {/* Illustration */}
-            <YStack ai="center" jc="center" h={160} mb="$4">
-               <Circle pos="absolute" size={130} bg={item.orbTint} opacity={0.35} />
-               <Animated.View style={{ transform: [{ translateY: imageTranslateY }] }}>
-                  <RNImage
-                    source={item.image}
-                    style={{
-                      width: isWelcome ? 180 : 160,
-                      height: isWelcome ? 90 : 130,
-                    }}
-                    resizeMode="contain"
-                  />
-               </Animated.View>
+            <YStack ai="center" jc="center" h={140} mb="$3">
+              <Circle pos="absolute" size={115} bg={item.orbTint} opacity={0.3} />
+              <Animated.View style={{ transform: [{ translateY: imageTranslateY }] }}>
+                <RNImage
+                  source={item.image}
+                  style={{ width: isWelcome ? 160 : 140, height: isWelcome ? 80 : 115 }}
+                  resizeMode="contain"
+                />
+              </Animated.View>
             </YStack>
 
             {/* Text Content */}
             <Animated.View style={{ transform: [{ translateY: contentTranslateY }], width: '100%', alignItems: 'center' }}>
-              <SizableText 
-                size="$6" 
-                fow="800" 
-                color={COLORS.textDark} 
-                ta="center" 
-                lh={24} 
-                mb="$2"
-                ls={-0.2}
-              >
+              <SizableText size="$5" fow="800" color={COLORS.textDark} ta="center" lh={22} mb="$1.5" ls={-0.2}>
                 {item.title}
                 {item.highlightedTitle && (
                   <SizableText color={item.accentColor}>{'\n'}{item.highlightedTitle}</SizableText>
@@ -288,20 +192,13 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               </SizableText>
 
               {/* Decorative Accent */}
-              <XStack ai="center" gap="$1" mb="$3" opacity={0.3}>
-                <YStack w={16} h={1} bg={item.accentColor} />
-                <Speaker size={10} color={item.accentColor} />
-                <YStack w={16} h={1} bg={item.accentColor} />
+              <XStack ai="center" gap="$1" mb="$2.5" opacity={0.25}>
+                <YStack w={14} h={1} bg={item.accentColor} />
+                <Speaker size={8} color={item.accentColor} />
+                <YStack w={14} h={1} bg={item.accentColor} />
               </XStack>
 
-              <SizableText 
-                size="$3" 
-                color={COLORS.textMid} 
-                ta="center" 
-                lh={18} 
-                fow="400"
-                maxWidth="90%"
-              >
+              <SizableText size="$2" color={COLORS.textMid} ta="center" lh={16} fow="400" maxWidth="90%">
                 {item.description}
               </SizableText>
             </Animated.View>
@@ -314,61 +211,51 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     );
   };
 
+  // Animated pagination dots (scroll-linked for smoothness)
   const Pagination = () => (
     <XStack jc="center" ai="center" mb="$4" gap="$1.5">
-      {slides.map((slide, i) => {
+      {slides.map((_, i) => {
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-        const dotWidth = scrollX.interpolate({ inputRange, outputRange: [5, 20, 5], extrapolate: 'clamp' });
-        const dotOpacity = scrollX.interpolate({ inputRange, outputRange: [0.2, 1, 0.2], extrapolate: 'clamp' });
+        const dotWidth = scrollX.interpolate({ inputRange, outputRange: [6, 22, 6], extrapolate: 'clamp' });
+        const dotOpacity = scrollX.interpolate({ inputRange, outputRange: [0.3, 1, 0.3], extrapolate: 'clamp' });
         return (
           <Animated.View key={i} style={{
-            height: 5, 
-            borderRadius: 2.5,
-            width: dotWidth, 
+            height: 4,
+            borderRadius: 2,
+            width: dotWidth,
             opacity: dotOpacity,
-            backgroundColor: slide.accentColor,
+            backgroundColor: 'white',
           }} />
         );
       })}
     </XStack>
   );
 
-  const buttonBg = scrollX.interpolate({
-    inputRange: slides.map((_, i) => i * width),
-    outputRange: slides.map(s => s.accentColor),
-    extrapolate: 'clamp',
-  });
-
   return (
-    <YStack f={1} bg={COLORS.cream}>
+    <YStack f={1} bg={COLORS.white}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-
-      {/* Floating Morphing Background */}
-      <MorphingBackground scrollX={scrollX} width={width} height={height} />
 
       {/* Skip Button */}
       <AnimatePresence>
         {!isLastSlide && (
           <Button
             pos="absolute" t={50} r={16} zIndex={20}
-            br={16} 
-            bg="rgba(255,255,255,0.6)"
+            br={16}
+            bg="rgba(255,255,255,0.7)"
             onPress={handleSkip}
-            pressStyle={{ scale: 0.95 }}
-            animation="quick"
-            enterStyle={{ opacity: 0, y: -5 }}
-            exitStyle={{ opacity: 0, y: -5 }}
+            pressStyle={{ scale: 0.95, opacity: 0.7 }}
             elevation={1}
             bw={1}
             bc={COLORS.sandMid}
             px="$3"
-            h={30}
+            h={28}
           >
-            <SizableText size="$1" fow="600" ls={0.4} color={currentSlide.accentColor}>SKIP</SizableText>
+            <SizableText size="$1" fow="600" ls={0.4} color={COLORS.textMid}>SKIP</SizableText>
           </Button>
         )}
       </AnimatePresence>
 
+      {/* Slides */}
       <Animated.FlatList
         ref={flatListRef}
         data={slides}
@@ -382,36 +269,51 @@ const StartUpScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           { useNativeDriver: false },
         )}
         scrollEventThrottle={16}
+        contentContainerStyle={{ alignItems: 'flex-start' }}
+        style={{ paddingTop: height * 0.05 }}
       />
 
-      <YStack pos="absolute" b={0} l={0} r={0} px="$10" pb="$8">
-        <Pagination />
-        
-        <Animated.View style={{ 
-          borderRadius: 12, 
-          overflow: 'hidden', 
-          backgroundColor: buttonBg,
-          elevation: 3,
-        }}>
-           <Button
-            bg="transparent"
+      {/* Bottom Section - Complementary wave style */}
+      <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.26}>
+        {/* Wave Transition */}
+        <YStack pos="absolute" t={-55} l={0} r={0} h={60} zIndex={1}>
+          <Svg height="100%" width="100%" viewBox="0 0 1440 320" preserveAspectRatio="none">
+            <Path
+              fill={COLORS.royalBlue}
+              d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,202.7C960,224,1056,224,1152,208C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            />
+          </Svg>
+        </YStack>
+
+        <YStack f={1} bg={COLORS.royalBlue} px="$8" pb={height * 0.035} jc="center" ai="center">
+          {/* Step Counter */}
+          <SizableText color="white" opacity={0.4} size="$1" fow="600" ls={1.5} tt="uppercase" mb="$1.5">
+            {`${activeIndex + 1} of ${slides.length}`}
+          </SizableText>
+
+          <Pagination />
+
+
+          <Button
+            bg="white"
             h={50}
+            w="100%"
+            maxWidth={280}
+            br={25}
             onPress={handleNext}
-            pressStyle={{ scale: 0.98, opacity: 0.85 }}
-            iconAfter={
-              <XStack animation="bouncy" x={0} enterStyle={{ x: 3, opacity: 0 }}>
-                {isLastSlide ? <ArrowRight size={16} color="white" /> : <ChevronRight size={16} color="white" />}
-              </XStack>
+            pressStyle={{ scale: 0.98, opacity: 0.9 }}
+            elevation={4}
+            iconAfter={isLastSlide
+              ? <ArrowRight size={16} color={COLORS.royalBlue} />
+              : <ChevronRight size={16} color={COLORS.royalBlue} />
             }
-           >
-            <SizableText color="white" fow="700" size="$3" ls={0.2}>
-              {isLastSlide ? 'Get Started' : 'Continue'}
+          >
+            <SizableText color={COLORS.royalBlue} fow="800" size="$2" ls={0.8}>
+              CONTINUE
             </SizableText>
-           </Button>
-        </Animated.View>
+          </Button>
+        </YStack>
       </YStack>
-
-
     </YStack>
   );
 };
