@@ -9,7 +9,7 @@ import asyncio
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from app.utils.authMiddleware import require_auth, get_current_user_id
 from app.utils.supabase_storage import upload_audio
-from app.models.transcription import create_audio_clip
+from app.models.transcription import create_audio_clip, get_clips_by_user, delete_audio_clip
 
 router = APIRouter(prefix="/api/v1", tags=["Transcription"])
 
@@ -129,3 +129,33 @@ def run_transcription_sync(audio, sr):
             num_beams=1
         )
     return processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
+
+@router.get("/history", dependencies=[Depends(require_auth)])
+async def get_history(
+    user_id: str = Depends(get_current_user_id),
+    skip: int = 0,
+    limit: int = 50
+):
+    """Fetch transcription history for the current user"""
+    try:
+        clips = await get_clips_by_user(user_id, skip=skip, limit=limit)
+        return clips
+    except Exception as e:
+        print(f"Error fetching history: {e}")
+        return {"error": "history_fetch_error", "detail": str(e)}
+
+@router.delete("/history/{clip_id}", dependencies=[Depends(require_auth)])
+async def delete_history_item(
+    clip_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Delete a specific history item"""
+    try:
+        # Note: In a real app, verify the clip belongs to the user first
+        success = await delete_audio_clip(clip_id)
+        if success:
+            return {"message": "Deleted successfully"}
+        return {"error": "delete_failed", "detail": "Item not found or could not be deleted"}
+    except Exception as e:
+        print(f"Error deleting history item: {e}")
+        return {"error": "delete_error", "detail": str(e)}

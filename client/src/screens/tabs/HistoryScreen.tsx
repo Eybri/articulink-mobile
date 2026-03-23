@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
   StatusBar,
@@ -6,7 +6,11 @@ import {
   Animated,
   useWindowDimensions,
   FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
+import { AuthContext } from '../../context/AuthContext';
 import {
   YStack,
   XStack,
@@ -54,70 +58,57 @@ const COLORS = {
 
 interface HistoryItem {
   id: string;
-  original: string;
-  translated: string;
-  timestamp: Date;
-  accuracy: number;
-  duration: number;
+  user_id: string;
+  audio_url?: string;
+  transcript?: string;
+  corrected_transcript?: string;
+  speech_type?: string;
+  duration_seconds?: number;
+  language?: string;
+  confidence_score?: number;
+  processing_status?: string;
+  created_at?: string;
 }
 
 const HistoryScreen = () => {
+  const { fetchSpeechHistory, deleteSpeechHistoryItem } = useContext(AuthContext)!;
   const [searchQuery, setSearchQuery] = useState('');
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { width, height } = useWindowDimensions();
   const [fadeAnim] = useState(new Animated.Value(0));
 
-  // Mock data - replace with actual data from your storage/API if available
-  const translationHistory: HistoryItem[] = [
-    {
-      id: '1',
-      original: "Helwo, how awe you?",
-      translated: "Hello, how are you?",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      accuracy: 96,
-      duration: 1.2,
-    },
-    {
-      id: '2',
-      original: "I wike thith game",
-      translated: "I like this game",
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-      accuracy: 94,
-      duration: 0.8,
-    },
-    {
-      id: '3',
-      original: "Pleath help me",
-      translated: "Please help me",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      accuracy: 98,
-      duration: 0.9,
-    },
-    {
-      id: '4',
-      original: "Thankth you vewy much",
-      translated: "Thank you very much",
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      accuracy: 97,
-      duration: 1.5,
-    },
-    {
-      id: '5',
-      original: "Whewre ith the bathwoom?",
-      translated: "Where is the bathroom?",
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      accuracy: 93,
-      duration: 1.1,
-    },
-  ];
+  const loadHistory = async (isRefreshing = false) => {
+    if (isRefreshing) setRefreshing(true);
+    else setLoading(true);
+
+    try {
+      const data = await fetchSpeechHistory();
+      if (Array.isArray(data)) {
+        setHistory(data);
+        setFilteredHistory(data);
+      }
+    } catch (error) {
+      console.error("Load history error:", error);
+    } finally {
+      if (isRefreshing) setRefreshing(false);
+      else setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const filtered = translationHistory.filter(item =>
-      item.original.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.translated.toLowerCase().includes(searchQuery.toLowerCase())
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    const filtered = history.filter(item =>
+      (item.transcript || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.corrected_transcript || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredHistory(filtered);
-  }, [searchQuery]);
+  }, [searchQuery, history]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -127,15 +118,39 @@ const HistoryScreen = () => {
     }).start();
   }, []);
 
-  const formatTimestamp = (timestamp: Date) => {
+  const formatTimestamp = (dateStr?: string) => {
+    if (!dateStr) return 'Just now';
+    const timestamp = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
 
     if (days > 0) return `${days} day${days === 1 ? '' : 's'} ago`;
     if (hours > 0) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
     return 'Just now';
+  };
+
+  const handleDelete = (item: HistoryItem) => {
+    Alert.alert(
+      "Delete Recording",
+      "Are you sure you want to delete this recording?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            const success = await deleteSpeechHistoryItem(item.id);
+            if (success) {
+              setHistory(prev => prev.filter(h => h.id !== item.id));
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderItem = ({ item }: { item: HistoryItem }) => (
@@ -151,30 +166,35 @@ const HistoryScreen = () => {
       pressStyle={{ scale: 0.98, bg: COLORS.warmWhite }}
     >
       <XStack jc="space-between" ai="flex-start" mb="$2">
-        <XStack ai="center" gap="$2">
+        <XStack ai="center" gap="$2" f={1}>
           <YStack w={32} h={32} br={10} bg={`${COLORS.teal}0C`} jc="center" ai="center">
             <Mic size={14} color={COLORS.teal} />
           </YStack>
-          <SizableText size="$1" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1}>
-            Saved Recording
+          <SizableText size="$1" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1} f={1} numberOfLines={1}>
+             {item.speech_type === 'unknown' ? 'Speech Record' : (item.speech_type || 'Saved Recording')}
           </SizableText>
         </XStack>
-        <SizableText size="$1" fow="600" color={`${COLORS.textMid}80`}>
-          {formatTimestamp(item.timestamp)}
-        </SizableText>
+        <XStack ai="center" gap="$2.5">
+          <SizableText size="$1" fow="600" color={`${COLORS.textMid}80`}>
+            {formatTimestamp(item.created_at)}
+          </SizableText>
+          <TouchableOpacity onPress={() => handleDelete(item)}>
+            <Trash2 size={14} color="#EF4444" opacity={0.6} />
+          </TouchableOpacity>
+        </XStack>
       </XStack>
 
       <YStack gap="$2" mb="$3">
         <XStack gap="$2" ai="flex-start">
           <Circle size={6} mt={8} bg={COLORS.sandMid} />
           <SizableText f={1} size="$3" color={COLORS.textMid} fow="500" fontStyle="italic">
-            "{item.original}"
+            "{item.transcript}"
           </SizableText>
         </XStack>
         <XStack gap="$2" ai="flex-start">
           <Circle size={6} mt={8} bg={COLORS.royalBlue} />
           <SizableText f={1} size="$4" color={COLORS.textDark} fow="700">
-            {item.translated}
+            {item.corrected_transcript}
           </SizableText>
         </XStack>
       </YStack>
@@ -183,11 +203,11 @@ const HistoryScreen = () => {
         <XStack gap="$4">
           <XStack ai="center" gap="$1.5">
             <CheckCircle size={12} color={COLORS.teal} />
-            <SizableText size="$1" fow="800" color={COLORS.teal}>{item.accuracy}% Accuracy</SizableText>
+            <SizableText size="$1" fow="800" color={COLORS.teal}>{Math.round((item.confidence_score || 0.95) * 100)}% Match</SizableText>
           </XStack>
           <XStack ai="center" gap="$1.5">
             <Clock size={12} color={COLORS.textMid} />
-            <SizableText size="$1" fow="700" color={COLORS.textMid}>{item.duration}s</SizableText>
+            <SizableText size="$1" fow="700" color={COLORS.textMid}>{item.duration_seconds?.toFixed(1) || '0.0'}s</SizableText>
           </XStack>
         </XStack>
         <ChevronRight size={18} color={COLORS.sandMid} />
@@ -249,11 +269,22 @@ const HistoryScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadHistory(true)}
+              tintColor={COLORS.royalBlue}
+            />
+          }
           ListEmptyComponent={
             <YStack ai="center" jc="center" mt="$10" opacity={0.5}>
               <History size={48} color={COLORS.sandMid} mb="$4" />
-              <SizableText size="$5" fow="700" color={COLORS.textMid}>No recordings found</SizableText>
-              <SizableText size="$2" color={COLORS.textMid}>Try a different search term</SizableText>
+              <SizableText size="$5" fow="700" color={COLORS.textMid}>
+                {loading ? 'Fetching history...' : (searchQuery ? 'No recordings found' : 'No history yet')}
+              </SizableText>
+              <SizableText size="$2" color={COLORS.textMid}>
+                {searchQuery ? 'Try a different search term' : 'Your recordings will appear here'}
+              </SizableText>
             </YStack>
           }
         />

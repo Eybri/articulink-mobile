@@ -39,6 +39,8 @@ export interface AuthContextType {
     clearChatHistory: () => Promise<any>;
     fetchChatHistory: () => Promise<any[]>;
     deleteMessage: (timestamp: string) => Promise<any>;
+    fetchSpeechHistory: () => Promise<any[]>;
+    deleteSpeechHistoryItem: (clipId: string) => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -283,6 +285,26 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
+    const fetchSpeechHistory = async () => {
+        try {
+            const response = await axios.get(`${baseURL}/history`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching speech history:", error);
+            return [];
+        }
+    };
+
+    const deleteSpeechHistoryItem = async (clipId: string) => {
+        try {
+            await axios.delete(`${baseURL}/history/${clipId}`);
+            return { success: true };
+        } catch (error: any) {
+            console.error("Error deleting speech history item:", error);
+            return { success: false, error: "Failed to delete item" };
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -297,7 +319,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             sendChatMessage,
             clearChatHistory,
             fetchChatHistory,
-            deleteMessage
+            deleteMessage,
+            fetchSpeechHistory,
+            deleteSpeechHistoryItem
         }}>
             {children}
         </AuthContext.Provider>

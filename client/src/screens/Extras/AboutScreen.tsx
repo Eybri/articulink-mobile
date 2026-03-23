@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  StyleSheet,
   StatusBar,
   Platform,
   Animated,
@@ -8,6 +7,8 @@ import {
   UIManager,
   useWindowDimensions,
   Image as RNImage,
+  ImageBackground,
+  View,
 } from "react-native";
 import {
   YStack,
@@ -16,16 +17,12 @@ import {
   Button,
   Circle,
   Paragraph,
-  H1,
   SizableText,
-  Card,
   ScrollView,
-  Theme,
 } from "tamagui";
 import {
   ChevronLeft,
   ChevronDown,
-  ChevronRight,
   Mic,
   Brain,
   Volume2,
@@ -38,7 +35,7 @@ import {
   AlertTriangle,
   CheckCircle,
   HandHelping,
-  Info,
+  Speaker,
 } from "@tamagui/lucide-icons";
 
 // Enable LayoutAnimation on Android
@@ -57,46 +54,9 @@ const COLORS = {
   mediumBlue: '#2A5FA8',
   teal: '#2A8FA0',
   tealLight: '#3DAFC4',
-  orbBlue: '#C8D8EE',
-  orbTeal: '#BEE4EC',
-  orbSand: '#E8E0D0',
   textDark: '#1C2B3A',
   textMid: '#4A5A6A',
   white: '#FFFFFF',
-};
-
-// ─── Soft Orb ─────────────────────────────────────────────────────
-interface OrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
-
-const SoftOrb: React.FC<OrbProps> = ({ color, size, x, y, duration, delay }) => {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -18] });
-  const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.92, 1, 0.92] });
-
-  return (
-    <Animated.View style={{
-      position: 'absolute',
-      left: x - size / 2, top: y - size / 2,
-      width: size, height: size,
-      borderRadius: size / 2,
-      backgroundColor: color,
-      opacity: 0.5,
-      transform: [{ translateY }, { scale }],
-    }}>
-      <Circle pos="absolute" t={size * 0.15} l={size * 0.15} size={size * 0.7} bg="white" opacity={0.35} />
-    </Animated.View>
-  );
 };
 
 // ─── Accordion ────────────────────────────────────────────────────
@@ -120,34 +80,35 @@ const Accordion: React.FC<AccordionProps> = ({ icon, title, children, defaultOpe
   const rotation = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] });
 
   return (
-    <Card bg="white" br={24} mb="$4" ov="hidden" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
-      <XStack ai="center" jc="space-between" p="$4" onPress={toggle}>
-        <XStack ai="center" gap="$3" f={1}>
-          <YStack w={40} h={40} br={12} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+    <YStack bg={COLORS.white} br={16} mb="$2.5" ov="hidden" bw={1} bc={COLORS.sandMid}>
+      <XStack ai="center" jc="space-between" py="$2.5" px="$3" onPress={toggle} pressStyle={{ opacity: 0.7 }}>
+        <XStack ai="center" gap="$2.5" f={1}>
+          <Circle size={30} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
             {icon}
-          </YStack>
-          <SizableText fow="800" size="$4" color={COLORS.textDark} ls={-0.3} f={1}>
+          </Circle>
+          <SizableText fow="700" size="$2" color={COLORS.textDark} ls={-0.2} f={1}>
             {title}
           </SizableText>
         </XStack>
         <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-          <ChevronDown size={20} color={COLORS.textMid} />
+          <ChevronDown size={14} color={COLORS.textMid} opacity={0.5} />
         </Animated.View>
       </XStack>
       {expanded && (
-        <YStack px="$4" pb="$4" pt="$1" borderTopWidth={1} borderTopColor={COLORS.sandLight}>
+        <YStack px="$3" pb="$3" pt="$1">
+          <YStack h={1} bg={COLORS.sandLight} mb="$2.5" />
           {children}
         </YStack>
       )}
-    </Card>
+    </YStack>
   );
 };
 
 // ─── Sub Components ───────────────────────────────────────────────
 const Bullet: React.FC<{ text: string; color?: string }> = ({ text, color = COLORS.teal }) => (
-  <XStack ai="flex-start" mb="$2" gap="$3">
-    <Circle size={6} mt={8} bg={color} />
-    <SizableText f={1} size="$3" color={COLORS.textMid} lh={22} fow="500">
+  <XStack ai="flex-start" mb="$1.5" gap="$2">
+    <Circle size={4} mt={7} bg={color} />
+    <SizableText f={1} size="$1" color={COLORS.textMid} lh={17} fow="500">
       {text}
     </SizableText>
   </XStack>
@@ -156,33 +117,30 @@ const Bullet: React.FC<{ text: string; color?: string }> = ({ text, color = COLO
 const StepCard: React.FC<{ step: string; icon: React.ReactNode; title: string; desc: string; optional?: boolean }> = ({
   step, icon, title, desc, optional,
 }) => (
-  <YStack bg={`${COLORS.royalBlue}06`} br={16} p="$4" mb="$3" bw={1} bc={`${COLORS.royalBlue}10`}>
-    <XStack ai="center" mb="$3" gap="$3">
-      <Circle size={24} bg={COLORS.royalBlue} jc="center" ai="center">
-        <SizableText color="white" size="$1" fow="800">{step}</SizableText>
+  <YStack bg={COLORS.cream} br={12} p="$2.5" mb="$2" bw={1} bc={COLORS.sandMid}>
+    <XStack ai="center" mb="$1.5" gap="$2">
+      <Circle size={18} bg={COLORS.royalBlue} jc="center" ai="center">
+        <SizableText color="white" size={9} fow="800">{step}</SizableText>
       </Circle>
-      <YStack w={34} h={34} br={10} bg="white" jc="center" ai="center" bw={1} bc={COLORS.sandMid}>
-        {icon}
-      </YStack>
+      <SizableText size="$2" fow="700" color={COLORS.textDark} f={1}>
+        {optional && <SizableText color={COLORS.teal} fow="700" size="$1">Optional · </SizableText>}
+        {title}
+      </SizableText>
     </XStack>
-    <SizableText size="$4" fow="700" color={COLORS.textDark} mb="$1">
-      {optional && <SizableText color="#D97706" fow="800" fontStyle="italic">Optional: </SizableText>}
-      {title}
-    </SizableText>
-    <SizableText size="$3" color={COLORS.textMid} lh={20}>
+    <SizableText size="$1" color={COLORS.textMid} lh={16} fow="400" pl={26}>
       {desc}
     </SizableText>
   </YStack>
 );
 
 const InfoBox: React.FC<{ text: string; type?: "info" | "warning" }> = ({ text, type = "info" }) => (
-  <XStack ai="flex-start" bg={type === "warning" ? "#FFFBEB" : `${COLORS.royalBlue}08`} p="$4" br={16} mt="$4" bw={1} bc={type === "warning" ? "#FEF3C7" : `${COLORS.royalBlue}15`} gap="$2">
+  <XStack ai="flex-start" bg={type === "warning" ? "#FFFBEB" : `${COLORS.royalBlue}06`} p="$2.5" br={10} mt="$2" bw={1} bc={type === "warning" ? "#FEF3C7" : `${COLORS.royalBlue}12`} gap="$2">
     {type === "warning" ? (
-      <AlertTriangle size={14} color="#D97706" mt={4} />
+      <AlertTriangle size={11} color="#D97706" mt={2} />
     ) : (
-      <CheckCircle size={14} color={COLORS.royalBlue} mt={4} />
+      <CheckCircle size={11} color={COLORS.royalBlue} mt={2} />
     )}
-    <SizableText f={1} size="$3" color={type === "warning" ? "#B45309" : COLORS.royalBlue} lh={20} fow="700">
+    <SizableText f={1} size="$1" color={type === "warning" ? "#B45309" : COLORS.royalBlue} lh={16} fow="600">
       {text}
     </SizableText>
   </XStack>
@@ -191,199 +149,190 @@ const InfoBox: React.FC<{ text: string; type?: "info" | "warning" }> = ({ text, 
 // ─── Main Screen ─────────────────────────────────────────────────
 const AboutScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { width, height } = useWindowDimensions();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
-  const orbs = useMemo(() => ([
-    { color: COLORS.orbBlue, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
-    { color: COLORS.orbTeal, size: width * 0.5, x: width * 0.1, y: height * 0.48, duration: 7200, delay: 1000 },
-    { color: COLORS.orbSand, size: width * 0.38, x: width * 0.62, y: height * 0.8, duration: 5500, delay: 500 },
-  ]), [width, height]);
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, tension: 25, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  // Parallax: header image moves slower than scroll
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 250],
+    outputRange: [0, -60],
+    extrapolate: 'clamp',
+  });
+
+  // Header fades as you scroll
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 180],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  // Header scales down slightly
+  const headerScale = scrollY.interpolate({
+    inputRange: [0, 250],
+    outputRange: [1, 0.92],
+    extrapolate: 'clamp',
+  });
 
   return (
     <YStack f={1} bg={COLORS.cream}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Background */}
-      <ZStack pos="absolute" fullscreen pointerEvents="none">
-        <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
-        <Circle pos="absolute" b={-height * 0.06} l={-width * 0.2} size={width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
-        {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-
-        {/* Corner Brackets */}
-        <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${COLORS.royalBlue}28`} br={6} />
-        <YStack pos="absolute" b={60} r={22} w={34} h={34} borderBottomWidth={1.5} borderRightWidth={1.5} bc={`${COLORS.teal}28`} br={6} />
-      </ZStack>
-
-      {/* Header */}
-      <XStack jc="space-between" ai="center" px="$4" pt={Platform.OS === "android" ? 44 : 56} pb="$4" zi={10}>
+      {/* ── Fixed Back Button (stays on top) ── */}
+      <XStack pos="absolute" t={Platform.OS === "android" ? 40 : 52} l={0} r={0} px="$5" zIndex={20} jc="space-between" ai="center">
         <Button
-          size="$4"
-          circular
-          bg="rgba(255,255,255,0.7)"
+          size="$3"
+          br={14}
+          bg="rgba(255,255,255,0.15)"
           bw={1}
-          bc={COLORS.sandMid}
-          icon={<ChevronLeft size={24} color={COLORS.textDark} />}
+          bc="rgba(255,255,255,0.2)"
+          icon={<ChevronLeft size={20} color="white" />}
           onPress={() => navigation.goBack()}
-          pressStyle={{ scale: 0.9 }}
+          pressStyle={{ scale: 0.95, opacity: 0.7 }}
         />
-        <SizableText size="$5" fow="800" color={COLORS.textDark} ls={-0.4}>
-          About Articulink
+        <SizableText size="$1" fow="700" color="white" ls={3} tt="uppercase" opacity={0.5}>
+          About
         </SizableText>
         <YStack w={40} />
       </XStack>
 
-      <ScrollView f={1} contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-        {/* Hero */}
-        <YStack ai="center" mb={36} mt={10}>
-          <Circle pos="absolute" t={-10} size={160} bg={COLORS.orbTeal} opacity={0.5} />
-          <RNImage
-            source={require('../../../assets/images/logo2-nobg.png')}
-            style={{ width: 130, height: 130 }}
-            resizeMode="contain"
-          />
-          <SizableText size="$9" fow="900" color={COLORS.textDark} mb="$1" ls={-1}>
-            Articulink
+      {/* ── Scrollable Content (everything scrolls) ── */}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        {/* ── Blue Header (scrolls up with parallax) ── */}
+        <Animated.View style={{
+          transform: [{ translateY: headerTranslateY }, { scale: headerScale }],
+        }}>
+          <View style={{
+            borderBottomLeftRadius: 35,
+            borderBottomRightRadius: 35,
+            overflow: 'hidden',
+          }}>
+            <ImageBackground
+              source={require('../../../assets/images/bg.jpg')}
+              resizeMode="cover"
+              style={{
+                paddingTop: Platform.OS === "android" ? 90 : 100,
+                paddingBottom: 40,
+                alignItems: 'center',
+              }}
+            >
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+              <Animated.View style={{ opacity: Animated.multiply(fadeAnim, headerOpacity), transform: [{ translateY: slideAnim }], alignItems: 'center' }}>
+                <RNImage
+                  source={require('../../../assets/images/whitelogo.png')}
+                  style={{ width: width * 0.18, height: width * 0.18 }}
+                  resizeMode="contain"
+                />
+                <SizableText size="$6" fow="900" color="white" ls={-0.5} mt="$1.5">
+                  articuLink
+                </SizableText>
+                <YStack w={24} h={2} bg={COLORS.teal} br={1} mt="$1" mb="$1.5" />
+                <XStack ai="center" gap="$1">
+                  <Speaker size={8} color="white" opacity={0.4} />
+                  <SizableText size={10} fow="600" color="white" opacity={0.4} ls={1.5} tt="uppercase">
+                    Speech Engine · v1.0.0
+                  </SizableText>
+                </XStack>
+              </Animated.View>
+            </ImageBackground>
+          </View>
+        </Animated.View>
+
+        {/* ── Content Cards ── */}
+        <YStack px="$4" pt="$4" pb={60}>
+          {/* Tagline */}
+          <SizableText size="$2" color={COLORS.textMid} ta="center" lh={18} fow="500" maw={280} als="center" mb="$4">
+            Empowering communication through AI — making every voice heard.
           </SizableText>
-          <YStack bg={`${COLORS.royalBlue}14`} px="$3" py="$1" br={20} mb="$4" bw={1} bc={`${COLORS.royalBlue}20`}>
-            <SizableText size="$1" fow="700" color={COLORS.royalBlue}>Version 1.0.0</SizableText>
-          </YStack>
-          <SizableText size="$4" color={COLORS.textMid} ta="center" lh={23} fow="500" maw={300}>
-            Speech assistance powered by AI — helping you communicate clearly and confidently.
-          </SizableText>
-        </YStack>
 
-        {/* ─── 1: What is Articulink ─── */}
-        <Accordion
-          icon={<Heart size={18} color={COLORS.royalBlue} />}
-          title="What is Articulink?"
-          defaultOpen={true}
-        >
-          <Paragraph size="$4" color={COLORS.textMid} lh={24} mb="$3">
-            Articulink is a speech assistance app designed to help individuals with
-            lisp and hypernasal speech communicate more clearly.
-          </Paragraph>
-          <Paragraph size="$4" color={COLORS.textMid} lh={24}>
-            The app processes your voice and converts it into a clearer, more
-            understandable speech output — while preserving your intended message.
-          </Paragraph>
-        </Accordion>
+          <Accordion icon={<Heart size={14} color={COLORS.royalBlue} />} title="What is Articulink?" defaultOpen={true}>
+            <Paragraph size="$1" color={COLORS.textMid} lh={17} mb="$1.5" fow="500">
+              A speech assistance app designed to help individuals with lisp and hypernasal speech communicate more clearly.
+            </Paragraph>
+            <Paragraph size="$1" color={COLORS.textMid} lh={17} fow="500">
+              The app processes your voice and converts it into a clearer, more understandable speech output — preserving your message.
+            </Paragraph>
+          </Accordion>
 
-        {/* ─── 2: Who Is It For ─── */}
-        <Accordion
-          icon={<Users size={18} color={COLORS.royalBlue} />}
-          title="Who Is It For?"
-        >
-          <Bullet text="Individuals with lisp speech patterns" />
-          <Bullet text="Individuals with hypernasal speech" />
-          <Bullet text="Speech therapy support users" />
-          <Bullet text="Students and professionals needing clearer communication" />
-          <InfoBox text="Articulink is built for you — we want you to feel seen and understood." />
-        </Accordion>
+          <Accordion icon={<Users size={14} color={COLORS.royalBlue} />} title="Who Is It For?">
+            <Bullet text="Individuals with lisp speech patterns" />
+            <Bullet text="Individuals with hypernasal speech" />
+            <Bullet text="Speech therapy support users" />
+            <Bullet text="Students and professionals needing clearer communication" />
+            <InfoBox text="Articulink is built for you — we want you to feel seen and understood." />
+          </Accordion>
 
-        {/* ─── 3: How to Use ─── */}
-        <Accordion
-          icon={<Mic size={18} color={COLORS.royalBlue} />}
-          title="How to Use Articulink"
-        >
-          <StepCard
-            step="1"
-            icon={<Mic size={18} color={COLORS.royalBlue} />}
-            title="Tap the Record Button"
-            desc="Press the microphone icon and start speaking normally."
-          />
-          <StepCard
-            step="2"
-            icon={<Brain size={18} color={COLORS.royalBlue} />}
-            title="Processing"
-            desc="The app analyzes your speech and enhances clarity using AI."
-          />
-          <StepCard
-            step="3"
-            icon={<Volume2 size={18} color={COLORS.royalBlue} />}
-            title="Hear or Share the Result"
-            desc="Play the improved audio, view the text transcription, or share the output."
-          />
-          <StepCard
-            step="4"
-            icon={<Save size={18} color={COLORS.royalBlue} />}
-            title="Save to History"
-            desc="Choose whether to save the recording to your private history or discard it."
-            optional={true}
-          />
-          <StepCard
-            step="5"
-            icon={<HandHelping size={18} color={COLORS.royalBlue} />}
-            title="Contribute to Model Improvement"
-            desc="You may allow anonymized recordings to improve the AI model. This is voluntary."
-            optional={true}
-          />
-        </Accordion>
+          <Accordion icon={<Mic size={14} color={COLORS.royalBlue} />} title="How to Use">
+            <StepCard step="1" icon={<Mic size={14} color={COLORS.royalBlue} />} title="Tap Record" desc="Press the microphone icon and start speaking naturally." />
+            <StepCard step="2" icon={<Brain size={14} color={COLORS.royalBlue} />} title="AI Processing" desc="The app analyzes your speech and enhances clarity using AI." />
+            <StepCard step="3" icon={<Volume2 size={14} color={COLORS.royalBlue} />} title="Hear the Result" desc="Play the improved audio, view the text, or share the output." />
+            <StepCard step="4" icon={<Save size={14} color={COLORS.royalBlue} />} title="Save to History" desc="Save the recording to your private history or discard it." optional />
+            <StepCard step="5" icon={<HandHelping size={14} color={COLORS.royalBlue} />} title="Help Improve" desc="Anonymized recordings may help improve the AI model. Voluntary." optional />
+          </Accordion>
 
-        {/* ─── 4: Privacy Summary ─── */}
-        <Accordion
-          icon={<Shield size={18} color={COLORS.royalBlue} />}
-          title="Privacy & Security Summary"
-        >
-          <XStack ai="center" mb="$3" gap="$2">
-            <Lock size={18} color={COLORS.royalBlue} />
-            <SizableText size="$4" fow="800" color={COLORS.textDark}>Your Privacy Matters</SizableText>
-          </XStack>
-          <Bullet text="Recordings are saved only with your permission" color="#059669" />
-          <Bullet text="You can delete your data anytime" color="#059669" />
-          <Bullet text="Training contributions are anonymized" color="#059669" />
-          <Bullet text="Data is encrypted during transfer and storage" color="#059669" />
-          <InfoBox text="Compliant with the Data Privacy Act of 2012 (Philippines)." />
-        </Accordion>
+          <Accordion icon={<Shield size={14} color={COLORS.royalBlue} />} title="Privacy & Security">
+            <XStack ai="center" mb="$2" gap="$1.5">
+              <Lock size={12} color={COLORS.teal} />
+              <SizableText size="$2" fow="800" color={COLORS.textDark}>Your Privacy Matters</SizableText>
+            </XStack>
+            <Bullet text="Recordings saved only with permission" color="#059669" />
+            <Bullet text="Delete your data anytime" color="#059669" />
+            <Bullet text="Training contributions are anonymized" color="#059669" />
+            <Bullet text="Encrypted during transfer and storage" color="#059669" />
+            <InfoBox text="Compliant with the Data Privacy Act of 2012 (Philippines)." />
+          </Accordion>
 
-        {/* ─── 5: Accessibility ─── */}
-        <Accordion
-          icon={<Accessibility size={18} color={COLORS.royalBlue} />}
-          title="Accessibility Features"
-        >
-          <Paragraph size="$4" color={COLORS.textMid} lh={24} mb="$3">
-            Since our users may struggle with articulation, we've designed the app to be as accessible as possible:
-          </Paragraph>
-          <Bullet text="Large, easy-to-tap buttons" />
-          <Bullet text="Clear, readable fonts" />
-          <Bullet text="High contrast mode support" />
-          <Bullet text="Text + audio feedback for all actions" />
-          <Bullet text="Slow playback option" />
-          <Bullet text="Adjustable playback speed" />
-          <Bullet text="Visual waveform display" />
-          <Bullet text="Text highlighting while speaking" />
-        </Accordion>
+          <Accordion icon={<Accessibility size={14} color={COLORS.royalBlue} />} title="Accessibility">
+            <Paragraph size="$1" color={COLORS.textMid} lh={17} mb="$1.5" fow="500">
+              Designed for users who may struggle with articulation:
+            </Paragraph>
+            <Bullet text="Large, easy-to-tap buttons" />
+            <Bullet text="Clear, readable fonts" />
+            <Bullet text="Text + audio feedback for all actions" />
+            <Bullet text="Adjustable playback speed" />
+            <Bullet text="Visual waveform display" />
+          </Accordion>
 
-        {/* ─── 6: Safety ─── */}
-        <Accordion
-          icon={<AlertTriangle size={18} color={COLORS.royalBlue} />}
-          title="Safety & Responsible Use"
-        >
-          <XStack bg="#FFFBEB" p="$4" br={16} bw={1} bc="#FEF3C7" gap="$3">
-            <AlertTriangle size={18} color="#D97706" mt={2} />
-            <SizableText f={1} size="$3" color="#92400E" lh={22}>
-              Articulink is a communication assistance tool and{" "}
-              <SizableText fow="800">not a replacement for professional speech therapy.</SizableText>
+          <Accordion icon={<AlertTriangle size={14} color={COLORS.royalBlue} />} title="Safety & Responsible Use">
+            <XStack bg="#FFFBEB" p="$2.5" br={10} bw={1} bc="#FEF3C7" gap="$2">
+              <AlertTriangle size={11} color="#D97706" mt={2} />
+              <SizableText f={1} size="$1" color="#92400E" lh={16}>
+                Articulink is a communication tool and{" "}
+                <SizableText fow="800">not a replacement for professional speech therapy.</SizableText>
+              </SizableText>
+            </XStack>
+            <Paragraph size="$1" color={COLORS.textMid} lh={17} mt="$2" fow="500">
+              We encourage working with a qualified speech-language pathologist alongside using Articulink.
+            </Paragraph>
+          </Accordion>
+
+          {/* Footer */}
+          <YStack ai="center" mt="$6" pb="$2" opacity={0.5}>
+            <XStack ai="center" gap="$1" mb="$1.5">
+              <YStack w={12} h={1} bg={COLORS.textMid} />
+              <Speaker size={8} color={COLORS.textMid} />
+              <YStack w={12} h={1} bg={COLORS.textMid} />
+            </XStack>
+            <SizableText size="$1" color={COLORS.textMid} fow="600" ls={1}>
+              Articulink © 2026
             </SizableText>
-          </XStack>
-          <Paragraph size="$4" color={COLORS.textMid} lh={24} mt="$4">
-            If you have a speech condition, we encourage you to work with a qualified
-            speech-language pathologist alongside using Articulink.
-          </Paragraph>
-        </Accordion>
-
-        {/* Footer */}
-        <YStack ai="center" mt="$5">
-          <XStack ai="center" w="80%" mb="$4" gap="$1">
-            <YStack f={1} h={1} bg={COLORS.sandMid} />
-            {[4, 8, 12, 8, 4].map((h, i) => (
-              <YStack key={i} w={2.5} h={h} br={1} bg={COLORS.teal} opacity={0.45} mx={1.5} />
-            ))}
-            <YStack f={1} h={1} bg={COLORS.sandMid} />
-          </XStack>
-          <SizableText size="$2" color={COLORS.textMid} fow="600" ls={0.5}>
-            Articulink © 2026
-          </SizableText>
+          </YStack>
         </YStack>
-      </ScrollView>
+      </Animated.ScrollView>
     </YStack>
   );
 };

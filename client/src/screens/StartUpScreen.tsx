@@ -54,7 +54,7 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 'welcome',
-    image: require('../../assets/images/logoName-nobg.png'),
+    image: require('../../assets/images/logo2-nobg.png'),
     tag: 'SPEECH & COMMUNICATION',
     title: 'Your voice,',
     highlightedTitle: 'perfectly understood',
