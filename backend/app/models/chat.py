@@ -67,13 +67,17 @@ async def save_chat_message(user_id: str, role: str, content: str) -> Dict[str, 
 
 async def get_chat_history(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Retrieve chat history for a user from their message array"""
+    logger.info(f"Fetching chat history for user: {user_id}")
     doc = await COLLECTION.find_one({"user_id": ObjectId(user_id)})
     
     if not doc or "messages" not in doc:
+        logger.info(f"No chat history found for user: {user_id}")
         return []
         
     # Return the last 'limit' messages
-    return doc["messages"][-limit:]
+    messages = doc["messages"][-limit:]
+    logger.info(f"Found {len(messages)} messages for user: {user_id}")
+    return messages
 
 async def delete_chat_history(user_id: str) -> int:
     """Delete the chat history document for a user"""

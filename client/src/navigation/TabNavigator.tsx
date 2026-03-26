@@ -234,4 +234,4 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
-export default TabNavigator;
+export default TabNavigator;
