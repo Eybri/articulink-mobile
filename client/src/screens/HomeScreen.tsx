@@ -186,8 +186,18 @@ const HomeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [transcript, setTranscript] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
   const { width, height } = useWindowDimensions();
+
+  // Entry Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   // Background orbs
   const orbs = useMemo(() => ([
@@ -358,136 +368,162 @@ const HomeScreen: React.FC = () => {
       <YStack f={1} px="$5" pt={Platform.OS === "android" ? 48 : 60} pb={Platform.OS === "android" ? 20 : 30} gap="$4">
         
         {/* Header */}
-        <YStack ai="center" gap="$1">
-          <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={2.5} tt="uppercase">
-            SPEECH CLARITY ENGINE
-          </SizableText>
-          <H1 fow="900" size="$10" color={COLORS.textDark} ls={-0.5}>
-            Articulink
-          </H1>
-          <SizableText size="$3" color={COLORS.textMid} fow="500">
-            Tap, speak, and let AI understand you
-          </SizableText>
-        </YStack>
-
-        {/* Recording Section */}
-        <YStack ai="center" gap="$2">
-          <YStack w={120} h={120} jc="center" ai="center">
-            <PulseRing active={isRecording} />
-            {isRecording && (
-              <Circle pos="absolute" size={120} bg={COLORS.teal} opacity={0.12} />
-            )}
-            
-            <Button
-              size={88}
-              br={44}
-              bg={isRecording ? '#DC2626' : COLORS.teal}
-              onPress={isRecording ? stopRecording : startRecording}
-              disabled={loading}
-              pressStyle={{ scale: 0.92 }}
-              elevation={10}
-              shadowColor={isRecording ? '#DC2626' : '#2A8FA0'}
-              icon={loading ? <Spinner size="large" color="white" /> : (isRecording ? <Square size={28} color="white" fill="white" /> : <Mic size={32} color="white" />)}
-            />
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <YStack ai="center" gap="$1">
+            <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={2.5} tt="uppercase">
+              SPEECH CLARITY ENGINE
+            </SizableText>
+            <H1 fow="900" size="$10" color={COLORS.textDark} ls={-0.5}>
+              Articulink
+            </H1>
+            <SizableText size="$3" color={COLORS.textMid} fow="500">
+              Tap, speak, and let AI understand you
+            </SizableText>
           </YStack>
+        </Animated.View>
 
-          <SizableText size="$3" fow="600" color={isRecording ? '#DC2626' : COLORS.textMid}>
-            {statusText}
-          </SizableText>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: fadeAnim }] }}>
+            <YStack ai="center" gap="$2">
+              <YStack w={120} h={120} jc="center" ai="center">
+                <PulseRing active={isRecording} />
+                <AnimatePresence>
+                  {isRecording && (
+                    <Circle
+                      key="active-bg"
+                      pos="absolute"
+                      size={120}
+                      bg={COLORS.teal}
+                      opacity={0.12}
+                      animation="quick"
+                      enterStyle={{ opacity: 0, scale: 0.8 }}
+                      exitStyle={{ opacity: 0, scale: 1.2 }}
+                    />
+                  )}
+                </AnimatePresence>
 
-          {isRecording && (
-            <YStack mt="$2">
-              <AnimatedWaveform color={COLORS.teal} />
+                <Button
+                  size={88}
+                  br={44}
+                  bg={isRecording ? '#DC2626' : COLORS.teal}
+                  onPress={isRecording ? stopRecording : startRecording}
+                  disabled={loading}
+                  pressStyle={{ scale: 0.92, opacity: 0.85 }}
+                  elevation={10}
+                  shadowColor={isRecording ? '#DC2626' : '#2A8FA0'}
+                  icon={loading ? <Spinner size="large" color="white" /> : (isRecording ? <Square size={28} color="white" fill="white" /> : <Mic size={32} color="white" />)}
+                />
+              </YStack>
+
+              <SizableText size="$3" fow="600" color={isRecording ? '#DC2626' : COLORS.textMid}>
+                {statusText}
+              </SizableText>
+
+              <AnimatePresence>
+                {isRecording && (
+                  <YStack
+                    key="waveform"
+                    mt="$2"
+                    animation="medium"
+                    enterStyle={{ opacity: 0, y: 10 }}
+                    exitStyle={{ opacity: 0, y: -10 }}
+                  >
+                    <AnimatedWaveform color={COLORS.teal} />
+                  </YStack>
+                )}
+              </AnimatePresence>
             </YStack>
-          )}
-        </YStack>
+          </Animated.View>
 
         {/* Transcript Card */}
-        <Card f={1} bg="white" br={22} elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid} ov="hidden">
-           {/* Top accent */}
-          <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
-          <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${COLORS.royalBlue}07`} />
+        <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <Card f={1} bg="white" br={22} elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid} ov="hidden">
+            {/* Top accent */}
+            <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
+            <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${COLORS.royalBlue}07`} />
 
-          <YStack f={1} p="$4">
-            <XStack ai="center" gap="$2" mb="$2">
-              <YStack w={30} h={30} br={9} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
-                <FileText size={14} color={COLORS.royalBlue} />
-              </YStack>
-              <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
-                Transcript
-              </SizableText>
-              <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.7} />
-              {transcript.length > 0 && (
-                <YStack bg={`${COLORS.teal}14`} px="$2" py="$1" br={8}>
-                  <SizableText fow="700" size="$1" color={COLORS.teal}>
-                    {transcript.length}
-                  </SizableText>
+            <YStack f={1} p="$4">
+              <XStack ai="center" gap="$2" mb="$2">
+                <YStack w={30} h={30} br={9} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+                  <FileText size={14} color={COLORS.royalBlue} />
                 </YStack>
-              )}
-            </XStack>
+                <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
+                  Transcript
+                </SizableText>
+                <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.7} />
+                {transcript.length > 0 && (
+                  <YStack bg={`${COLORS.teal}14`} px="$2" py="$1" br={8}>
+                    <SizableText fow="700" size="$1" color={COLORS.teal}>
+                      {transcript.length}
+                    </SizableText>
+                  </YStack>
+                )}
+              </XStack>
 
-            <TextArea
-              flex={1}
-              bg={`${COLORS.royalBlue}04`}
-              borderColor={COLORS.sandMid}
-              br={14}
-              p="$3"
-              size="$4"
-              fontWeight="500"
-              color={COLORS.textDark}
-              value={transcript}
-              onChangeText={setTranscript}
-              placeholder="Your speech will appear here..."
-              placeholderTextColor={COLORS.textMid as any}
-              borderWidth={1.5}
-            />
+              <TextArea
+                flex={1}
+                bg={`${COLORS.royalBlue}04`}
+                borderColor={COLORS.sandMid}
+                br={14}
+                p="$3"
+                size="$4"
+                fontWeight="500"
+                color={COLORS.textDark}
+                value={transcript}
+                onChangeText={setTranscript}
+                placeholder="Your speech will appear here..."
+                placeholderTextColor={COLORS.textMid as any}
+                borderWidth={1.5}
+              />
 
-            <YStack pos="absolute" b={12} r={14}>
-              <AnimatedWaveform color={COLORS.royalBlue} />
+              <YStack pos="absolute" b={12} r={14}>
+                <AnimatedWaveform color={COLORS.royalBlue} />
+              </YStack>
             </YStack>
-          </YStack>
-        </Card>
+          </Card>
+        </Animated.View>
 
         {/* Action Buttons */}
-        <YStack gap="$2">
-          <Button
-            size="$5"
-            bg={COLORS.teal}
-            br={18}
-            onPress={speakText}
-            disabled={!transcript}
-            opacity={!transcript ? 0.45 : 1}
-            pressStyle={{ scale: 0.98 }}
-            icon={<Volume2 size={18} color="white" />}
-            iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.5)" />}
-            elevation={6}
-            shadowColor="#2A8FA0"
-          >
-            <SizableText fow="800" size="$4" color="white" ml="$2">
-              Speak
-            </SizableText>
-          </Button>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <YStack gap="$2">
+            <Button
+              size="$5"
+              bg={COLORS.teal}
+              br={18}
+              onPress={speakText}
+              disabled={!transcript}
+              opacity={!transcript ? 0.45 : 1}
+              pressStyle={{ scale: 0.98, opacity: 0.9 }}
+              icon={<Volume2 size={18} color="white" />}
+              iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.5)" />}
+              elevation={6}
+              shadowColor="#2A8FA0"
+            >
+              <SizableText fow="800" size="$4" color="white" ml="$2">
+                Speak
+              </SizableText>
+            </Button>
 
-          <Button
-            size="$5"
-            bg="white"
-            br={18}
-            onPress={clearTranscript}
-            disabled={!transcript}
-            opacity={!transcript ? 0.45 : 1}
-            pressStyle={{ scale: 0.98 }}
-            borderWidth={1}
-            borderColor="rgba(220,38,38,0.18)"
-            icon={<Trash2 size={16} color="#DC2626" />}
-            iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.35)" />}
-            elevation={5}
-            shadowColor="#8A96A4"
-          >
-            <SizableText fow="800" size="$4" color="#DC2626" ml="$2">
-              Clear
-            </SizableText>
-          </Button>
-        </YStack>
+            <Button
+              size="$5"
+              bg="white"
+              br={18}
+              onPress={clearTranscript}
+              disabled={!transcript}
+              opacity={!transcript ? 0.45 : 1}
+              pressStyle={{ scale: 0.98, opacity: 0.9 }}
+              borderWidth={1}
+              borderColor="rgba(220,38,38,0.18)"
+              icon={<Trash2 size={16} color="#DC2626" />}
+              iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.35)" />}
+              elevation={5}
+              shadowColor="#8A96A4"
+            >
+              <SizableText fow="800" size="$4" color="#DC2626" ml="$2">
+                Clear
+              </SizableText>
+            </Button>
+          </YStack>
+        </Animated.View>
       </YStack>
     </YStack>
   );
