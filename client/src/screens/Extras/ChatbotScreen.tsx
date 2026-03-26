@@ -267,7 +267,8 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         });
       }
     } catch (error) {
-      console.error("Error loading chat history:", error);
+      // Silence errors here, they are logged with context in the service/auth provider if necessary
+      // console.error("Error loading chat history:", error);
     } finally {
       setLoading(false);
     }

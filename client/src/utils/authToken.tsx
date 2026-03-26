@@ -32,7 +32,7 @@ import { User } from "../context/AuthContext";
 export const storeUser = async (userData: User): Promise<void> => {
     try {
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        console.log("User data stored");
+        // User data stored
     } catch (error) {
         console.log("Error storing user data:", error);
         throw error;
@@ -83,7 +83,7 @@ export const clearAuth = async (): Promise<void> => {
     try {
         // Only clear access_token and user (no refresh_token)
         await AsyncStorage.multiRemove(["access_token", "user"]);
-        console.log("Auth data cleared");
+        // Auth data cleared
     } catch (err) {
         console.log("Error clearing auth data", err);
     }
@@ -94,7 +94,7 @@ export const storeTokens = async (accessToken: string, refreshToken?: string): P
     try {
         // Only store access token (ignore refreshToken)
         await AsyncStorage.setItem("access_token", accessToken);
-        console.log("Access token stored (legacy function)");
+        // Access token stored (legacy function)
     } catch (err) {
         console.log("Error storing tokens", err);
     }
