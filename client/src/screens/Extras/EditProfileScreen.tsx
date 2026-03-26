@@ -44,7 +44,7 @@ import baseURL from "../../utils/baseurl";
 import { getToken, storeUser } from "../../utils/authToken";
 import { AuthContext, AuthContextType, User as UserType } from "../../context/AuthContext";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental && !((global as any).nativeFabricUIManager)) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
