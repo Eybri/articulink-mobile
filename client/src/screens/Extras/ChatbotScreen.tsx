@@ -122,15 +122,20 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setLoading(true);
     try {
       const history = await fetchChatHistory();
-      if (history && history.length > 0) {
+      if (history && Array.isArray(history) && history.length > 0) {
         const formattedMessages: Message[] = history.map((msg: any, index: number) => ({
-          id: msg.id || index,
-          text: msg.content,
+          id: msg._id || msg.id || `history-${index}-${Date.now()}`,
+          text: msg.content || msg.text || "",
           sender: msg.role === 'assistant' ? 'bot' : 'user',
           timestamp: msg.created_at || new Date().toISOString(),
           isExpanded: true,
         }));
-        setMessages(formattedMessages);
+        
+        // Prepend the initial tutorial/bot greeting if not in history
+        setMessages((prev) => {
+          const greeting = prev[0];
+          return [greeting, ...formattedMessages];
+        });
       }
     } catch (error) {
       console.error("Error loading chat history:", error);
@@ -169,7 +174,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       if (result.success) {
         const botMessage: Message = {
           id: Date.now() + 1,
-          text: result.response,
+          text: result.response || "",
           sender: "bot",
           timestamp: new Date().toISOString(),
           isExpanded: true,
@@ -280,7 +285,7 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const MessageBubble = ({ message }: { message: Message }) => {
     const isUser = message.sender === "user";
-    const isLongMessage = message.text.length > 300;
+    const isLongMessage = (message.text || "").length > 300;
     const shouldTruncate = !message.isExpanded && isLongMessage;
     const displayText = shouldTruncate
       ? message.text.substring(0, 300) + "..."

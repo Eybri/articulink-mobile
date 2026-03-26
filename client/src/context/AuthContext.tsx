@@ -234,7 +234,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const allMessages = [...currentHistory, userMessage];
 
             const response = await axios.post(
-                `${baseURL}/message`,
+                `${baseURL}/chatbot/message`,
                 {
                     messages: allMessages.map(msg => ({
                         role: msg.role || (msg.sender === 'bot' ? 'assistant' : 'user'),
@@ -258,7 +258,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const fetchChatHistory = async () => {
         try {
-            const response = await axios.get(`${baseURL}/history`);
+            const response = await axios.get(`${baseURL}/chatbot/history`);
             return response.data;
         } catch (error) {
             console.error("Error fetching chat history:", error);
@@ -268,7 +268,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const clearChatHistory = async () => {
         try {
-            await axios.delete(`${baseURL}/history`);
+            await axios.delete(`${baseURL}/chatbot/history`);
             return { success: true };
         } catch (error: any) {
             console.error("Error clearing chat history:", error);
@@ -277,7 +277,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
     const deleteMessage = async (timestamp: string) => {
         try {
-            await axios.delete(`${baseURL}/history/${timestamp}`);
+            await axios.delete(`${baseURL}/chatbot/history/${timestamp}`);
             return { success: true };
         } catch (error: any) {
             console.error("Error deleting message:", error);
