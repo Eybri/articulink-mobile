@@ -258,10 +258,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const fetchChatHistory = async () => {
         try {
+            const token = await getToken();
+            if (!token) return [];
+            
             const response = await axios.get(`${baseURL}/chatbot/history`);
             return response.data;
-        } catch (error) {
-            console.error("Error fetching chat history:", error);
+        } catch (error: any) {
+            // Silence 401/403 errors as they often occur during transition/init and shouldn't clutter the console
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                console.error("Error fetching chat history:", error.message || error);
+            }
             return [];
         }
     };
@@ -287,10 +293,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const fetchSpeechHistory = async () => {
         try {
+            const token = await getToken();
+            if (!token) return [];
+            
             const response = await axios.get(`${baseURL}/history`);
             return response.data;
-        } catch (error) {
-            console.error("Error fetching speech history:", error);
+        } catch (error: any) {
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                console.error("Error fetching speech history:", error.message || error);
+            }
             return [];
         }
     };
