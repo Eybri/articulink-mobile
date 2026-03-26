@@ -10,14 +10,12 @@ import SettingsScreen from "../screens/tabs/SettingsScreen";
 import MapScreen from "../screens/tabs/MapScreen";
 import EditProfileScreen from '../screens/Extras/EditProfileScreen';
 import ChatbotScreen from '../screens/Extras/ChatbotScreen';
-import TamaguiDemoScreen from "../screens/TamaguiDemoScreen";
 import {
   Home,
   History,
   MapPin,
   User,
   Settings,
-  Layers,
   MessageCircle,
 } from "@tamagui/lucide-icons";
 
@@ -95,7 +93,6 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },
   { name: "Settings", label: "Settings", icon: Settings },
-  { name: "Demo", label: "Tamagui", icon: Layers },
 ];
 
 // ─── Custom Tab Bar ──────────────────────────────────────────────
@@ -190,7 +187,6 @@ const TabNavigator = () => (
     <Tab.Screen name="Map" component={MapScreen} options={{ title: "Nearby Centers" }} />
     <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
     <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
-    <Tab.Screen name="Demo" component={TamaguiDemoScreen} options={{ title: "Tamagui Demo" }} />
   </Tab.Navigator>
 );
 
