@@ -155,7 +155,7 @@ const TabItem: React.FC<{
         transform: [{ translateY }, { scale: iconScale }],
       }}>
         {React.createElement(config.icon, {
-          size: isFocused ? 22 : 20,
+          size: isFocused ? 28 : 24,
           color: isFocused ? COLORS.royalBlue : COLORS.textMid,
           strokeWidth: isFocused ? 2.4 : 1.8,
         })}
