@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { Platform, Animated } from "react-native";
+import { Platform, Animated, Image as RNImage } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
@@ -41,18 +41,20 @@ const COLORS = {
 const headerOptions = {
   headerStyle: {
     backgroundColor: COLORS.cream,
-    borderBottomColor: COLORS.sandMid,
+    borderBottomColor: 'rgba(221, 214, 200, 0.5)',
     borderBottomWidth: 1,
     elevation: 0,
     shadowOpacity: 0,
   },
   headerTitleStyle: {
     color: COLORS.textDark,
-    fontSize: 18,
-    fontWeight: "800" as const,
-    letterSpacing: -0.3,
+    fontSize: 20,
+    fontWeight: "900" as const,
+    letterSpacing: -0.6,
   },
-  headerTintColor: COLORS.deepNavy,
+  headerTintColor: COLORS.royalBlue,
+  headerTitleAlign: "center" as const,
+  headerBackTitleVisible: false,
 };
 
 // ─── Home Stack ──────────────────────────────────────────────────
@@ -62,19 +64,26 @@ const HomeStack = () => (
       name="HomeMain"
       component={HomeScreen}
       options={({ navigation }) => ({
-        title: "Articulink",
+        headerLeft: () => (
+          <RNImage
+            source={require("../../assets/images/logo2-nobg.png")}
+            style={{ width: 50, height: 50, marginLeft: 16 }}
+            resizeMode="contain"
+          />
+        ),
+        headerTitle: "",
         headerRight: () => (
           <Button
             chromeless
-            icon={<MessageCircle size={22} color={COLORS.royalBlue} />}
+            icon={<MessageCircle size={23} color={COLORS.royalBlue} />}
             onPress={() => navigation.navigate("Chatbot")}
-            mr="$3"
+            mr="$2"
             pressStyle={{ scale: 0.95, opacity: 0.9 }}
           />
         ),
       })}
     />
-    <Stack.Screen name="Chatbot" component={ChatbotScreen} options={{ title: "Articulink ChatBot" }} />
+    <Stack.Screen name="Chatbot" component={ChatbotScreen} options={{ title: "AI Assistant" }} />
   </Stack.Navigator>
 );
 
