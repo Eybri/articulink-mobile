@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Linking, Platform, StatusBar } from 'react-native';
+import { View, Linking, Platform, StatusBar, Animated, useWindowDimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import {
@@ -34,6 +34,11 @@ import {
   AlertCircle,
   Activity,
   Trash2,
+  Mic,
+  Activity as ActivityIcon,
+  GraduationCap,
+  Accessibility,
+  MessageSquare,
 } from "@tamagui/lucide-icons";
 
 // ─── Brand Palette ───────────────────────────────────────────────
@@ -86,6 +91,10 @@ const SpeechTherapyMaps: React.FC = () => {
   const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [travelMode, setTravelMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
+  const [isListExpanded, setIsListExpanded] = useState(true);
+  const { width, height } = useWindowDimensions();
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(30)).current;
 
   const SEARCH_RADIUS = 10000;
   const MAX_RESULTS = 15;
@@ -281,6 +290,7 @@ const SpeechTherapyMaps: React.FC = () => {
     setSelectedCenter(center);
     setRouteInfo(null);
     getRouteInfo(center);
+    setIsListExpanded(false); // Auto-hide list when marker is selected
   };
 
   const openGoogleMaps = () => {
@@ -330,7 +340,22 @@ const SpeechTherapyMaps: React.FC = () => {
     getCurrentLocation();
   };
 
-  useEffect(() => { getCurrentLocation(); }, []);
+  useEffect(() => { 
+    getCurrentLocation(); 
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 20,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   if (loading) {
     return (
@@ -353,8 +378,8 @@ const SpeechTherapyMaps: React.FC = () => {
           <SizableText size="$3" color={COLORS.textMid} ta="center" mt="$2">{error}</SizableText>
         </YStack>
         <YStack w="100%" gap="$3">
-          <Button bg={COLORS.royalBlue} col="white" fontWeight="700" br={16} h={54} onPress={handleRetry}>Try Again</Button>
-          <Button bw={1} bc={COLORS.sandMid} bg="transparent" col={COLORS.textDark} fontWeight="700" br={16} h={54} onPress={openGoogleMaps}>Open in Google Maps</Button>
+          <Button bg={COLORS.royalBlue} color="white" fontWeight="700" br={16} h={54} onPress={handleRetry}>Try Again</Button>
+          <Button bw={1} bc={COLORS.sandMid} bg="transparent" color={COLORS.textDark} fontWeight="700" br={16} h={54} onPress={openGoogleMaps}>Open in Google Maps</Button>
         </YStack>
       </YStack>
     );
@@ -364,18 +389,37 @@ const SpeechTherapyMaps: React.FC = () => {
     <YStack flex={1} bg={COLORS.cream}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       
+      {/* Background blobs */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.7} bg={COLORS.orbBlue} opacity={0.3} />
+        <Circle pos="absolute" b={-height * 0.05} l={-width * 0.1} size={width * 0.6} bg={COLORS.orbTeal} opacity={0.2} />
+      </ZStack>
+
       {/* Map Header */}
-      <YStack pt={Platform.OS === 'android' ? 50 : 60} px="$4" pb="$3" bg="white" borderBottomWidth={1} bc={COLORS.sandMid}>
+      <YStack pt="$4" px="$4" pb="$2.5" bg="transparent">
         <XStack ai="center" jc="space-between" mb="$2">
           <YStack>
-            <H1 size="$8" fow="900" color={COLORS.textDark} ls={-0.8}>Articulink Maps</H1>
-            <SizableText size="$1" color={COLORS.textMid} fow="600">Speech & Voice Clinics Nearby</SizableText>
+            <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Articulink Maps</H1>
+            <SizableText size="$2" color={COLORS.textMid} fow="600" o={0.8}>Nearby Speech & Voice Clinics</SizableText>
           </YStack>
-          <Button size="$3" circular bg={COLORS.white} bw={1} bc={COLORS.sandMid} icon={<RefreshCw size={16} color={COLORS.royalBlue} />} onPress={handleRetry} />
+          <Circle 
+            size={40} 
+            circular 
+            bg="white" 
+            bw={1} 
+            bc={COLORS.sandMid} 
+            elevation={2}
+            shadowColor={COLORS.deepNavy}
+            shadowOpacity={0.1}
+            onPress={handleRetry}
+          >
+            <RefreshCw size={18} color={COLORS.royalBlue} />
+          </Circle>
         </XStack>
       </YStack>
 
-      <ZStack f={1}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+        <ZStack f={1} mx="$4" mb="$4" mt="$0" br={28} ov="hidden" bw={1.5} bc={COLORS.sandMid} elevation={4} shadowColor={COLORS.deepNavy}>
         <WebView
           key={webViewKey}
           source={{ html: generateMapHTML() }}
@@ -396,26 +440,31 @@ const SpeechTherapyMaps: React.FC = () => {
 
         <Button
           pos="absolute"
-          t={20}
+          b={30}
           r={20}
           size="$4"
           circular
           bg="white"
           elevation={5}
-          shadowColor="#000"
+          shadowColor={COLORS.deepNavy}
+          shadowOpacity={0.2}
           icon={<LocateFixed size={20} color={COLORS.royalBlue} />}
           onPress={() => setWebViewKey(p => p + 1)}
         />
-      </ZStack>
+        </ZStack>
+      </Animated.View>
 
       {/* Selected Center Overly */}
       <AnimatePresence>
-        {selectedCenter && (
+        {selectedCenter && !isListExpanded && (
           <YStack pos="absolute" b={120} l={20} r={20} zi={100}>
             <Card bg="white" br={24} p="$4" elevation={10} shadowColor="#000" bw={1} bc={COLORS.sandMid}>
               <XStack gap="$3" ai="center" mb="$3">
                 <Circle size={44} bg={`${COLORS.royalBlue}0C`} bw={1} bc={`${COLORS.royalBlue}15`} jc="center" ai="center">
-                  <SizableText size="$5">{selectedCenter.icon}</SizableText>
+                  {selectedCenter.type === 'speech-therapy' ? <Mic size={20} color={COLORS.royalBlue} /> :
+                   selectedCenter.type === 'voice-clinic' ? <ActivityIcon size={20} color={COLORS.royalBlue} /> :
+                   selectedCenter.type === 'sped-school' ? <GraduationCap size={20} color={COLORS.royalBlue} /> :
+                   <Accessibility size={20} color={COLORS.royalBlue} />}
                 </Circle>
                 <YStack f={1}>
                   <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3}>{selectedCenter.name}</SizableText>
@@ -477,16 +526,38 @@ const SpeechTherapyMaps: React.FC = () => {
       </AnimatePresence>
 
       {/* Bottom Info Bar */}
-      <YStack bg="white" borderTopLeftRadius={30} borderTopRightRadius={30} p="$4" pb={Platform.OS === 'android' ? 20 : 35} elevation={8} shadowColor="#000" bw={1} bc={COLORS.sandMid}>
-        <XStack ai="center" jc="space-between" mb="$3">
-          <XStack ai="center" gap="$2">
+      <YStack 
+        bg="white" 
+        borderTopLeftRadius={28} 
+        borderTopRightRadius={28} 
+        p="$4" 
+        pb={Platform.OS === 'android' ? 20 : 35} 
+        elevation={8} 
+        shadowColor={COLORS.deepNavy} 
+        shadowOpacity={0.08}
+        bw={1} 
+        bc={COLORS.sandMid}
+      >
+        <XStack ai="center" jc="space-between" mb={isListExpanded ? "$3" : "0"}>
+          <XStack ai="center" gap="$2" onPress={() => setIsListExpanded(!isListExpanded)}>
             <MapPin size={18} color={COLORS.royalBlue} />
             <SizableText size="$4" fow="800" color={COLORS.textDark}>Nearby Centers</SizableText>
+            <YStack bg={`${COLORS.royalBlue}14`} px="$2.5" py={2} br={20} ml="$1">
+              <SizableText size="$1" fow="800" color={COLORS.royalBlue}>{centers.length}</SizableText>
+            </YStack>
           </XStack>
-          <YStack bg={`${COLORS.royalBlue}14`} px="$3" py={4} br={20}>
-            <SizableText size="$1" fow="800" color={COLORS.royalBlue}>{centers.length} Found</SizableText>
-          </YStack>
+          <Button 
+            size="$2.5" 
+            circular 
+            bg="transparent" 
+            unstyled 
+            icon={isListExpanded ? <ChevronRight size={18} color={COLORS.textMid} style={{ transform: [{ rotate: '90deg' }] }} /> : <ChevronRight size={18} color={COLORS.textMid} style={{ transform: [{ rotate: '-90deg' }] }} />} 
+            onPress={() => setIsListExpanded(!isListExpanded)} 
+          />
         </XStack>
+
+        {isListExpanded && (
+          <YStack>
 
         {centers.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
@@ -503,7 +574,12 @@ const SpeechTherapyMaps: React.FC = () => {
                 pressStyle={{ scale: 0.95 }}
               >
                 <XStack ai="center" gap="$2" mb="$2">
-                  <SizableText size="$5">{c.icon || '🏫'}</SizableText>
+                  <YStack w={28} h={28} br={8} bg={`${COLORS.royalBlue}0A`} ai="center" jc="center">
+                    {c.type === 'speech-therapy' ? <Mic size={14} color={COLORS.royalBlue} /> :
+                     c.type === 'voice-clinic' ? <ActivityIcon size={14} color={COLORS.royalBlue} /> :
+                     c.type === 'sped-school' ? <GraduationCap size={14} color={COLORS.royalBlue} /> :
+                     <Accessibility size={14} color={COLORS.royalBlue} />}
+                  </YStack>
                   <SizableText f={1} size="$2" fow="800" color={COLORS.textDark} numberOfLines={1}>{c.name}</SizableText>
                 </XStack>
                 <SizableText size="$1" color={COLORS.textMid} fow="600" mb="$1">{c.distance.toFixed(1)} km away</SizableText>
@@ -519,10 +595,12 @@ const SpeechTherapyMaps: React.FC = () => {
           <SizableText size="$2" color={COLORS.textMid} ta="center" py="$4">No centers found within 10km.</SizableText>
         )}
 
-        <XStack mt="$4" gap="$3">
-          <Button f={1} bg={COLORS.mediumBlue} col="white" br={16} icon={<Search size={16} color="white" />} onPress={openGoogleMaps}>Find More on Google</Button>
-          <Button circular bg="white" bw={1} bc={COLORS.sandMid} icon={<RefreshCw size={18} color={COLORS.textMid} />} onPress={handleRetry} />
-        </XStack>
+            <XStack mt="$4" gap="$3">
+              <Button f={1} bg={COLORS.mediumBlue} col="white" br={16} icon={<Search size={16} color="white" />} onPress={openGoogleMaps}>Find More on Google</Button>
+              <Button circular bg="white" bw={1} bc={COLORS.sandMid} icon={<RefreshCw size={18} color={COLORS.textMid} />} onPress={handleRetry} />
+            </XStack>
+          </YStack>
+        )}
       </YStack>
     </YStack>
   );
