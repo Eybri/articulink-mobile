@@ -88,6 +88,7 @@ const SpeechTherapyMaps: React.FC = () => {
   const [centers, setCenters] = useState<Center[]>([]);
   const [mapLoading, setMapLoading] = useState(true);
   const [webViewKey, setWebViewKey] = useState(1);
+  const webViewRef = React.useRef<WebView>(null);
   const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [travelMode, setTravelMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
@@ -199,30 +200,24 @@ const SpeechTherapyMaps: React.FC = () => {
 
       const speech = await fetchNominatim(lat, lng, ['speech therapy', 'speech pathology', 'speech language pathologist', 'speech therapist', 'articulation therapy', 'voice therapy', 'speech clinic'], 'speech', '🗣️');
       found.push(...speech);
-      console.log(`🗣️ Found ${speech.length} speech centers`);
 
       const voice = await fetchNominatim(lat, lng, ['speech language hearing center', 'voice clinic', 'communication clinic', 'speech and hearing center'], 'voice', '🎤');
       found.push(...voice);
-      console.log(`👂 Found ${voice.length} voice clinics`);
 
       const schools = await fetchNominatim(lat, lng, ['special education school', 'SPED school', 'speech disorder school', 'communication disorder school', 'special needs school'], 'school', '🏫');
       found.push(...schools);
-      console.log(`🏫 Found ${schools.length} SPED schools`);
 
       const pwd = await fetchNominatim(lat, lng, ['PWD center', 'persons with disability center', 'disability support center', 'speech disability center', 'communication disability center'], 'pwd', '♿');
       found.push(...pwd);
-      console.log(`♿ Found ${pwd.length} PWD centers`);
 
       const overpass = await searchOverpass(lat, lng);
       found.push(...overpass);
-      console.log(`📍 Found ${overpass.length} via Overpass`);
 
       const unique = found
         .filter((c, i, s) => i === s.findIndex(x => x.latitude.toFixed(4) === c.latitude.toFixed(4) && x.longitude.toFixed(4) === c.longitude.toFixed(4)))
         .sort((a, b) => a.distance - b.distance)
         .filter(c => c.distance <= SEARCH_RADIUS / 1000);
 
-      console.log(`🎯 Total unique centers: ${unique.length}`);
       setCenters(unique.slice(0, MAX_RESULTS));
       setLoading(false);
     } catch (e) {
@@ -265,11 +260,18 @@ const SpeechTherapyMaps: React.FC = () => {
         const data = await res.json();
         if (data.routes?.[0]) {
           const r = data.routes[0];
-          setRouteInfo({
+          const info = {
             distance: `${(r.distance / 1000).toFixed(1)} km`,
             duration: `${Math.ceil(r.duration / 60)} mins`,
             geometry: r.geometry
-          });
+          };
+          setRouteInfo(info);
+          
+          // Post route to WebView
+          webViewRef.current?.injectJavaScript(`
+            if (window.showRoute) window.showRoute(${JSON.stringify(r.geometry)});
+            true;
+          `);
         }
       }
     } catch (e) {
@@ -290,7 +292,7 @@ const SpeechTherapyMaps: React.FC = () => {
     setSelectedCenter(center);
     setRouteInfo(null);
     getRouteInfo(center);
-    setIsListExpanded(false); // Auto-hide list when marker is selected
+    setIsListExpanded(false); 
   };
 
   const openGoogleMaps = () => {
@@ -310,11 +312,143 @@ const SpeechTherapyMaps: React.FC = () => {
   };
 
   const generateMapHTML = () => {
-    if (!location) return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:20px;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f5f5}.error-message{text-align:center;color:#666}</style></head><body><div class="error-message"><h3>Loading map...</h3><p>Please wait while we load your location.</p></div></body></html>`;
+    if (!location) return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:20px;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:#FAF8F4}.loading{text-align:center;color:#1A4480;font-weight:bold}</style></head><body><div class="loading">Initializing Map...</div></body></html>`;
 
-    const safe = JSON.stringify(centers || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/'/g, '\\u0027').replace(/"/g, '\\u0022').replace(/&/g, '\\u0026').replace(/\//g, '\\/');
+    // Correctly escape for JSON string safely
+    const safeStr = JSON.stringify(centers || []).replace(/`/g, '\\`').replace(/\$/g, '\\$');
 
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>#map{height:100vh;width:100%;position:absolute;top:0;left:0}body{margin:0;padding:0;font-family:Arial;height:100vh}.user-marker,.facility-icon{font-size:24px}.facility-icon{font-size:20px}.route-popup{padding:10px;max-width:250px}</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script></head><body><div id="map"></div><script>let map,routeLayer=null;try{map=L.map('map').setView([${location.latitude},${location.longitude}],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);L.circle([${location.latitude},${location.longitude}],{color:'#1A4480',fillColor:'#1A4480',fillOpacity:0.1,radius:${SEARCH_RADIUS}}).addTo(map);L.marker([${location.latitude},${location.longitude}],{icon:L.divIcon({className:'user-marker',html:'📍',iconSize:[30,30],iconAnchor:[15,30]})}).addTo(map).bindPopup('<b>Your Location</b><br>You are here<br><small>Search radius: ${SEARCH_RADIUS / 1000}km</small>').openPopup();let centers=JSON.parse('${safe}');centers.forEach(c=>{try{const m=L.marker([c.latitude,c.longitude],{icon:L.divIcon({className:'facility-icon',html:c.icon||'🗣️',iconSize:[25,25],iconAnchor:[12,25]})}).addTo(map);const typeLabel=c.type==='speech-therapy'?'Speech Therapy Center':c.type==='voice-clinic'?'Voice & Speech Clinic':c.type==='sped-school'?'SPED School':c.type==='pwd-center'?'PWD Center':'Speech Therapy Center';m.bindPopup('<div class="route-popup"><strong>'+(c.name||'Speech Therapy Center')+'</strong><br/><em style="color:#1A4480;">'+typeLabel+'</em><br/><small>'+(c.fullAddress||'Address not available')+'</small><br/><small style="color:#666;">'+c.distance.toFixed(1)+' km away</small><br/><button onclick="window.selectCenter('+c.latitude+','+c.longitude+')" style="background:#1A4480;color:white;border:none;padding:5px 10px;border-radius:3px;margin-top:5px;cursor:pointer;width:100%">Show Route</button></div>')}catch(e){console.error('Marker error:',e)}});window.showRoute=(g,c)=>{try{if(routeLayer)map.removeLayer(routeLayer);if(g?.coordinates){const ll=g.coordinates.map(co=>[co[1],co[0]]);routeLayer=L.polyline(ll,{color:'#1A4480',weight:5,opacity:0.7,dashArray:'10, 10'}).addTo(map);map.fitBounds(routeLayer.getBounds())}}catch(e){console.error('Route error:',e)}};window.selectCenter=(lat,lng)=>{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'CENTER_SELECT',center:{latitude:lat,longitude:lng}}))};window.addEventListener('message',e=>{try{const d=JSON.parse(e.data);if(d.type==='SHOW_ROUTE')window.showRoute(d.route,d.center)}catch(er){console.error('Message error:',er)}});if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_LOADED',centerCount:centers.length}))}catch(e){console.error('Map error:',e);if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_ERROR',error:e.toString()}))}</script></body></html>`;
+    return `<!DOCTYPE html><html><head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <style>
+        #map { height: 100vh; width: 100%; position: absolute; top: 0; left: 0; background: #FAF8F4; }
+        body { margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; height: 100vh; }
+        
+        .user-marker {
+          width: 18px; height: 18px;
+          background: #1A4480;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(26,68,128,0.4);
+          position: relative;
+        }
+        .user-marker::after {
+          content: '';
+          position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+          border-radius: 50%;
+          background: rgba(26,68,128,0.2);
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+          0% { transform: scale(0.6); opacity: 1; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        .leaflet-div-icon {
+          background: transparent !important;
+          border: none !important;
+        }
+
+        .facility-marker {
+          background: white !important;
+          width: 38px !important; height: 38px !important;
+          border-radius: 14px !important;
+          display: flex !important; 
+          align-items: center !important; 
+          justify-content: center !important;
+          box-shadow: 0 6px 16px rgba(15,40,71,0.12) !important;
+          border: 1.5px solid #DDD6C8 !important;
+          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          box-sizing: border-box !important;
+        }
+        .facility-marker svg {
+          display: block !important;
+          margin: 0 !important;
+        }
+        .facility-marker:active { transform: scale(0.9); }
+        
+        .leaflet-popup-content-wrapper { 
+          border-radius: 20px; 
+          padding: 6px;
+          box-shadow: 0 12px 30px rgba(15,40,71,0.25);
+        }
+        .leaflet-popup-tip { display: none; }
+        .popup-card { padding: 8px; text-align: center; }
+        .popup-title { font-weight: 900; color: #1C2B3A; font-size: 14px; margin-bottom: 2px; }
+        .popup-type { color: #1A4480; font-weight: 800; font-size: 9px; text-transform: uppercase; margin-bottom: 4px; opacity: 0.7; }
+        .popup-btn { 
+          background: #1A4480; color: white; border: none; 
+          padding: 8px 12px; border-radius: 12px; font-weight: 800;
+          font-size: 12px; width: 100%; margin-top: 8px; cursor: pointer;
+        }
+      </style>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    </head><body><div id="map"></div><script>
+      let map, routeLayer = null;
+      const icons = {
+        'speech-therapy': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A4480" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>',
+        'voice-clinic': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A8FA0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>',
+        'sped-school': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A4480" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>',
+        'pwd-center': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2A8FA0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="4" r="1"/><path d="M12.3 10a2 2 0 0 0-2.3 1.3l-1.4 3.4c-.2.5-.2 1.1 0 1.6l1.2 3.2c.2.5.7.8 1.2.8h3.3"/><path d="M15 10l-3.5 1.5L9 16l3 5"/></svg>'
+      };
+
+      try {
+        map = L.map('map', { zoomControl: false }).setView([${location.latitude}, ${location.longitude}], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+
+        L.marker([${location.latitude}, ${location.longitude}], {
+          icon: L.divIcon({ className: 'user-marker', iconSize: [18, 18], iconAnchor: [9, 9] })
+        }).addTo(map);
+
+        let centers = JSON.parse(\`${safeStr}\`);
+        centers.forEach(c => {
+          const marker = L.marker([c.latitude, c.longitude], {
+            icon: L.divIcon({ 
+              className: 'facility-marker', 
+              html: icons[c.type] || icons['speech-therapy'], 
+              iconSize: [38, 38], 
+              iconAnchor: [19, 19] 
+            })
+          }).addTo(map);
+
+          const typeLabel = c.type==='speech-therapy'?'Speech Therapy Center':c.type==='voice-clinic'?'Voice & Speech Clinic':c.type==='sped-school'?'SPED School':c.type==='pwd-center'?'PWD Center':'Center';
+          
+          marker.bindPopup(\`
+            <div class="popup-card">
+              <div class="popup-type">\${typeLabel}</div>
+              <div class="popup-title">\${c.name}</div>
+              <button class="popup-btn" onclick="window.selectCenter(\${c.latitude},\${c.longitude})">View Route</button>
+            </div>
+          \`, { offset: [0, -10] });
+        });
+
+        window.selectCenter = (lat, lng) => {
+          if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({ type:'CENTER_SELECT', center:{latitude:lat, longitude:lng} }));
+        };
+
+        window.showRoute = (g) => {
+          if (routeLayer) map.removeLayer(routeLayer);
+          if (g?.coordinates) {
+            const latlngs = g.coordinates.map(co => [co[1], co[0]]);
+            routeLayer = L.polyline(latlngs, { color: '#1A4480', weight: 6, opacity: 0.8, lineCap: 'round', dashArray: '1, 12' }).addTo(map);
+            map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+          }
+        };
+
+        window.addEventListener('message', e => {
+          try {
+            const d = JSON.parse(e.data);
+            if (d.type === 'SHOW_ROUTE') window.showRoute(d.route);
+          } catch(err) {}
+        });
+
+        if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_LOADED'}));
+      } catch (e) {
+        if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({type:'MAP_ERROR', error: e.toString()}));
+      }
+    </script></body></html>`;
   };
 
   const handleWebViewMessage = (e: any) => {
@@ -326,7 +460,7 @@ const SpeechTherapyMaps: React.FC = () => {
       } else if (data.type === 'MAP_LOADED' || data.type === 'MAP_ERROR') {
         setMapLoading(false);
       }
-    } catch (er) { console.log('WebView message:', e.nativeEvent.data); }
+    } catch (er) { console.log('WebView message error:', er); }
   };
 
   const handleRetry = () => {
@@ -421,6 +555,7 @@ const SpeechTherapyMaps: React.FC = () => {
       <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <ZStack f={1} mx="$4" mb="$4" mt="$0" br={28} ov="hidden" bw={1.5} bc={COLORS.sandMid} elevation={4} shadowColor={COLORS.deepNavy}>
         <WebView
+          ref={webViewRef}
           key={webViewKey}
           source={{ html: generateMapHTML() }}
           style={{ flex: 1 }}
