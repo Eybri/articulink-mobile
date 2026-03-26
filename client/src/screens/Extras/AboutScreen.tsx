@@ -39,9 +39,9 @@ import {
 } from "@tamagui/lucide-icons";
 
 // Enable LayoutAnimation on Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental && !((global as any).nativeFabricUIManager)) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
 
 // ─── Brand Palette ───────────────────────────────────────────────
 const COLORS = {
