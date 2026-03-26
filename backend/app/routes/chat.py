@@ -14,8 +14,8 @@ from app.utils.authMiddleware import require_auth, get_current_user_id
 from typing import List, Dict
 
 router = APIRouter(
-    prefix="/api/v1",
-    tags=["chat"],
+    prefix="/api/v1/chatbot",
+    tags=["Chatbot"],
     dependencies=[Depends(require_auth)]
 )
 
