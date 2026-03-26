@@ -1,8 +1,8 @@
-import React from "react";
-import { Platform } from "react-native";
+import React, { useRef, useEffect } from "react";
+import { Platform, Animated } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
-import { YStack, XStack, SizableText, Button, Circle, Theme } from "tamagui";
+import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/HomeScreen";
 import HistoryScreen from "../screens/tabs/HistoryScreen";
 import ProfileScreen from "../screens/tabs/ProfileScreen";
@@ -69,7 +69,7 @@ const HomeStack = () => (
             icon={<MessageCircle size={22} color={COLORS.royalBlue} />}
             onPress={() => navigation.navigate("Chatbot")}
             mr="$3"
-            pressStyle={{ scale: 0.95 }}
+            pressStyle={{ scale: 0.95, opacity: 0.9 }}
           />
         ),
       })}
@@ -95,81 +95,125 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "Settings", label: "Settings", icon: Settings },
 ];
 
-// ─── Custom Tab Bar ──────────────────────────────────────────────
-const CustomTabBar = ({ state, descriptors, navigation }: any) => (
+// ─── Animated Tab Item ───────────────────────────────────────────
+const TabItem: React.FC<{
+  isFocused: boolean;
+  config: { name: string; label: string; icon: any };
+  onPress: () => void;
+}> = ({ isFocused, config, onPress }) => {
+  const liftAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+  const glowAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(liftAnim, {
+        toValue: isFocused ? 1 : 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(glowAnim, {
+        toValue: isFocused ? 1 : 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isFocused]);
+
+  const translateY = liftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+  const iconScale = liftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.12],
+  });
+  const pillOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const labelOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.55, 1],
+  });
+
+  return (
+    <YStack f={1} ai="center" jc="center" py="$1" onPress={onPress}>
+      {/* Icon with subtle pop */}
+      <Animated.View style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{ translateY }, { scale: iconScale }],
+      }}>
+        {React.createElement(config.icon, {
+          size: isFocused ? 22 : 20,
+          color: isFocused ? COLORS.royalBlue : COLORS.textMid,
+          strokeWidth: isFocused ? 2.4 : 1.8,
+        })}
+      </Animated.View>
+
+      {/* Label - tight to icon */}
+      <Animated.View style={{ opacity: labelOpacity, marginTop: 3 }}>
+        <SizableText
+          size="$1"
+          fow={isFocused ? "800" : "500"}
+          ls={isFocused ? 0.3 : 0}
+          color={isFocused ? COLORS.royalBlue : COLORS.textMid}
+        >
+          {config.label}
+        </SizableText>
+      </Animated.View>
+
+      {/* Active indicator bar */}
+      <Animated.View style={{
+        width: 14,
+        height: 2.5,
+        borderRadius: 1.25,
+        backgroundColor: COLORS.royalBlue,
+        marginTop: 3,
+        opacity: pillOpacity,
+        transform: [{ scaleX: liftAnim }],
+      }} />
+    </YStack>
+  );
+};
+
+// ─── Premium Custom Tab Bar ──────────────────────────────────────
+const CustomTabBar = ({ state, navigation }: any) => (
   <YStack
-    bg="white"
-    bt={1}
-    btc={COLORS.sandMid}
+    bg="rgba(255,255,255,0.96)"
+    borderTopWidth={1}
+    borderTopColor="rgba(221,214,200,0.45)"
     pb={Platform.OS === "ios" ? 24 : 8}
     pt={6}
-    elevation={8}
+    elevation={12}
     shadowColor={COLORS.deepNavy}
     shadowOffset={{ width: 0, height: -4 }}
-    shadowOpacity={0.06}
-    shadowRadius={12}
+    shadowOpacity={0.08}
+    shadowRadius={16}
   >
     <XStack jc="space-around" ai="center">
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
         const config = TAB_CONFIG.find(t => t.name === route.name)!;
         const onPress = () => {
-          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }
         };
 
         return (
-          <YStack
+          <TabItem
             key={route.key}
-            f={1}
-            ai="center"
-            jc="center"
-            py="$1"
-            pos="relative"
+            isFocused={isFocused}
+            config={config}
             onPress={onPress}
-          >
-            {/* Active pill indicator */}
-            {isFocused && (
-                <YStack
-                    pos="absolute"
-                    t={0}
-                    w={48}
-                    h={48}
-                    br={14}
-                    bg={`${COLORS.royalBlue}0A`}
-                    bw={1}
-                    bc={`${COLORS.royalBlue}12`}
-                />
-            )}
-
-            <YStack
-                w={32}
-                h={28}
-                jc="center"
-                ai="center"
-                {...(isFocused && { y: -1 })}
-            >
-              {React.createElement(config.icon, {
-                size: isFocused ? 22 : 20,
-                color: isFocused ? COLORS.royalBlue : COLORS.textMid,
-              })}
-            </YStack>
-
-            <SizableText
-                size="$1"
-                fow={isFocused ? "800" : "600"}
-                mt={2}
-                ls={0.2}
-                color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-            >
-              {config.label}
-            </SizableText>
-
-            {/* Active dot indicator */}
-            {isFocused && <Circle size={4} bg={COLORS.royalBlue} mt={3} />}
-          </YStack>
+          />
         );
       })}
     </XStack>
@@ -190,4 +234,4 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
-export default TabNavigator;
+export default TabNavigator;
