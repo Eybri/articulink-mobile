@@ -43,6 +43,8 @@ export interface AuthContextType {
     deleteSpeechHistoryItem: (clipId: string) => Promise<any>;
     verifyOTP: (email: string, otp_code: string) => Promise<any>;
     resendOTP: (email: string) => Promise<any>;
+    forgotPassword: (email: string) => Promise<any>;
+    resetPassword: (data: any) => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -189,6 +191,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             return res.data;
         } catch (err: any) {
             throw err.response?.data || { detail: "Failed to resend OTP" };
+        }
+    };
+
+    const forgotPassword = async (email: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/forgot-password`, { email });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to process forgot password" };
+        }
+    };
+
+    const resetPassword = async (data: any) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/reset-password`, data);
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to reset password" };
         }
     };
 
@@ -354,7 +374,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             fetchSpeechHistory,
             deleteSpeechHistoryItem,
             verifyOTP,
-            resendOTP
+            resendOTP,
+            forgotPassword,
+            resetPassword
         }}>
             {children}
         </AuthContext.Provider>

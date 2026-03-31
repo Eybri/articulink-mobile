@@ -240,7 +240,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     <YStack gap="$1.5">
                                         <XStack jc="space-between" ai="center">
                                             <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Password</SizableText>
-                                            <Button chromeless p={0} h="auto" onPress={() => { }}><SizableText size="$1" fow="700" color={COLORS.teal}>Forgot?</SizableText></Button>
+                                            <Button chromeless p={0} h="auto" onPress={() => navigation.navigate("ForgotPassword")}><SizableText size="$1" fow="700" color={COLORS.teal}>Forgot?</SizableText></Button>
                                         </XStack>
                                         <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
                                             <Lock size={16} color={COLORS.royalBlue} opacity={0.5} />

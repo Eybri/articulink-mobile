@@ -169,8 +169,27 @@ class EmailService:
         """
         return await self.send_email(subject, [email], _base_template(content))
 
-    async def send_password_reset(self, email: str, reset_link: str):
+    async def send_password_reset_otp(self, email: str, otp: str):
         subject = "Articulink — Reset Your Password"
+
+        # Build individual digit boxes
+        digit_boxes = ""
+        for ch in otp:
+            digit_boxes += f"""
+            <td style="
+                width:40px; height:44px;
+                background-color:{BRAND['cream']};
+                border:1.5px solid {BRAND['teal']};
+                border-radius:10px;
+                text-align:center;
+                vertical-align:middle;
+                font-size:22px;
+                font-weight:700;
+                color:{BRAND['textDark']};
+                font-family:'Segoe UI',Roboto,monospace;
+            ">{ch}</td>
+            """
+
         content = f"""
         <div style="text-align:center; margin-bottom:24px;">
             <div style="
@@ -186,39 +205,25 @@ class EmailService:
         </div>
 
         <h2 style="margin:0 0 6px; font-size:18px; font-weight:800; color:{BRAND['textDark']}; text-align:center; letter-spacing:-0.2px;">
-            Reset Your Password
+            Password Reset Code
         </h2>
-        <p style="margin:0 0 24px; font-size:13px; color:{BRAND['textMid']}; text-align:center; line-height:1.5;">
-            We received a request to reset the password for your Articulink account. Click the button below to set a new one.
+        <p style="margin:0 0 20px; font-size:13px; color:{BRAND['textMid']}; text-align:center; line-height:1.5;">
+            We received a request to reset your Articulink password. Use the code below to proceed. It expires in <strong style="color:{BRAND['teal']};">1 hour</strong>.
         </p>
 
-        <!-- CTA Button -->
-        <div style="text-align:center; margin-bottom:24px;">
-            <a href="{reset_link}" style="
-                display:inline-block;
-                background-color:{BRAND['royalBlue']};
-                color:{BRAND['white']};
-                padding:14px 36px;
-                font-size:14px;
-                font-weight:700;
-                text-decoration:none;
-                border-radius:12px;
-                letter-spacing:0.3px;
-            ">RESET PASSWORD</a>
-        </div>
-
-        <p style="margin:0 0 4px; font-size:12px; color:{BRAND['textMid']}; text-align:center;">
-            Or copy this link into your browser:
-        </p>
-        <p style="margin:0 0 20px; font-size:11px; color:{BRAND['teal']}; text-align:center; word-break:break-all;">
-            {reset_link}
-        </p>
+        <!-- OTP Digit Boxes -->
+        <table cellpadding="0" cellspacing="6" style="margin:0 auto 24px;" role="presentation">
+            <tr>{digit_boxes}</tr>
+        </table>
 
         <!-- Divider -->
         <div style="height:1px; background-color:{BRAND['sandMid']}; margin:0 8px 20px; opacity:0.5;"></div>
 
-        <p style="margin:0; font-size:12px; color:{BRAND['textMid']}; text-align:center; line-height:1.6;">
-            This link expires in <strong style="color:{BRAND['teal']};">1 hour</strong>. If you didn't request this, you can safely ignore this email.
+        <p style="margin:0 0 6px; font-size:12px; color:{BRAND['textMid']}; text-align:center; line-height:1.6;">
+            If you didn't request a password reset, you can safely ignore this email.
+        </p>
+        <p style="margin:0; font-size:12px; color:{BRAND['sandMid']}; text-align:center;">
+            Do not share this code with anyone.
         </p>
         """
         return await self.send_email(subject, [email], _base_template(content))

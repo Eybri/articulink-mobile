@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 from app.models.user import (
     UserCreate, UserOut, Token, LoginRequest, 
-    UserUpdate, UserUpdateResponse, VerifyOTPRequest, ResendOTPRequest
+    UserUpdate, UserUpdateResponse, VerifyOTPRequest, ResendOTPRequest,
+    ForgotPasswordRequest, ResetPasswordRequest
 )
 from app.models.user import (
     get_user_by_email, get_user_by_id, create_user, update_user
@@ -124,6 +125,12 @@ async def resend_otp(request: ResendOTPRequest):
     pending_user = await db.temp_users.find_one({"email": request.email.lower()})
     
     # 2. Check for resend limits
+    if not pending_user:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Registration not found."
+        )
+         
     last_sent = pending_user.get("last_sent_at")
     resend_count = pending_user.get("resend_count", 0)
 
@@ -166,6 +173,70 @@ async def resend_otp(request: ResendOTPRequest):
         )
 
     return {"message": "New verification code sent successfully"}
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Initiate password reset by sending an OTP to the user's email"""
+    user = await get_user_by_email(request.email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Generate 6-digit OTP
+    otp_code = str(secrets.randbelow(900000) + 100000)
+    otp_expires_at = datetime.utcnow() + timedelta(hours=1) 
+
+    # Store OTP in user record
+    await db.users.update_one(
+        {"email": request.email.lower()},
+        {
+            "$set": {
+                "reset_otp_code": otp_code,
+                "reset_otp_expires_at": otp_expires_at
+            }
+        }
+    )
+
+    # Send Email
+    email_sent = await email_service.send_password_reset_otp(request.email, otp_code)
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send password reset email."
+        )
+
+    return {"message": "Password reset code sent to your email."}
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password using the OTP code"""
+    user = await get_user_by_email(request.email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # Check OTP
+    stored_otp = user.get("reset_otp_code")
+    expires_at = user.get("reset_otp_expires_at")
+
+    if not stored_otp or stored_otp != request.otp_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset code")
+
+    if not expires_at or datetime.utcnow() > expires_at:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset code has expired")
+
+    # Update password and clear OTP
+    new_hashed_password = hash_password(request.new_password)
+    await db.users.update_one(
+        {"email": request.email.lower()},
+        {
+            "$set": {"password": new_hashed_password, "updated_at": datetime.utcnow()},
+            "$unset": {"reset_otp_code": "", "reset_otp_expires_at": ""}
+        }
+    )
+
+    return {"message": "Password has been reset successfully."}
 
 @router.post("/login", response_model=Token)
 async def login(login_data: LoginRequest):
@@ -222,7 +293,7 @@ async def login(login_data: LoginRequest):
                 detail=f"Account deactivated: {deactivation_reason}"
             )
 
-    # Create access token only (no refresh token)
+    # Create access token
     access_token = create_access_token(str(user["_id"]))
 
     user_data = {
@@ -239,16 +310,14 @@ async def login(login_data: LoginRequest):
 
     return Token(
         access_token=access_token,
-        refresh_token="",  # Empty string since we removed refresh tokens
+        refresh_token="", 
         token_type="bearer",
         user=user_data
     )
 
 @router.post("/logout", dependencies=[Depends(require_auth)])
 async def logout(user_id: str = Depends(get_current_user_id)):
-    """
-    Logout endpoint (kept for compatibility, no token revocation needed)
-    """
+    """Logout endpoint"""
     logger.info(f"User {user_id} logged out")
     return {"message": "Logged out successfully"}
 
@@ -271,7 +340,7 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         profile_pic=user.get("profile_pic"),
         birthdate=user.get("birthdate"),
         gender=user.get("gender"),
-        status=user.get("status", "active"),  # Make sure status is included
+        status=user.get("status", "active"),
         created_at=user.get("created_at"),
         updated_at=user.get("updated_at")
     )
@@ -281,31 +350,18 @@ async def update_profile(
     profile_data: UserUpdate,
     user_id: str = Depends(get_current_user_id)
 ):
-    """Update user profile details (name, birthdate, gender)"""
-    logger.info(f"Update profile request for user: {user_id}")
-    
+    """Update user profile details"""
     user = await get_user_by_id(user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     update_data = profile_data.dict(exclude_none=True)
     if not update_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No data provided for update"
-        )
-    
-    logger.info(f"Updating user {user_id} with data: {update_data}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided")
     
     updated_user = await update_user(user_id, update_data)
     if not updated_user:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update profile"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile")
     
     return UserUpdateResponse(
         id=str(updated_user["_id"]),
@@ -326,37 +382,21 @@ async def upload_profile_pic(
 ):
     """Upload or update profile picture"""
     try:
-        logger.info(f"Received upload request for user: {user_id}")
-        logger.info(f"File info - Name: {file.filename}, Content-Type: {file.content_type}")
-        
         user = await get_user_by_id(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-        # Extract old public_id for cleanup
         old_public_id = None
         if user.get("profile_pic"):
             old_public_id = extract_public_id_from_url(user["profile_pic"])
-            logger.info(f"Found existing profile pic with public_id: {old_public_id}")
         
-        # Upload to Cloudinary (will replace old image if old_public_id provided)
         upload_result = await upload_profile_picture(file, user_id, old_public_id)
-        logger.info(f"Upload successful: {upload_result['secure_url']}")
         
-        # Update user with new profile picture URL
         update_data = {"profile_pic": upload_result["secure_url"]}
         updated_user = await update_user(user_id, update_data)
         
         if not updated_user:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update profile picture in database"
-            )
-        
-        logger.info(f"Database updated successfully for user {user_id}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile picture")
         
         return UserUpdateResponse(
             id=str(updated_user["_id"]),
@@ -369,40 +409,20 @@ async def upload_profile_pic(
             gender=updated_user.get("gender"),
             message="Profile picture updated successfully"
         )
-    
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Unexpected error in upload_profile_pic: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
-        )
+        logger.error(f"Error in upload_profile_pic: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @router.delete("/profile/picture", response_model=dict, dependencies=[Depends(require_auth)])
 async def delete_profile_pic(user_id: str = Depends(get_current_user_id)):
     """Delete profile picture"""
     user = await get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    if not user or not user.get("profile_pic"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No profile picture to delete")
     
-    if not user.get("profile_pic"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No profile picture to delete"
-        )
-    
-    # Extract public_id from Cloudinary URL
     old_public_id = extract_public_id_from_url(user["profile_pic"])
-    
-    # Delete from Cloudinary
     if old_public_id:
         await delete_profile_picture(old_public_id)
     
-    # Remove profile_pic from user document
     await update_user(user_id, {"profile_pic": None})
-    
     return {"message": "Profile picture deleted successfully"}

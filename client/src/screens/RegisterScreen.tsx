@@ -193,7 +193,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                             borderBottomLeftRadius={40}
                             borderBottomRightRadius={40}
                             px="$5"
-                            pt="$10"
+                            pt="$6"
                             pb="$6"
                             shadowColor="rgba(0,0,0,0.15)"
                             shadowRadius={15}
