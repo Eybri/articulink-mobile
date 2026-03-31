@@ -34,6 +34,7 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
     const [otp, setOtp] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
+    const [timer, setTimer] = useState(60);
     const { verifyOTP, resendOTP } = useContext(AuthContext) as AuthContextType;
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -59,6 +60,16 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
         }
     }, [email]);
 
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (timer > 0) {
+            interval = setInterval(() => {
+                setTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timer]);
+
     const handleVerify = async () => {
         if (otp.length < 6) {
             Alert.alert("Error", "Please enter the 6-digit code");
@@ -80,10 +91,12 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
     };
 
     const handleResend = async () => {
+        if (timer > 0) return;
         setResendLoading(true);
         try {
             await resendOTP(email);
             Alert.alert("Success", "A new verification code has been sent to your email.");
+            setTimer(60); // Reset timer
         } catch (err: any) {
             const errorMessage = err.detail || err.message || "Failed to resend code";
             Alert.alert("Error", errorMessage);
@@ -197,12 +210,13 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
                                     chromeless 
                                     p={0} 
                                     onPress={handleResend} 
-                                    disabled={resendLoading}
+                                    disabled={resendLoading || timer > 0}
+                                    opacity={timer > 0 ? 0.5 : 1}
                                 >
                                     <XStack ai="center" gap="$1">
                                         {resendLoading && <RefreshCw size={14} color="#2563eb" />}
-                                        <SizableText size="$4" fow="600" color="#2563eb">
-                                            {resendLoading ? "Sending..." : "Resend"}
+                                        <SizableText size="$4" fow="600" color={timer > 0 ? "#94a3b8" : "#2563eb"}>
+                                            {resendLoading ? "Sending..." : (timer > 0 ? `Resend in ${timer}s` : "Resend")}
                                         </SizableText>
                                     </XStack>
                                 </Button>
