@@ -1,33 +1,53 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
 import {
-    StyleSheet,
     Alert,
     Animated,
     Dimensions,
     StatusBar,
     Platform,
     KeyboardAvoidingView,
+    Image as RNImage,
+    TextInput,
+    Pressable,
 } from "react-native";
 import {
     YStack,
     XStack,
-    ZStack,
     Button,
     Input,
     SizableText,
-    H1,
-    Circle,
     ScrollView,
+    Spinner,
 } from "tamagui";
 import {
     ArrowLeft,
-    Sparkles,
     ShieldCheck,
-    RefreshCw
+    Mail,
+    ArrowRight,
+    Clock,
+    RotateCcw,
 } from "@tamagui/lucide-icons";
 import { AuthContext, AuthContextType } from "./../context/AuthContext";
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
+
+// ─── Brand Palette (consistent with Login/Register) ──────────────
+const COLORS = {
+    cream: '#FAF8F4',
+    warmWhite: '#F5F1EA',
+    sandLight: '#EDE8DF',
+    sandMid: '#DDD6C8',
+    deepNavy: '#0F2847',
+    royalBlue: '#1A4480',
+    mediumBlue: '#2A5FA8',
+    teal: '#2A8FA0',
+    tealLight: '#3DAFC4',
+    textDark: '#1C2B3A',
+    textMid: '#4A5A6A',
+    white: '#FFFFFF',
+    success: '#10b981',
+    successBg: '#ecfdf5',
+};
 
 const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation, route }) => {
     const { email } = route.params || {};
@@ -36,9 +56,13 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
     const [resendLoading, setResendLoading] = useState(false);
     const [timer, setTimer] = useState(60);
     const { verifyOTP, resendOTP } = useContext(AuthContext) as AuthContextType;
+    const hiddenInputRef = useRef<TextInput>(null);
 
+    // ─── Animations ──────────────────────────────────────────────
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
+    const logoScale = useRef(new Animated.Value(0.85)).current;
+    const logoFade = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.parallel([
@@ -47,11 +71,25 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
                 duration: 800,
                 useNativeDriver: true,
             }),
-            Animated.timing(slideAnim, {
+            Animated.spring(slideAnim, {
                 toValue: 0,
-                duration: 600,
+                tension: 20,
+                friction: 8,
                 useNativeDriver: true,
-            })
+            }),
+            Animated.timing(logoFade, {
+                toValue: 1,
+                duration: 600,
+                delay: 200,
+                useNativeDriver: true,
+            }),
+            Animated.spring(logoScale, {
+                toValue: 1,
+                tension: 40,
+                friction: 7,
+                delay: 200,
+                useNativeDriver: true,
+            }),
         ]).start();
 
         if (!email) {
@@ -60,6 +98,7 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
         }
     }, [email]);
 
+    // ─── Countdown Timer ─────────────────────────────────────────
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (timer > 0) {
@@ -96,7 +135,7 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
         try {
             await resendOTP(email);
             Alert.alert("Success", "A new verification code has been sent to your email.");
-            setTimer(60); // Reset timer
+            setTimer(60);
         } catch (err: any) {
             const errorMessage = err.detail || err.message || "Failed to resend code";
             Alert.alert("Error", errorMessage);
@@ -105,38 +144,41 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
         }
     };
 
+    const formatTime = (s: number) => {
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
     return (
-        <YStack flex={1} bg="#fafafa">
+        <YStack flex={1} bg={COLORS.cream}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
-            <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
-
-            {/* Background */}
-            <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <Circle pos="absolute" size={width * 0.6} bg="#dbeafe" opacity={0.4} t={-width * 0.2} r={-width * 0.2} />
-                <Circle pos="absolute" size={width * 0.4} bg="#f0f9ff" opacity={0.4} b={height * 0.1} l={-width * 0.1} />
-            </ZStack>
+            <StatusBar barStyle="dark-content" backgroundColor={COLORS.cream} />
 
             <ScrollView f={1} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                {/* Header */}
-                <XStack jc="space-between" ai="center" px="$6" pt="$10" pb="$4">
+                {/* ─── Header Bar ─────────────────────────────── */}
+                <XStack jc="space-between" ai="center" px="$5" pt="$10" pb="$2">
                     <Button
-                        size="$4"
-                        br={20}
-                        bg="white"
-                        elevation={3}
+                        size="$3.5"
+                        br={14}
+                        bg={COLORS.white}
+                        elevation={2}
                         bw={1}
-                        bc="#f1f5f9"
+                        bc={COLORS.sandMid}
                         onPress={() => navigation.goBack()}
-                        icon={<ArrowLeft size={24} color="#475569" />}
+                        pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                        icon={<ArrowLeft size={20} color={COLORS.textMid} />}
                     />
                     <XStack ai="center" gap="$2">
-                        <YStack w={36} h={36} br={18} bg="white" jc="center" ai="center" elevation={3}>
-                            <Sparkles size={22} color="#2563eb" fill="#2563eb" />
-                        </YStack>
-                        <SizableText size="$6" fow="700" color="#1e293b" ls={-0.5}>
+                        <RNImage
+                            source={require('../../assets/images/logo2-nobg.png')}
+                            style={{ width: 28, height: 28 }}
+                            resizeMode="contain"
+                        />
+                        <SizableText size="$4" fow="700" color={COLORS.textDark} ls={-0.3}>
                             Articulink
                         </SizableText>
                     </XStack>
@@ -144,92 +186,193 @@ const VerifyOTPScreen: React.FC<{ navigation: any, route: any }> = ({ navigation
                 </XStack>
 
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <YStack px="$6" gap="$8" mt="$4">
-                        {/* Title Section */}
-                        <YStack gap="$2" ai="center">
-                            <YStack w={80} h={80} br={40} bg="#eff6ff" jc="center" ai="center" mb="$4">
-                                <ShieldCheck size={40} color="#2563eb" />
-                            </YStack>
-                            <H1 size="$8" fow="700" color="#0f172a" ls={-0.5} ta="center">Verify Email</H1>
-                            <SizableText size="$4" color="#64748b" lh={22} ta="center">
-                                We've sent a 6-digit verification code to
-                            </SizableText>
-                            <SizableText size="$4" color="#1e293b" fow="600" ta="center">
-                                {email}
-                            </SizableText>
-                        </YStack>
+                    <YStack px="$5" gap="$4" mt="$4">
 
-                        {/* Input Section */}
-                        <YStack gap="$6">
-                            <YStack gap="$2">
-                                <SizableText size="$2" fow="600" color="#475569" ls={0.3} ta="center">ENTER 6-DIGIT CODE</SizableText>
-                                <Input
-                                    size="$6"
-                                    br={16}
-                                    bg="white"
-                                    px="$4"
-                                    h={70}
-                                    bw={1}
-                                    bc="#e2e8f0"
-                                    placeholder="000000"
-                                    aria-label="OTP Input"
+                        {/* ─── Single Unified Card ────────────── */}
+                        <YStack
+                            bg={COLORS.white}
+                            br={24}
+                            px="$5"
+                            pt="$6"
+                            pb="$5"
+                            bw={1}
+                            bc={COLORS.sandMid}
+                            elevation={3}
+                            shadowColor={COLORS.sandMid}
+                            gap="$5"
+                        >
+                            {/* ── Icon + Title ──────────────────── */}
+                            <YStack ai="center" gap="$3">
+                                <Animated.View style={{ opacity: logoFade, transform: [{ scale: logoScale }] }}>
+                                    <YStack
+                                        w={60} h={60} br={16}
+                                        bg={COLORS.cream}
+                                        jc="center" ai="center"
+                                        bw={1} bc={COLORS.sandMid}
+                                    >
+                                        <ShieldCheck size={28} color={COLORS.teal} />
+                                    </YStack>
+                                </Animated.View>
+
+                                <YStack gap="$1" ai="center">
+                                    <SizableText size="$5" fow="800" color={COLORS.textDark} ls={-0.3}>
+                                        Verify Your Email
+                                    </SizableText>
+                                    <YStack w={24} h={2.5} bg={COLORS.teal} br={1.5} mt="$1" />
+                                </YStack>
+
+                                <SizableText size="$2" color={COLORS.textMid} lh={18} ta="center">
+                                    We've sent a 6-digit code to
+                                </SizableText>
+                                <XStack ai="center" gap="$1.5" bg={COLORS.warmWhite} px="$3" py="$1.5" br={10} bw={1} bc={COLORS.sandMid}>
+                                    <Mail size={13} color={COLORS.royalBlue} opacity={0.7} />
+                                    <SizableText size="$2" color={COLORS.royalBlue} fow="600">
+                                        {email}
+                                    </SizableText>
+                                </XStack>
+                            </YStack>
+
+                            {/* ── Divider ───────────────────────── */}
+                            <YStack h={1} bg={COLORS.sandMid} opacity={0.5} mx="$2" />
+
+                            {/* ── OTP Input ─────────────────────── */}
+                            <YStack gap="$3">
+                                <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" ta="center">
+                                    Enter verification code
+                                </SizableText>
+
+                                {/* Hidden input for keyboard — must have non-zero size to stay focusable */}
+                                <TextInput
+                                    ref={hiddenInputRef}
                                     value={otp}
                                     onChangeText={setOtp}
                                     keyboardType="number-pad"
                                     maxLength={6}
-                                    disabled={isLoading}
-                                    shadowColor="#e2e8f0"
-                                    shadowRadius={10}
-                                    shadowOffset={{ width: 0, height: 4 }}
-                                    textAlign="center"
-                                    fontWeight="700"
-                                    letterSpacing={10}
-                                    fontSize={28}
+                                    editable={!isLoading}
+                                    caretHidden
+                                    autoFocus
+                                    style={{
+                                        position: 'absolute',
+                                        width: 1,
+                                        height: 1,
+                                        opacity: 0,
+                                    }}
                                 />
+
+                                {/* Digit Boxes — tap anywhere to re-open keyboard */}
+                                <Pressable onPress={() => {
+                                    hiddenInputRef.current?.blur();
+                                    setTimeout(() => hiddenInputRef.current?.focus(), 50);
+                                }}>
+                                    <XStack jc="center" gap="$1.5">
+                                        {[0, 1, 2, 3, 4, 5].map((i) => {
+                                            const digit = otp[i] || "";
+                                            const isFocused = otp.length === i;
+                                            return (
+                                                <YStack
+                                                    key={i}
+                                                    w={38} h={42}
+                                                    br={10}
+                                                    bg={digit ? COLORS.warmWhite : COLORS.cream}
+                                                    bw={1.5}
+                                                    bc={digit ? COLORS.teal : (isFocused ? COLORS.royalBlue : COLORS.sandMid)}
+                                                    jc="center" ai="center"
+                                                >
+                                                    <SizableText
+                                                        size="$5" fow="700"
+                                                        color={digit ? COLORS.textDark : COLORS.sandMid}
+                                                    >
+                                                        {digit || "·"}
+                                                    </SizableText>
+                                                </YStack>
+                                            );
+                                        })}
+                                    </XStack>
+                                </Pressable>
+
+                                {/* Timer */}
+                                <XStack jc="center" ai="center" gap="$2">
+                                    <Clock size={13} color={timer > 0 ? COLORS.teal : COLORS.textMid} />
+                                    <SizableText size="$2" fow="600" color={timer > 0 ? COLORS.teal : COLORS.textMid}>
+                                        {timer > 0 ? `Code expires in ${formatTime(timer)}` : "Code expired"}
+                                    </SizableText>
+                                </XStack>
                             </YStack>
 
+                            {/* ── Verify Button ─────────────────── */}
                             <Button
-                                size="$5"
-                                br={16}
-                                bg="#2563eb"
+                                bg={COLORS.royalBlue}
+                                h={50}
+                                br={14}
                                 onPress={handleVerify}
                                 disabled={otp.length < 6 || isLoading}
-                                opacity={otp.length < 6 ? 0.6 : 1}
-                                pressStyle={{ scale: 0.98 }}
-                                elevation={8}
-                                shadowColor="#2563eb"
+                                opacity={otp.length < 6 ? 0.5 : 1}
+                                pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                elevation={4}
+                                shadowColor={COLORS.royalBlue}
+                                iconAfter={isLoading ? <Spinner color="white" /> : <ArrowRight size={16} color="white" />}
                             >
-                                <SizableText fow="600" color="white" ls={0.3}>
-                                    {isLoading ? "Verifying..." : "Verify & Activate"}
+                                <SizableText color="white" fow="700" size="$2" ls={0.5}>
+                                    {isLoading ? "VERIFYING" : "VERIFY & ACTIVATE"}
                                 </SizableText>
                             </Button>
 
-                            <XStack jc="center" ai="center" mt="$2">
-                                <SizableText size="$4" color="#64748b">Didn't receive the code? </SizableText>
-                                <Button 
-                                    chromeless 
-                                    p={0} 
-                                    onPress={handleResend} 
+                            {/* ── Divider ───────────────────────── */}
+                            <YStack h={1} bg={COLORS.sandMid} opacity={0.5} mx="$2" />
+
+                            {/* ── Resend Row ────────────────────── */}
+                            <XStack jc="space-between" ai="center">
+                                <YStack f={1} mr="$3">
+                                    <SizableText size="$2" color={COLORS.textDark} fow="600">
+                                        Didn't get the code?
+                                    </SizableText>
+                                    <SizableText size="$1" color={COLORS.textMid}>
+                                        Check spam folder or request a new one
+                                    </SizableText>
+                                </YStack>
+
+                                <Button
+                                    size="$3"
+                                    br={12}
+                                    bg={timer > 0 ? COLORS.sandLight : COLORS.teal}
+                                    onPress={handleResend}
                                     disabled={resendLoading || timer > 0}
-                                    opacity={timer > 0 ? 0.5 : 1}
+                                    opacity={timer > 0 ? 0.6 : 1}
+                                    pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                    icon={resendLoading
+                                        ? <Spinner size="small" color={COLORS.white} />
+                                        : <RotateCcw size={14} color={timer > 0 ? COLORS.textMid : COLORS.white} />
+                                    }
                                 >
-                                    <XStack ai="center" gap="$1">
-                                        {resendLoading && <RefreshCw size={14} color="#2563eb" />}
-                                        <SizableText size="$4" fow="600" color={timer > 0 ? "#94a3b8" : "#2563eb"}>
-                                            {resendLoading ? "Sending..." : (timer > 0 ? `Resend in ${timer}s` : "Resend")}
-                                        </SizableText>
-                                    </XStack>
+                                    <SizableText
+                                        size="$2"
+                                        fow="600"
+                                        color={timer > 0 ? COLORS.textMid : COLORS.white}
+                                    >
+                                        {resendLoading ? "Sending" : (timer > 0 ? `${timer}s` : "Resend")}
+                                    </SizableText>
                                 </Button>
                             </XStack>
                         </YStack>
 
-                        <YStack ai="center" mt="$10">
-                            <Button 
-                                chromeless 
+                        {/* ─── Footer Links ───────────────────── */}
+                        <YStack ai="center" gap="$3" mt="$1" mb="$6">
+                            <Button
+                                chromeless
                                 onPress={() => navigation.navigate("Register")}
+                                pressStyle={{ opacity: 0.7 }}
                             >
-                                <SizableText size="$3" color="#94a3b8">Use a different email address</SizableText>
+                                <SizableText size="$2" color={COLORS.textMid} fow="500">
+                                    Use a different email address
+                                </SizableText>
                             </Button>
+
+                            <XStack ai="center" gap="$2" opacity={0.5}>
+                                <ShieldCheck size={12} color={COLORS.textMid} />
+                                <SizableText size="$1" color={COLORS.textMid} fow="500" ls={0.2}>
+                                    Secure verification powered by SMTP
+                                </SizableText>
+                            </XStack>
                         </YStack>
                     </YStack>
                 </Animated.View>
