@@ -90,6 +90,14 @@ class VerifyOTPRequest(BaseModel):
     email: EmailStr
     otp_code: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+    new_password: str = Field(min_length=6)
+
 class ResendOTPRequest(BaseModel):
     email: EmailStr
 
