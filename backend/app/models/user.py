@@ -78,10 +78,20 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     birthdate: Optional[str] = None
     gender: Optional[str] = None
+    status: Optional[str] = None
+    otp_code: Optional[str] = None
+    otp_expires_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
         extra = "ignore"
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+
+class ResendOTPRequest(BaseModel):
+    email: EmailStr
 
 # ============================================================================
 # USER CRUD OPERATIONS
