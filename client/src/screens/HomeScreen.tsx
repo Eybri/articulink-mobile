@@ -1,21 +1,222 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
   StyleSheet,
   Alert,
   StatusBar,
+  Platform,
+  Animated,
+  useWindowDimensions,
 } from "react-native";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  TextArea,
+  Card,
+  Spinner,
+  Theme,
+  AnimatePresence,
+} from "tamagui";
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
+import {
+  Mic,
+  Square,
+  Volume2,
+  Trash2,
+  ChevronRight,
+  FileText,
+} from "@tamagui/lucide-icons";
 import baseURL from "./../utils/baseurl";
+import { getToken } from "./../utils/authToken";
 
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+  cream: '#FAF8F4',
+  warmWhite: '#F5F1EA',
+  sandLight: '#EDE8DF',
+  sandMid: '#DDD6C8',
+  deepNavy: '#0F2847',
+  royalBlue: '#1A4480',
+  mediumBlue: '#2A5FA8',
+  teal: '#1A4480',
+  tealLight: '#3DAFC4',
+  orbBlue: '#C8D8EE',
+  orbTeal: '#BEE4EC',
+  orbSand: '#E8E0D0',
+  textDark: '#1C2B3A',
+  textMid: '#4A5A6A',
+  white: '#FFFFFF',
+};
+
+// ─── Soft Orb (adapted for Tamagui/Animated) ──────────────────────
+interface SoftOrbProps { color: string; size: number; x: number; y: number; duration: number; delay: number; }
+
+const SoftOrb: React.FC<SoftOrbProps> = ({ color, size, x, y, duration, delay }) => {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -18] });
+  const scale = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.92, 1, 0.92] });
+
+  return (
+    <Animated.View style={{
+      position: 'absolute',
+      left: x - size / 2, top: y - size / 2,
+      width: size, height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      opacity: 0.5,
+      transform: [{ translateY }, { scale }],
+    }}>
+      <Circle
+        pos="absolute"
+        t={size * 0.15}
+        l={size * 0.15}
+        size={size * 0.7}
+        bg="white"
+        opacity={0.35}
+      />
+    </Animated.View>
+  );
+};
+
+// ─── Animated Waveform Bars ───────────────────────────────────────
+const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
+  const barHeights = [6, 14, 22, 16, 30, 20, 10, 26, 18, 12];
+  const barAnims = useRef(barHeights.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    const animations = barAnims.map((anim, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(i * 80),
+          Animated.timing(anim, { toValue: 1, duration: 500 + (i % 4) * 120, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0, duration: 500 + (i % 4) * 120, useNativeDriver: true }),
+        ])
+      )
+    );
+    animations.forEach(a => a.start());
+    return () => animations.forEach(a => a.stop());
+  }, []);
+
+  return (
+    <XStack ai="flex-end">
+      {barHeights.map((h, i) => {
+        const scaleY = barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
+        return (
+          <Animated.View key={i} style={{
+            width: 3.5, height: h,
+            borderRadius: 1.75,
+            backgroundColor: color,
+            opacity: 0.18,
+            marginHorizontal: 2.5,
+            transform: [{ scaleY }],
+          }} />
+        );
+      })}
+    </XStack>
+  );
+};
+
+// ─── Pulse Ring ──────────────────────────────────────────────────
+const PulseRing: React.FC<{ active: boolean }> = ({ active }) => {
+  const pulse1 = useRef(new Animated.Value(0)).current;
+  const pulse2 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (active) {
+      const createPulse = (anim: Animated.Value, delay: number) =>
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(anim, { toValue: 1, duration: 1400, useNativeDriver: true }),
+          ])
+        );
+      const a1 = createPulse(pulse1, 0);
+      const a2 = createPulse(pulse2, 700);
+      a1.start(); a2.start();
+      return () => { a1.stop(); a2.stop(); pulse1.setValue(0); pulse2.setValue(0); };
+    } else {
+      pulse1.setValue(0);
+      pulse2.setValue(0);
+    }
+  }, [active]);
+
+  if (!active) return null;
+
+  const renderRing = (anim: Animated.Value) => {
+    const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] });
+    const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0] });
+    return (
+      <Animated.View style={{
+        position: 'absolute',
+        width: 120, height: 120, borderRadius: 60,
+        borderWidth: 2, borderColor: COLORS.teal,
+        transform: [{ scale }],
+        opacity,
+      }} />
+    );
+  };
+
+  return (
+    <>
+      {renderRing(pulse1)}
+      {renderRing(pulse2)}
+    </>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────
 const HomeScreen: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [transcript, setTranscript] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const { width, height } = useWindowDimensions();
+
+  // Entry Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  // Background orbs
+  const orbs = useMemo(() => ([
+    { color: COLORS.orbSand, size: width * 0.7, x: width * 0.85, y: height * 0.08, duration: 6000, delay: 0 },
+    { color: COLORS.orbBlue, size: width * 0.55, x: width * 0.1, y: height * 0.5, duration: 7200, delay: 900 },
+    { color: COLORS.orbTeal, size: width * 0.4, x: width * 0.6, y: height * 0.85, duration: 5500, delay: 500 },
+  ]), [width, height]);
+
+  // Dot grid
+  const dotGrid = useMemo(() => {
+    const items: { left: number; top: number }[] = [];
+    for (let row = 0; row < 9; row++)
+      for (let col = 0; col < 6; col++)
+        items.push({
+          left: (width / 6) * col + (width / 12),
+          top: (height / 9) * row + (height / 18),
+        });
+    return items;
+  }, [width, height]);
 
   // 🎙 Start Recording
   async function startRecording() {
@@ -50,36 +251,52 @@ const HomeScreen: React.FC = () => {
     setLoading(false);
   }
 
-  // 📤 Upload Audio to FastAPI
+  // 📤 Upload Audio
   async function uploadAudio(uri: string) {
     const formData = new FormData();
+    const uriParts = uri.split(".");
+    const uriExtension = uriParts[uriParts.length - 1].toLowerCase();
+    const extension = ["wav", "m4a", "caf", "3gp", "mp4"].includes(uriExtension) ? uriExtension : "wav";
+    const fileName = `speech.${extension}`;
 
-    // @ts-ignore - FormData expects string | Blob, but RN expects this object structure
+    let type = "audio/wav";
+    if (extension === "m4a") type = "audio/x-m4a";
+    else if (extension === "3gp") type = "audio/3gpp";
+    else if (extension === "caf") type = "audio/x-caf";
+    else if (extension === "mp4") type = "audio/mp4";
+    else if (extension === "webm") type = "audio/webm";
+    else if (extension === "mp3") type = "audio/mpeg";
+
     formData.append("file", {
       uri,
-      name: "speech.wav",
-      type: "audio/wav",
+      name: fileName,
+      type: type,
     } as any);
 
     try {
+      const token = await getToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${baseURL}/transcribe`, {
         method: "POST",
         body: formData,
+        headers,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Server Error:", data);
         Alert.alert("Transcription Error", data.detail || data.error || "Server failed to process audio");
         setTranscript("");
         return;
       }
 
-      setTranscript(data.text || "");
+      setTranscript(data.transcript || data.text || "");
     } catch (err: any) {
-      console.error("Fetch Error:", err);
-      Alert.alert("Network Error", "Could not connect to the transcription server. Please check your connection and IP address.");
+      Alert.alert("Network Error", "Could not connect to the transcription server.");
     }
   }
 
@@ -89,10 +306,9 @@ const HomeScreen: React.FC = () => {
       Alert.alert("Nothing to speak");
       return;
     }
-
     Speech.stop();
     Speech.speak(transcript, {
-      language: "en-US",
+      language: "fil-PH",
       rate: 0.9,
       pitch: 1.0,
     });
@@ -104,231 +320,213 @@ const HomeScreen: React.FC = () => {
     setTranscript("");
   }
 
+  const isRecording = !!recording;
+  const statusText = loading ? "Processing your speech..." : isRecording ? "Listening..." : "Tap the mic to start";
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a0f0d" />
+    <YStack f={1} bg={COLORS.cream}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Articulink</Text>
-        <Text style={styles.subtitle}>Speech Clarity Assistant</Text>
-      </View>
+      {/* ── Layered Background ── */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <YStack fullscreen bg={COLORS.cream} />
+        
+        {/* Orbs */}
+        {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
 
-      {/* Recording Controls */}
-      <View style={styles.recordingSection}>
-        <TouchableOpacity
-          style={[
-            styles.recordButton,
-            !!recording && styles.recordButtonActive,
-          ]}
-          onPress={startRecording}
-          disabled={!!recording}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.recordDot, !!recording && styles.recordDotActive]} />
-          <Text style={styles.recordButtonText}>
-            {recording ? "Recording..." : "Start Recording"}
-          </Text>
-        </TouchableOpacity>
+        {/* Subtle dot grid */}
+        {dotGrid.map((d, i) => (
+          <Circle
+            key={i}
+            pos="absolute"
+            size={2}
+            bg={COLORS.royalBlue}
+            opacity={0.04}
+            l={d.left}
+            t={d.top}
+          />
+        ))}
 
-        <TouchableOpacity
-          style={[
-            styles.stopButton,
-            (!recording || loading) && styles.buttonDisabled,
-          ]}
-          onPress={stopRecording}
-          disabled={!recording || loading}
-          activeOpacity={0.8}
-        >
-          <View style={styles.stopIcon} />
-          <Text style={styles.stopButtonText}>
-            {loading ? "Processing..." : "Stop & Transcribe"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Transcript Section */}
-      <View style={styles.transcriptSection}>
-        <Text style={styles.label}>Transcript</Text>
-
-        <TextInput
-          style={styles.textbox}
-          multiline
-          value={transcript}
-          onChangeText={setTranscript}
-          placeholder="Your speech will appear here..."
-          placeholderTextColor="#4a5568"
+        {/* Corner brackets */}
+        <YStack
+          pos="absolute" t={58} l={22} w={34} h={34}
+          borderTopWidth={1.5} borderLeftWidth={1.5}
+          borderColor={`${COLORS.royalBlue}25`}
+          br={6}
+          borderBottomWidth={0} borderRightWidth={0}
         />
-      </View>
+        <YStack
+          pos="absolute" b={60} r={22} w={34} h={34}
+          borderBottomWidth={1.5} borderRightWidth={1.5}
+          borderColor={`${COLORS.teal}25`}
+          br={6}
+          borderTopWidth={0} borderLeftWidth={0}
+        />
+      </ZStack>
 
-      {/* Action Buttons */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.speakButton,
-            !transcript && styles.buttonDisabled,
-          ]}
-          onPress={speakText}
-          disabled={!transcript}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.actionButtonIcon}>🔊</Text>
-          <Text style={styles.actionButtonText}>Speak</Text>
-        </TouchableOpacity>
+      {/* ── Main Content ── */}
+      <YStack f={1} px="$5" pt={Platform.OS === "android" ? 48 : 60} pb={Platform.OS === "android" ? 20 : 30} gap="$4">
+        
+        {/* Header */}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <YStack ai="center" gap="$1">
+            <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={2.5} tt="uppercase">
+              SPEECH CLARITY ENGINE
+            </SizableText>
+            <H1 fow="900" size="$10" color={COLORS.textDark} ls={-0.5}>
+              Articulink
+            </H1>
+            <SizableText size="$3" color={COLORS.textMid} fow="500">
+              Tap, speak, and let AI understand you
+            </SizableText>
+          </YStack>
+        </Animated.View>
 
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.clearButton,
-            !transcript && styles.buttonDisabled,
-          ]}
-          onPress={clearTranscript}
-          disabled={!transcript}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.actionButtonIcon}>🗑</Text>
-          <Text style={styles.actionButtonText}>Clear</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: fadeAnim }] }}>
+            <YStack ai="center" gap="$2">
+              <YStack w={120} h={120} jc="center" ai="center">
+                <PulseRing active={isRecording} />
+                <AnimatePresence>
+                  {isRecording && (
+                    <Circle
+                      key="active-bg"
+                      pos="absolute"
+                      size={120}
+                      bg={COLORS.teal}
+                      opacity={0.12}
+                      animation="quick"
+                      enterStyle={{ opacity: 0, scale: 0.8 }}
+                      exitStyle={{ opacity: 0, scale: 1.2 }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <Button
+                  size={88}
+                  br={44}
+                  bg={isRecording ? '#DC2626' : COLORS.teal}
+                  onPress={isRecording ? stopRecording : startRecording}
+                  disabled={loading}
+                  pressStyle={{ scale: 0.92, opacity: 0.85 }}
+                  elevation={10}
+                  shadowColor={isRecording ? '#DC2626' : '#2A8FA0'}
+                  icon={loading ? <Spinner size="large" color="white" /> : (isRecording ? <Square size={28} color="white" fill="white" /> : <Mic size={32} color="white" />)}
+                />
+              </YStack>
+
+              <SizableText size="$3" fow="600" color={isRecording ? '#DC2626' : COLORS.textMid}>
+                {statusText}
+              </SizableText>
+
+              <AnimatePresence>
+                {isRecording && (
+                  <YStack
+                    key="waveform"
+                    mt="$2"
+                    animation="medium"
+                    enterStyle={{ opacity: 0, y: 10 }}
+                    exitStyle={{ opacity: 0, y: -10 }}
+                  >
+                    <AnimatedWaveform color={COLORS.teal} />
+                  </YStack>
+                )}
+              </AnimatePresence>
+            </YStack>
+          </Animated.View>
+
+        {/* Transcript Card */}
+        <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <Card f={1} bg="white" br={22} elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid} ov="hidden">
+            {/* Top accent */}
+            <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
+            <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${COLORS.royalBlue}07`} />
+
+            <YStack f={1} p="$4">
+              <XStack ai="center" gap="$2" mb="$2">
+                <YStack w={30} h={30} br={9} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+                  <FileText size={14} color={COLORS.royalBlue} />
+                </YStack>
+                <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
+                  Transcript
+                </SizableText>
+                <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.7} />
+                {transcript.length > 0 && (
+                  <YStack bg={`${COLORS.teal}14`} px="$2" py="$1" br={8}>
+                    <SizableText fow="700" size="$1" color={COLORS.teal}>
+                      {transcript.length}
+                    </SizableText>
+                  </YStack>
+                )}
+              </XStack>
+
+              <TextArea
+                flex={1}
+                bg={`${COLORS.royalBlue}04`}
+                borderColor={COLORS.sandMid}
+                br={14}
+                p="$3"
+                size="$4"
+                fontWeight="500"
+                color={COLORS.textDark}
+                value={transcript}
+                onChangeText={setTranscript}
+                placeholder="Your speech will appear here..."
+                placeholderTextColor={COLORS.textMid as any}
+                borderWidth={1.5}
+              />
+
+              <YStack pos="absolute" b={12} r={14}>
+                <AnimatedWaveform color={COLORS.royalBlue} />
+              </YStack>
+            </YStack>
+          </Card>
+        </Animated.View>
+
+        {/* Action Buttons */}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <YStack gap="$2">
+            <Button
+              size="$5"
+              bg={COLORS.teal}
+              br={18}
+              onPress={speakText}
+              disabled={!transcript}
+              opacity={!transcript ? 0.45 : 1}
+              pressStyle={{ scale: 0.98, opacity: 0.9 }}
+              icon={<Volume2 size={18} color="white" />}
+              iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.5)" />}
+              elevation={6}
+              shadowColor="#2A8FA0"
+            >
+              <SizableText fow="800" size="$4" color="white" ml="$2">
+                Speak
+              </SizableText>
+            </Button>
+
+            <Button
+              size="$5"
+              bg="white"
+              br={18}
+              onPress={clearTranscript}
+              disabled={!transcript}
+              opacity={!transcript ? 0.45 : 1}
+              pressStyle={{ scale: 0.98, opacity: 0.9 }}
+              borderWidth={1}
+              borderColor="rgba(220,38,38,0.18)"
+              icon={<Trash2 size={16} color="#DC2626" />}
+              iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.35)" />}
+              elevation={5}
+              shadowColor="#8A96A4"
+            >
+              <SizableText fow="800" size="$4" color="#DC2626" ml="$2">
+                Clear
+              </SizableText>
+            </Button>
+          </YStack>
+        </Animated.View>
+      </YStack>
+    </YStack>
   );
 };
 
 export default HomeScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0a0f0d",
-    padding: 24,
-    paddingTop: 60,
-  },
-  header: {
-    marginBottom: 40,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#10b981",
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    letterSpacing: 0.3,
-  },
-  recordingSection: {
-    marginBottom: 32,
-    gap: 16,
-  },
-  recordButton: {
-    backgroundColor: "#1a2820",
-    borderWidth: 2,
-    borderColor: "#10b981",
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  recordButtonActive: {
-    backgroundColor: "#10b981",
-    borderColor: "#10b981",
-  },
-  recordDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#10b981",
-  },
-  recordDotActive: {
-    backgroundColor: "#fff",
-  },
-  recordButtonText: {
-    color: "#10b981",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  stopButton: {
-    backgroundColor: "#1f2937",
-    borderWidth: 1,
-    borderColor: "#374151",
-    borderRadius: 16,
-    padding: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  stopIcon: {
-    width: 14,
-    height: 14,
-    backgroundColor: "#ef4444",
-    borderRadius: 2,
-  },
-  stopButtonText: {
-    color: "#d1d5db",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  transcriptSection: {
-    flex: 1,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#9ca3af",
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  textbox: {
-    backgroundColor: "#1a1f1c",
-    borderWidth: 1,
-    borderColor: "#2d3730",
-    borderRadius: 12,
-    padding: 16,
-    minHeight: 180,
-    color: "#e5e7eb",
-    fontSize: 15,
-    lineHeight: 22,
-    textAlignVertical: "top",
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  speakButton: {
-    backgroundColor: "#10b981",
-  },
-  clearButton: {
-    backgroundColor: "#1f2937",
-    borderWidth: 1,
-    borderColor: "#374151",
-  },
-  actionButtonIcon: {
-    fontSize: 20,
-  },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});

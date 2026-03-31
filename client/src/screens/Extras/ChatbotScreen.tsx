@@ -1,36 +1,234 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, { useState, useRef, useEffect, useContext, memo } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  SafeAreaView,
   Alert,
-  Dimensions,
+  Animated,
+  useWindowDimensions,
+  StatusBar,
+  TouchableOpacity,
+  Image as RNImage,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  SizableText,
+  Card,
+  Image,
+  ScrollView,
+  Spinner,
+  Input,
+  Theme,
+} from "tamagui";
+import { Send, Trash2, Bot, MessageCircle, ChevronLeft, MoreVertical } from "@tamagui/lucide-icons";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+  cream: '#FAF8F4',
+  warmWhite: '#F5F1EA',
+  sandLight: '#EDE8DF',
+  sandMid: '#DDD6C8',
+  deepNavy: '#0F2847',
+  royalBlue: '#1A4480',
+  mediumBlue: '#2A5FA8',
+  teal: '#2A8FA0',
+  tealLight: '#3DAFC4',
+  tealDark: '#1E6B78',
+  orbBlue: '#C8D8EE',
+  orbTeal: '#BEE4EC',
+  orbSand: '#E8E0D0',
+  textDark: '#1C2B3A',
+  textMid: '#4A5A6A',
+  white: '#FFFFFF',
+  error: '#DC2626',
+};
 
+// ─── Animated Typing Dots ─────────────────────────────────────────
+const TypingDots: React.FC = () => {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const createBounce = (anim: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(anim, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0, duration: 300, useNativeDriver: true }),
+          Animated.delay(600 - delay),
+        ])
+      );
+    const a1 = createBounce(dot1, 0);
+    const a2 = createBounce(dot2, 200);
+    const a3 = createBounce(dot3, 400);
+    a1.start(); a2.start(); a3.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, []);
+
+  const renderDot = (anim: Animated.Value) => {
+    const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
+    return (
+      <Animated.View style={{ transform: [{ translateY }] }}>
+        <Circle size={6} bg={COLORS.teal} opacity={0.6} />
+      </Animated.View>
+    );
+  };
+
+  return (
+    <XStack ai="center" px="$2" py="$1" gap="$1.5">
+      {renderDot(dot1)}
+      {renderDot(dot2)}
+      {renderDot(dot3)}
+    </XStack>
+  );
+};
+
+// ─── Interfaces ───────────────────────────────────────────────────
 interface Message {
-  id: number;
+  id: string | number;
   text: string;
   sender: 'bot' | 'user';
   timestamp: string;
   isExpanded: boolean;
 }
 
+// ─── Message Bubble Component ─────────────────────────────────────
+const MessageBubble = memo(({
+  message,
+  onToggleExpand,
+  onLongPress,
+  formatTime,
+  width
+}: {
+  message: Message;
+  onToggleExpand: (id: string | number) => void;
+  onLongPress: (msg: Message) => void;
+  formatTime: (ts: string) => string;
+  width: number;
+}) => {
+  const isUser = message.sender === "user";
+  const isLongMessage = (message.text || "").length > 300;
+  const shouldTruncate = !message.isExpanded && isLongMessage;
+  const displayText = shouldTruncate
+    ? message.text.substring(0, 300) + "..."
+    : message.text;
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{
+      opacity: fadeAnim,
+      transform: [{ translateY: slideAnim }],
+      alignSelf: isUser ? "flex-end" : "flex-start",
+      width: '100%'
+    }}>
+      <XStack
+        gap="$2.5"
+        mb="$4"
+        ai="flex-end"
+        jc={isUser ? "flex-end" : "flex-start"}
+      >
+        {!isUser && (
+          <Circle
+            size={32}
+            bg={COLORS.white}
+            elevation={2}
+            jc="center"
+            ai="center"
+            mb={2}
+            bc={COLORS.sandMid}
+            bw={1}
+            overflow="hidden"
+          >
+            <RNImage
+              source={require("../../../assets/images/logo2-nobg.png")}
+              style={{ width: 26, height: 26 }}
+              resizeMode="contain"
+            />
+          </Circle>
+        )}
+        <Card
+          p="$3.5"
+          px="$4"
+          br={20}
+          borderBottomRightRadius={isUser ? 4 : 20}
+          borderBottomLeftRadius={isUser ? 20 : 4}
+          maw={width * 0.78}
+          elevation={isUser ? 4 : 2}
+          bg={isUser ? COLORS.teal : COLORS.white}
+          onPress={() => isLongMessage && !isUser && onToggleExpand(message.id)}
+          onLongPress={() => onLongPress(message)}
+          pressStyle={{ scale: 0.98 }}
+          overflow="hidden"
+        >
+          <SizableText
+            color={isUser ? "white" : COLORS.textDark}
+            size="$3"
+            lh={22}
+            fow="500"
+            ls={-0.2}
+          >
+            {displayText}
+          </SizableText>
+
+          {isLongMessage && !isUser && (
+            <TouchableOpacity
+              onPress={() => onToggleExpand(message.id)}
+              style={{ marginTop: 8 }}
+            >
+              <SizableText color={COLORS.teal} size="$2" fow="700">
+                {message.isExpanded ? "Show less" : "Read more"}
+              </SizableText>
+            </TouchableOpacity>
+          )}
+
+          <XStack jc="flex-end" ai="center" mt="$1.5" gap="$1.5">
+            <SizableText
+              size="$1"
+              color={isUser ? "rgba(255, 255, 255, 0.7)" : `${COLORS.textMid}70`}
+              fow="600"
+              ls={0.5}
+            >
+              {formatTime(message.timestamp)}
+            </SizableText>
+          </XStack>
+        </Card>
+      </XStack>
+    </Animated.View>
+  );
+});
+
+// ─── Main Component ───────────────────────────────────────────────
 const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      text: "Hello! I'm your AI assistant. How can I help you today?",
+      id: "initial- greeting",
+      text: "Hello! I'm your Articulink AI assistant. I can help with speech exercises, answer questions, or just chat. How can I help you today?",
       sender: "bot",
       timestamp: new Date().toISOString(),
       isExpanded: true,
@@ -39,119 +237,122 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const auth = useContext(AuthContext) as AuthContextType;
-  const { sendChatMessage, clearChatHistory, user } = auth;
+  const { sendChatMessage, clearChatHistory, fetchChatHistory, user } = auth;
   const scrollViewRef = useRef<ScrollView>(null);
+  const { width } = useWindowDimensions();
 
-  // Load conversation history on component mount
   useEffect(() => {
     loadConversationHistory();
   }, [user]);
 
   const loadConversationHistory = async () => {
-    // If you want to load previous conversations, you can add that logic here
+    if (!user) return;
+    setLoading(true);
+    try {
+      const history = await fetchChatHistory();
+      if (history && Array.isArray(history) && history.length > 0) {
+        const formattedMessages: Message[] = history.map((msg: any, index: number) => ({
+          id: msg._id || msg.id || `history-${index}-${Date.now()}`,
+          text: msg.content || msg.text || "",
+          sender: msg.role === 'assistant' ? 'bot' : 'user',
+          timestamp: msg.created_at || new Date().toISOString(),
+          isExpanded: true,
+        }));
+
+        setMessages((prev) => {
+          const greeting = prev[0];
+          // Simple deduplication check
+          const filteredHistory = formattedMessages.filter(m => m.text !== greeting.text);
+          return [greeting, ...filteredHistory];
+        });
+      }
+    } catch (error) {
+      // Silence errors here, they are logged with context in the service/auth provider if necessary
+      // console.error("Error loading chat history:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // Scroll to bottom when new message is added
     if (scrollViewRef.current) {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 150);
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || loading) return;
 
     const userMessage: Message = {
-      id: Date.now(),
+      id: Date.now().toString(),
       text: inputText.trim(),
       sender: "user",
       timestamp: new Date().toISOString(),
       isExpanded: true,
     };
 
-    // Add user message immediately for better UX
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = inputText.trim();
     setInputText("");
     setLoading(true);
 
     try {
-      const result = await sendChatMessage(inputText.trim());
+      const result = await sendChatMessage(currentInput, messages);
 
       if (result.success) {
         const botMessage: Message = {
-          id: Date.now() + 1,
-          text: result.response,
+          id: (Date.now() + 1).toString(),
+          text: result.response || "No response received.",
           sender: "bot",
           timestamp: new Date().toISOString(),
-          isExpanded: true, // Expanded by default
+          isExpanded: true,
         };
         setMessages((prev) => [...prev, botMessage]);
       } else {
-        // Handle error from backend
         const errorMessage: Message = {
-          id: Date.now() + 1,
-          text: result.error,
+          id: (Date.now() + 1).toString(),
+          text: result.error || "Failed to get response. Please try again.",
           sender: "bot",
           timestamp: new Date().toISOString(),
           isExpanded: true,
         };
         setMessages((prev) => [...prev, errorMessage]);
-
-        // If session expired, show alert
-        if (result.statusCode === 401) {
-          Alert.alert("Session Expired", "Please log in again");
-        }
       }
     } catch (error) {
       console.error("Error in handleSendMessage:", error);
-
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        text: "An unexpected error occurred. Please try again.",
-        sender: "bot",
-        timestamp: new Date().toISOString(),
-        isExpanded: true,
-      };
-      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleMessageExpansion = (messageId: number) => {
-    setMessages(prevMessages =>
-      prevMessages.map(msg =>
+  const toggleMessageExpansion = (messageId: string | number) => {
+    setMessages(prev =>
+      prev.map(msg =>
         msg.id === messageId ? { ...msg, isExpanded: !msg.isExpanded } : msg
       )
     );
   };
 
-  const clearChat = async () => {
+  const clearChat = () => {
     Alert.alert(
-      "Clear Chat",
-      "Are you sure you want to clear all messages?",
+      "Clear Journey",
+      "This will remove all your conversation history with the assistant. Continue?",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Keep it", style: "cancel" },
         {
-          text: "Clear",
+          text: "Clear all",
           style: "destructive",
           onPress: async () => {
-            // Clear local state
-            setMessages([
-              {
-                id: 1,
-                text: "Hello! I'm your AI assistant. How can I help you today?",
-                sender: "bot",
-                timestamp: new Date().toISOString(),
-                isExpanded: true,
-              },
-            ]);
-
-            // Clear stored conversation
-            if (clearChatHistory) {
-              await clearChatHistory();
+            setLoading(true);
+            try {
+              if (clearChatHistory) await clearChatHistory();
+              setMessages([messages[0]]);
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear history");
+            } finally {
+              setLoading(false);
             }
           },
         },
@@ -164,292 +365,178 @@ const ChatbotScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const MessageBubble = ({ message }: { message: Message }) => {
-    const isUser = message.sender === "user";
-    const isLongMessage = message.text.length > 300; // Show expand if > 300 chars
-    const shouldTruncate = !message.isExpanded && isLongMessage;
-    const displayText = shouldTruncate
-      ? message.text.substring(0, 300) + "..."
-      : message.text;
-
-    return (
-      <View
-        style={[
-          styles.messageContainer,
-          isUser ? styles.userMessageContainer : styles.botMessageContainer,
-        ]}
-      >
-        <View
-          style={[
-            styles.messageBubble,
-            isUser ? styles.userBubble : styles.botBubble,
-          ]}
-        >
-          <Text style={isUser ? styles.userMessageText : styles.botMessageText}>
-            {displayText}
-          </Text>
-
-          {isLongMessage && !isUser && (
-            <TouchableOpacity
-              onPress={() => toggleMessageExpansion(message.id)}
-              style={styles.expandButton}
-            >
-              <Text style={styles.expandButtonText}>
-                {message.isExpanded ? "Show less" : "Show more"}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <Text style={[styles.timestamp, isUser && styles.userTimestamp]}>
-            {formatTime(message.timestamp)}
-          </Text>
-        </View>
-      </View>
+  const handleDeleteMessage = (message: Message) => {
+    Alert.alert(
+      "Delete Message",
+      "Remove this message from history?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const result = await auth.deleteMessage(message.timestamp);
+              if (result.success) {
+                setMessages(prev => prev.filter(m => m.timestamp !== message.timestamp));
+              }
+            } catch (error) {
+              Alert.alert("Error", "Could not delete message");
+            }
+          },
+        },
+      ]
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <View style={styles.avatar}>
-            <MaterialIcons name="smart-toy" size={20} color="#fff" />
-          </View>
-          <View>
-            <Text style={styles.headerTitle}>AI Assistant</Text>
-            <Text style={styles.headerSubtitle}>
-              {loading ? "Typing..." : "Online"}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity onPress={clearChat} style={styles.clearButton}>
-          <MaterialIcons name="delete-outline" size={24} color="#FF3B30" />
-        </TouchableOpacity>
-      </View>
+    <YStack f={1} bg={COLORS.cream}>
+      <StatusBar barStyle="dark-content" />
 
-      {/* Chat Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.chatContainer}
-        contentContainerStyle={styles.chatContent}
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+      {/* Simplified Header */}
+      <XStack
+        jc="space-between"
+        ai="center"
+        px="$4"
+        py="$2"
+        pt={Platform.OS === 'ios' ? 44 : 10}
+        bg="transparent"
       >
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-        {loading && (
-          <View style={styles.botMessageContainer}>
-            <View style={[styles.messageBubble, styles.botBubble]}>
-              <View style={styles.typingIndicator}>
-                <View style={styles.typingDot} />
-                <View style={[styles.typingDot, styles.typingDotMiddle]} />
-                <View style={styles.typingDot} />
-              </View>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+        <XStack ai="center" bg={`${COLORS.teal}0C`} px="$3" py="$1.5" br={12} gap="$2">
+          <Circle size={8} bg={loading ? COLORS.orbSand : "#34C759"} />
+          <SizableText size="$1" fow="700" color={COLORS.teal} ls={-0.1}>
+            {loading ? "Thinking..." : "Online"}
+          </SizableText>
+        </XStack>
 
-      {/* Input Area */}
+        <Button
+          size="$3"
+          circular
+          bg="rgba(220,38,38,0.06)"
+          bw={1}
+          bc="rgba(220,38,38,0.12)"
+          icon={<Trash2 size={16} color="#DC2626" />}
+          onPress={clearChat}
+          pressStyle={{ scale: 0.9 }}
+        />
+      </XStack>
+
+      {/* Main Chat Area */}
+      <ZStack f={1}>
+        {/* Subtle Background Logo */}
+        <YStack fullscreen o={0.05} jc="center" ai="center">
+          <RNImage
+            source={require("../../../assets/images/logo2-nobg.png")}
+            style={{ width: width * 0.7, height: width * 0.7 }}
+            resizeMode="contain"
+          />
+        </YStack>
+
+        <ScrollView
+          ref={scrollViewRef}
+          f={1}
+          px="$4"
+          pt="$1"
+          pb="$4"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        >
+          {messages.length === 1 && (
+            <YStack ai="center" mt="$8" mb="$6" gap="$4">
+              <ZStack w={100} h={100} jc="center" ai="center">
+                <Circle size={100} bg={`${COLORS.teal}08`} />
+                <Circle size={80} bg={`${COLORS.teal}0F`} />
+                <RNImage
+                  source={require("../../../assets/images/logo2-nobg.png")}
+                  style={{ width: 60, height: 60 }}
+                  resizeMode="contain"
+                />
+              </ZStack>
+              <YStack ai="center" gap="$1">
+                <SizableText size="$6" fow="800" color={COLORS.textDark} ta="center">
+                  Start a Conversation
+                </SizableText>
+                <SizableText size="$3" color={COLORS.textMid} ta="center" px="$6" o={0.8}>
+                  I'm here to support your speech journey and answer any questions.
+                </SizableText>
+              </YStack>
+            </YStack>
+          )}
+
+          {messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              onToggleExpand={toggleMessageExpansion}
+              onLongPress={handleDeleteMessage}
+              formatTime={formatTime}
+              width={width}
+            />
+          ))}
+
+          {loading && (
+            <XStack ai="flex-end" gap="$2.5" mb="$4">
+              <Circle size={32} bg={COLORS.white} elevation={1} bc={COLORS.sandMid} bw={1} jc="center" ai="center" overflow="hidden">
+                 <RNImage
+                  source={require("../../../assets/images/logo2-nobg.png")}
+                  style={{ width: 26, height: 26 }}
+                  resizeMode="contain"
+                />
+              </Circle>
+              <Card bg={COLORS.white} p="$2.5" px="$3.5" br={20} borderBottomLeftRadius={4} elevation={2}>
+                <TypingDots />
+              </Card>
+            </XStack>
+          )}
+        </ScrollView>
+      </ZStack>
+
+      {/* Floating Input Area */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-        style={styles.inputContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <TextInput
-          style={styles.textInput}
-          placeholder="Type your message here..."
-          value={inputText}
-          onChangeText={setInputText}
-          multiline
-          maxLength={1000} // Increased max length
-          editable={!loading}
-          onSubmitEditing={handleSendMessage}
-          returnKeyType="send"
-        />
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            (!inputText.trim() || loading) && styles.sendButtonDisabled,
-          ]}
-          onPress={handleSendMessage}
-          disabled={!inputText.trim() || loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <MaterialIcons name="send" size={20} color="#fff" />
-          )}
-        </TouchableOpacity>
+        <Theme name="light">
+          <YStack bg={COLORS.white} px="$4" pt="$3" pb={Platform.OS === 'ios' ? 34 : 20} elevation={10} bc={COLORS.sandMid} btw={1}>
+            <XStack gap="$3" ai="flex-end">
+              <YStack f={1} bg={COLORS.warmWhite} br={24} px="$4" py="$1" bc={COLORS.sandMid} bw={1.5} focusStyle={{ bc: COLORS.teal }}>
+                <Input
+                  unstyled
+                  f={1}
+                  py="$2"
+                  size="$4"
+                  fow="500"
+                  color={COLORS.textDark}
+                  placeholder="Type your message..."
+                  placeholderTextColor={`${COLORS.textMid}60`}
+                  value={inputText}
+                  onChangeText={setInputText}
+                  multiline
+                  disabled={loading}
+                />
+              </YStack>
+
+              <Animated.View style={{ transform: [{ scale: 1 }] }}>
+                <Button
+                  size="$5"
+                  w={52}
+                  h={52}
+                  circular
+                  bg={!inputText.trim() || loading ? COLORS.sandMid : COLORS.teal}
+                  pressStyle={{ scale: 0.92, bg: COLORS.tealDark }}
+                  icon={loading ? <Spinner color="white" /> : <Send size={20} color="white" />}
+                  onPress={handleSendMessage}
+                  disabled={!inputText.trim() || loading}
+                  elevation={4}
+                />
+              </Animated.View>
+            </XStack>
+          </YStack>
+        </Theme>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </YStack>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e9ecef",
-  },
-  backButton: {
-    padding: 8,
-  },
-  clearButton: {
-    padding: 8,
-  },
-  headerTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginLeft: 12,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1c1c1e",
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: "#6c757d",
-  },
-  chatContainer: {
-    flex: 1,
-  },
-  chatContent: {
-    padding: 16,
-    paddingBottom: 20,
-  },
-  messageContainer: {
-    marginBottom: 12,
-  },
-  userMessageContainer: {
-    alignItems: "flex-end",
-  },
-  botMessageContainer: {
-    alignItems: "flex-start",
-  },
-  messageBubble: {
-    maxWidth: SCREEN_WIDTH * 0.85, // Better width calculation
-    padding: 12,
-    borderRadius: 18,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  userBubble: {
-    backgroundColor: "#007AFF",
-    borderBottomRightRadius: 4,
-  },
-  botBubble: {
-    backgroundColor: "#fff",
-    borderBottomLeftRadius: 4,
-  },
-  userMessageText: {
-    color: "#fff",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  botMessageText: {
-    color: "#1c1c1e",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  timestamp: {
-    fontSize: 10,
-    color: "rgba(0, 0, 0, 0.5)",
-    marginTop: 4,
-    alignSelf: "flex-end",
-  },
-  userTimestamp: {
-    color: "rgba(255, 255, 255, 0.7)",
-  },
-  expandButton: {
-    marginTop: 8,
-    paddingVertical: 4,
-  },
-  expandButtonText: {
-    color: "#007AFF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  typingIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ccc",
-    marginHorizontal: 2,
-  },
-  typingDotMiddle: {
-    opacity: 0.5,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#e9ecef",
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    paddingTop: 10,
-    maxHeight: 120, // Increased max height
-    fontSize: 14,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#ccc",
-  },
-});
 
 export default ChatbotScreen;

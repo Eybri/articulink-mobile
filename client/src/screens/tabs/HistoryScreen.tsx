@@ -1,514 +1,342 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  StatusBar,
+  Platform,
+  Animated,
+  useWindowDimensions,
   FlatList,
+  RefreshControl,
   TouchableOpacity,
   Alert,
-  TextInput,
-  Animated,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../../context/AuthContext';
+import {
+  YStack,
+  XStack,
+  ZStack,
+  Button,
+  Circle,
+  Paragraph,
+  H1,
+  SizableText,
+  Card,
+  Image,
+  Input,
+  Theme,
+} from "tamagui";
+import {
+  History,
+  Search,
+  ChevronRight,
+  Mic,
+  Calendar,
+  Clock,
+  Trash2,
+  Filter,
+  CheckCircle,
+} from "@tamagui/lucide-icons";
+
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+  cream: '#FAF8F4',
+  warmWhite: '#F5F1EA',
+  sandLight: '#EDE8DF',
+  sandMid: '#DDD6C8',
+  deepNavy: '#0F2847',
+  royalBlue: '#1A4480',
+  mediumBlue: '#2A5FA8',
+  teal: '#2A8FA0',
+  tealLight: '#3DAFC4',
+  orbBlue: '#C8D8EE',
+  orbTeal: '#BEE4EC',
+  orbSand: '#E8E0D0',
+  textDark: '#1C2B3A',
+  textMid: '#4A5A6A',
+  white: '#FFFFFF',
+};
 
 interface HistoryItem {
   id: string;
-  original: string;
-  translated: string;
-  timestamp: Date;
-  accuracy: number;
-  duration: number;
+  user_id: string;
+  audio_url?: string;
+  transcript?: string;
+  corrected_transcript?: string;
+  speech_type?: string;
+  duration_seconds?: number;
+  language?: string;
+  confidence_score?: number;
+  processing_status?: string;
+  created_at?: string;
 }
 
 const HistoryScreen = () => {
+  const { fetchSpeechHistory, deleteSpeechHistoryItem } = useContext(AuthContext)!;
   const [searchQuery, setSearchQuery] = useState('');
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(30)).current;
 
-  // Mock data - replace with actual data from your storage/API
-  const translationHistory: HistoryItem[] = [
-    {
-      id: '1',
-      original: "Helwo, how awe you?",
-      translated: "Hello, how are you?",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      accuracy: 96,
-      duration: 1.2,
-    },
-    {
-      id: '2',
-      original: "I wike thith game",
-      translated: "I like this game",
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-      accuracy: 94,
-      duration: 0.8,
-    },
-    {
-      id: '3',
-      original: "Pleath help me",
-      translated: "Please help me",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      accuracy: 98,
-      duration: 0.9,
-    },
-    {
-      id: '4',
-      original: "Thankth you vewy much",
-      translated: "Thank you very much",
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      accuracy: 97,
-      duration: 1.5,
-    },
-    {
-      id: '5',
-      original: "Whewre ith the bathwoom?",
-      translated: "Where is the bathroom?",
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      accuracy: 93,
-      duration: 1.1,
-    },
-  ];
+  const loadHistory = async (isRefreshing = false) => {
+    if (isRefreshing) setRefreshing(true);
+    else setLoading(true);
 
-  useEffect(() => {
-    // Filter history based on search query
-    const filtered = translationHistory.filter(item =>
-      item.original.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.translated.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredHistory(filtered);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days} day${days === 1 ? '' : 's'} ago`;
-    } else if (hours > 0) {
-      return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-    } else {
-      return 'Just now';
+    try {
+      const data = await fetchSpeechHistory();
+      if (Array.isArray(data)) {
+        setHistory(data);
+        setFilteredHistory(data);
+      }
+    } catch (error) {
+      console.error("Load history error:", error);
+    } finally {
+      if (isRefreshing) setRefreshing(false);
+      else setLoading(false);
     }
   };
 
-  const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 95) return '#10B981'; // Excellent - Emerald
-    if (accuracy >= 90) return '#F59E0B'; // Good - Amber
-    return '#EF4444'; // Needs improvement - Red
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    const filtered = history.filter(item =>
+      (item.transcript || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.corrected_transcript || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredHistory(filtered);
+  }, [searchQuery, history]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 20,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const formatTimestamp = (dateStr?: string) => {
+    if (!dateStr) return 'Just now';
+    
+    // Ensure the date is parsed correctly. If it lacks a timezone, assume UTC
+    let dateInput = dateStr;
+    if (dateStr.length === 19 && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateInput = `${dateStr}Z`;
+    }
+    
+    const timestamp = new Date(dateInput);
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    
+    return timestamp.toLocaleDateString(undefined, { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
-  const getAccuracyLabel = (accuracy: number) => {
-    if (accuracy >= 95) return '🎯 Excellent';
-    if (accuracy >= 90) return '👍 Good';
-    return '📈 Improving';
-  };
-
-  const handlePlayTranslation = (item: HistoryItem) => {
-    // Here you would implement text-to-speech functionality
-    Alert.alert("Playing Translation", `"${item.translated}"`);
-  };
-
-  const handleDeleteItem = (id: string) => {
+  const handleDelete = (item: HistoryItem) => {
     Alert.alert(
-      "Delete Translation",
-      "Are you sure you want to delete this translation from your history?",
+      "Delete Recording",
+      "Are you sure you want to delete this recording?",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete", style: "destructive", onPress: () => {
-            // Handle delete logic here
-            Alert.alert("Deleted", "Translation removed from history.");
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            const success = await deleteSpeechHistoryItem(item.id);
+            if (success) {
+              setHistory(prev => prev.filter(h => h.id !== item.id));
+            }
           }
         }
       ]
     );
   };
 
-  const renderHistoryItem = ({ item }: { item: HistoryItem; index: number }) => (
-    <Animated.View
-      style={[
-        styles.historyItem,
-        {
-          opacity: fadeAnim,
-          transform: [{
-            translateY: fadeAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [50, 0],
-            })
-          }]
-        }
-      ]}
+  const renderItem = ({ item }: { item: HistoryItem }) => (
+    <Card
+      bg="white"
+      br={20}
+      p="$3.5"
+      mb="$3"
+      bw={1}
+      bc={COLORS.sandMid}
+      elevation={2}
+      shadowColor={COLORS.deepNavy}
+      shadowOpacity={0.06}
+      pressStyle={{ scale: 0.98, bg: COLORS.warmWhite }}
     >
-      <LinearGradient
-        colors={['#1F2937', '#374151']}
-        style={styles.historyCard}
-      >
-        {/* Header with timestamp and accuracy */}
-        <View style={styles.historyHeader}>
-          <View style={styles.timestampContainer}>
-            <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-            <Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
-          </View>
-          <View style={styles.accuracyContainer}>
-            <Text style={[styles.accuracyText, { color: getAccuracyColor(item.accuracy) }]}>
-              {item.accuracy}%
-            </Text>
-            <Text style={styles.accuracyLabel}>{getAccuracyLabel(item.accuracy)}</Text>
-          </View>
-        </View>
-
-        {/* Translation Content */}
-        <View style={styles.translationContent}>
-          <View style={styles.originalSection}>
-            <Text style={styles.sectionLabel}>📝 Original Speech</Text>
-            <Text style={styles.originalText}>"{item.original}"</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.translatedSection}>
-            <Text style={styles.sectionLabel}>✨ Clear Translation</Text>
-            <Text style={styles.translatedText}>"{item.translated}"</Text>
-          </View>
-        </View>
-
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Ionicons name="timer-outline" size={16} color="#10B981" />
-            <Text style={styles.statText}>{item.duration}s</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#10B981" />
-            <Text style={styles.statText}>Processed</Text>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.playButton}
-            onPress={() => handlePlayTranslation(item)}
-          >
-            <LinearGradient
-              colors={['#10B981', '#14B8A6']}
-              style={styles.playButtonGradient}
-            >
-              <Ionicons name="play" size={20} color="white" />
-              <Text style={styles.playButtonText}>Play</Text>
-            </LinearGradient>
+      <XStack jc="space-between" ai="flex-start" mb="$2">
+        <XStack ai="center" gap="$2" f={1}>
+          <YStack w={28} h={28} br={8} bg={`${COLORS.teal}0C`} jc="center" ai="center">
+            <Mic size={12} color={COLORS.teal} />
+          </YStack>
+          <SizableText size="$1" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1} f={1} numberOfLines={1}>
+             {item.speech_type === 'unknown' ? 'Speech Record' : (item.speech_type || 'Saved Recording')}
+          </SizableText>
+        </XStack>
+        <XStack ai="center" gap="$2.5">
+          <SizableText size="$1" fow="600" color={`${COLORS.textMid}80`}>
+            {formatTimestamp(item.created_at)}
+          </SizableText>
+          <TouchableOpacity onPress={() => handleDelete(item)}>
+            <Trash2 size={12} color="#EF4444" opacity={0.6} />
           </TouchableOpacity>
+        </XStack>
+      </XStack>
 
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteItem(item.id)}
-          >
-            <Ionicons name="trash-outline" size={18} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </Animated.View>
-  );
+      <YStack gap="$1.5" mb="$2.5">
+        <XStack gap="$2" ai="flex-start">
+          <Circle size={4} mt={8} bg={COLORS.sandMid} />
+          <SizableText f={1} size="$2" color={COLORS.textMid} fow="500" fontStyle="italic">
+            "{item.transcript}"
+          </SizableText>
+        </XStack>
+        <XStack gap="$2" ai="flex-start">
+          <Circle size={4} mt={8} bg={COLORS.royalBlue} />
+          <SizableText f={1} size="$3" color={COLORS.textDark} fow="700">
+            {item.corrected_transcript}
+          </SizableText>
+        </XStack>
+      </YStack>
 
-  const EmptyState = () => (
-    <View style={styles.emptyState}>
-      <LinearGradient
-        colors={['#10B981', '#14B8A6']}
-        style={styles.emptyIcon}
-      >
-        <Ionicons name="time" size={40} color="white" />
-      </LinearGradient>
-      <Text style={styles.emptyTitle}>No Translation History</Text>
-      <Text style={styles.emptyDescription}>
-        Your translation history will appear here after you start using Articulink
-      </Text>
-    </View>
+      <XStack jc="space-between" ai="center" pt="$2.5" borderTopWidth={1} borderTopColor={COLORS.sandLight} mt="$1">
+        <XStack gap="$4">
+          <XStack ai="center" gap="$1.5">
+            <CheckCircle size={10} color={COLORS.teal} />
+            <SizableText size="$1" fow="800" color={COLORS.teal}>{Math.round((item.confidence_score || 0.95) * 100)}% Match</SizableText>
+          </XStack>
+          <XStack ai="center" gap="$1.5">
+            <Clock size={10} color={COLORS.textMid} />
+            <SizableText size="$1" fow="700" color={COLORS.textMid}>{item.duration_seconds?.toFixed(1) || '0.0'}s</SizableText>
+          </XStack>
+        </XStack>
+        <ChevronRight size={16} color={COLORS.sandMid} />
+      </XStack>
+    </Card>
   );
 
   return (
-    <LinearGradient
-      colors={['#111827', '#1F2937', '#111827']}
-      style={styles.container}
-    >
-      {/* Background Effects */}
-      <View style={styles.backgroundEffects}>
-        <LinearGradient
-          colors={['#10B98110', 'transparent']}
-          style={[styles.backgroundOrb, { top: 50, left: 20 }]}
-        />
-        <LinearGradient
-          colors={['#14B8A610', 'transparent']}
-          style={[styles.backgroundOrb, { bottom: 100, right: 20 }]}
-        />
-      </View>
+    <YStack f={1} bg={COLORS.cream}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Header Stats */}
-      <View style={styles.headerStats}>
-        <LinearGradient
-          colors={['#1F2937', '#374151']}
-          style={styles.statsCard}
+      {/* Background blobs */}
+      <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <Circle pos="absolute" t={-height * 0.15} r={-width * 0.2} size={width * 0.8} bg={COLORS.orbBlue} opacity={0.3} />
+        <Circle pos="absolute" b={-height * 0.1} l={-width * 0.2} size={width * 0.7} bg={COLORS.orbTeal} opacity={0.2} />
+      </ZStack>
+
+      {/* Header Area */}
+      <YStack pt="$4" px="$4" pb="$4">
+        <XStack ai="center" jc="space-between" mb="$4">
+          <YStack>
+            <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Speech History</H1>
+            <SizableText size="$2" color={COLORS.textMid} fow="600" o={0.8}>Review your speech recordings</SizableText>
+          </YStack>
+          <Circle 
+            size={40} 
+            bg="white" 
+            bw={1} 
+            bc={COLORS.sandMid} 
+            elevation={2} 
+            shadowColor={COLORS.deepNavy}
+            shadowOpacity={0.1}
+          >
+            <History size={18} color={COLORS.royalBlue} />
+          </Circle>
+        </XStack>
+
+        <XStack 
+          bg={COLORS.white} 
+          br={18} 
+          bw={1.5} 
+          bc={isSearchFocused ? COLORS.royalBlue : COLORS.sandMid} 
+          px="$4" 
+          ai="center" 
+          h={48} 
+          elevation={isSearchFocused ? 4 : 2}
+          shadowColor={COLORS.deepNavy}
+          animation="quick"
         >
-          <View style={styles.statColumn}>
-            <Text style={styles.statNumber}>{translationHistory.length}</Text>
-            <Text style={styles.statLabel}>Total Translations</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statColumn}>
-            <Text style={styles.statNumber}>
-              {Math.round(translationHistory.reduce((sum, item) => sum + item.accuracy, 0) / translationHistory.length)}%
-            </Text>
-            <Text style={styles.statLabel}>Avg Accuracy</Text>
-          </View>
-        </LinearGradient>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#9CA3AF" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search translations..."
-            placeholderTextColor="#9CA3AF"
+          <Search size={18} color={isSearchFocused ? COLORS.royalBlue : COLORS.textMid} o={isSearchFocused ? 1 : 0.6} />
+          <Input
+            flex={1}
+            bg="transparent"
+            bw={0}
+            size="$4"
+            placeholder="Search transcriptions..."
+            placeholderTextColor={`${COLORS.textMid}80`}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            fontWeight="600"
+            color={COLORS.textDark}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
+            <Button
+              size="$2"
+              circular
+              unstyled
+              onPress={() => setSearchQuery('')}
+              icon={<Trash2 size={16} color={COLORS.textMid} />}
+            />
           )}
-        </View>
-      </View>
+        </XStack>
+      </YStack>
 
-      {/* History List */}
-      <FlatList
-        data={filteredHistory}
-        renderItem={renderHistoryItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={EmptyState}
-      />
-    </LinearGradient>
+      {/* List */}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+        <FlatList
+          data={filteredHistory}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadHistory(true)}
+              tintColor={COLORS.royalBlue}
+            />
+          }
+          ListEmptyComponent={
+            <YStack ai="center" jc="center" mt="$10" opacity={0.5}>
+              <History size={48} color={COLORS.sandMid} mb="$4" />
+              <SizableText size="$5" fow="700" color={COLORS.textMid}>
+                {loading ? 'Fetching history...' : (searchQuery ? 'No recordings found' : 'No history yet')}
+              </SizableText>
+              <SizableText size="$2" color={COLORS.textMid}>
+                {searchQuery ? 'Try a different search term' : 'Your recordings will appear here'}
+              </SizableText>
+            </YStack>
+          }
+        />
+      </Animated.View>
+    </YStack>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  backgroundEffects: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  backgroundOrb: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  headerStats: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  statsCard: {
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderWidth: 1,
-    borderColor: '#10B98130',
-  },
-  statColumn: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#10B981',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#374151',
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1F2937',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#374151',
-    gap: 12,
-  },
-  searchInput: {
-    flex: 1,
-    color: 'white',
-    fontSize: 16,
-  },
-  listContainer: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  historyItem: {
-    marginBottom: 16,
-  },
-  historyCard: {
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#10B98130',
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  timestampContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  accuracyContainer: {
-    alignItems: 'flex-end',
-  },
-  accuracyText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  accuracyLabel: {
-    fontSize: 10,
-    color: '#9CA3AF',
-  },
-  translationContent: {
-    marginBottom: 16,
-  },
-  originalSection: {
-    marginBottom: 12,
-  },
-  translatedSection: {
-    marginTop: 12,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 6,
-  },
-  originalText: {
-    fontSize: 16,
-    color: '#D1D5DB',
-    fontStyle: 'italic',
-  },
-  translatedText: {
-    fontSize: 16,
-    color: '#10B981',
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#374151',
-    marginVertical: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  playButton: {
-    flex: 1,
-    marginRight: 12,
-  },
-  playButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    gap: 8,
-  },
-  playButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#EF444420',
-    borderWidth: 1,
-    borderColor: '#EF4444',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 12,
-  },
-  emptyDescription: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 40,
-  },
-});
 
 export default HistoryScreen;

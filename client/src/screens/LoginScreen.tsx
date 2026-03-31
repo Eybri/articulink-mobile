@@ -1,44 +1,133 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-    ScrollView,
-    Dimensions,
     Animated,
     StatusBar,
-    ActivityIndicator
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
+    Image as RNImage,
 } from "react-native";
+import {
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Input,
+    SizableText,
+    Card,
+    Circle,
+    ScrollView,
+    Spinner,
+    AnimatePresence,
+} from "tamagui";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from "lucide-react-native";
+import {
+    Eye,
+    EyeOff,
+    ArrowRight,
+    Globe,
+    Github,
+    Twitter,
+    Facebook,
+    Mail,
+    Lock
+} from "@tamagui/lucide-icons";
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// ─── Brand Palette ───────────────────────────────────────────────
+const COLORS = {
+    cream: '#FAF8F4',
+    warmWhite: '#F5F1EA',
+    sandLight: '#EDE8DF',
+    sandMid: '#DDD6C8',
+    deepNavy: '#0F2847',
+    royalBlue: '#1A4480',
+    mediumBlue: '#2A5FA8',
+    teal: '#2A8FA0',
+    tealLight: '#3DAFC4',
+    orbBlue: '#C8D8EE',
+    orbTeal: '#BEE4EC',
+    orbSand: '#E8E0D0',
+    textDark: '#1C2B3A',
+    textMid: '#4A5A6A',
+    white: '#FFFFFF',
+};
 
 const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [fadeAnim] = useState(new Animated.Value(0));
-    const [slideAnim] = useState(new Animated.Value(30));
+    const [typedLine1, setTypedLine1] = useState("");
+    const [typedLine2, setTypedLine2] = useState("");
 
     const { login } = useContext(AuthContext) as AuthContextType;
 
-    React.useEffect(() => {
+    // Animations
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideHeight = useRef(new Animated.Value(height * 0.4)).current;
+    const textFade = useRef(new Animated.Value(1)).current;
+    const logoFade = useRef(new Animated.Value(0)).current;
+    const logoScale = useRef(new Animated.Value(0.8)).current;
+    const orbAnims = useRef([
+        new Animated.Value(0),
+        new Animated.Value(0),
+        new Animated.Value(0)
+    ]).current;
+
+    // Typewriter → then crossfade to logo
+    useEffect(() => {
+        const line1 = "Welcome";
+        const line2 = "Back!";
+        let i = 0;
+        let j = 0;
+        const delay = setTimeout(() => {
+            // Type line 1 first
+            const timer1 = setInterval(() => {
+                if (i < line1.length) {
+                    setTypedLine1(line1.slice(0, i + 1));
+                    i++;
+                } else {
+                    clearInterval(timer1);
+                    // Then type line 2
+                    const timer2 = setInterval(() => {
+                        if (j < line2.length) {
+                            setTypedLine2(line2.slice(0, j + 1));
+                            j++;
+                        } else {
+                            clearInterval(timer2);
+                            // Pause, then fade out text and fade in logo
+                            setTimeout(() => {
+                                Animated.sequence([
+                                    Animated.timing(textFade, { toValue: 0, duration: 400, useNativeDriver: true }),
+                                    Animated.parallel([
+                                        Animated.timing(logoFade, { toValue: 1, duration: 600, useNativeDriver: true }),
+                                        Animated.spring(logoScale, { toValue: 1, tension: 40, friction: 7, useNativeDriver: true }),
+                                    ]),
+                                ]).start();
+                            }, 600);
+                        }
+                    }, 65);
+                }
+            }, 65);
+        }, 300);
+        return () => clearTimeout(delay);
+    }, []);
+
+    useEffect(() => {
         Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 600,
-                useNativeDriver: true,
-            })
+            Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+            Animated.spring(slideHeight, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
+            ...orbAnims.map((anim, i) =>
+                Animated.loop(
+                    Animated.sequence([
+                        Animated.timing(anim, { toValue: 1, duration: 3000 + i * 1000, useNativeDriver: true }),
+                        Animated.timing(anim, { toValue: 0, duration: 3000 + i * 1000, useNativeDriver: true }),
+                    ])
+                )
+            ).map(a => { a.start(); return a; })
         ]).start();
     }, []);
 
@@ -47,443 +136,164 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         return emailRegex.test(email);
     };
 
-    const formatDeactivationMessage = (errorDetail: string) => {
-        const timeMatch = errorDetail.match(/Available in (\d+) days/);
-        const reasonMatch = errorDetail.match(/Reason: (.+)$/);
-
-        let message = "";
-        let title = "Account Deactivated";
-
-        if (errorDetail.includes("temporarily deactivated")) {
-            title = "Account Temporarily Deactivated";
-
-            if (timeMatch) {
-                const days = timeMatch[1];
-                const daysNum = parseInt(days);
-                message = `Your account is temporarily deactivated. It will be automatically reactivated in ${days} day${daysNum > 1 ? 's' : ''}.`;
-            } else {
-                message = "Your account is temporarily deactivated. Please try again later.";
-            }
-
-            if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
-                message += `\n\nReason: ${reasonMatch[1]}`;
-            }
-
-        } else if (errorDetail.includes("Account deactivated")) {
-            title = "Account Permanently Deactivated";
-            message = "Your account has been permanently deactivated.";
-
-            if (reasonMatch && reasonMatch[1] && reasonMatch[1] !== "No reason provided") {
-                message += `\n\nReason: ${reasonMatch[1]}`;
-            }
-
-            message += "\n\nPlease contact support for more information.";
-        }
-
-        return { title, message };
-    };
-
     const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert("Error", "Please fill in all fields");
             return;
         }
-
         if (!validateEmail(email)) {
             Alert.alert("Error", "Please enter a valid email address");
             return;
         }
 
-        if (password.length < 6) {
-            Alert.alert("Error", "Password must be at least 6 characters");
-            return;
-        }
-
         setIsLoading(true);
-
         try {
-            console.log("Attempting login...");
-
             await login({
                 email: email.toLowerCase().trim(),
                 password: password.trim()
             });
-
-            console.log("Login successful!");
-
-            setEmail("");
-            setPassword("");
-
         } catch (err: any) {
-            console.error("Login error:", err);
-
-            let errorMessage = "Invalid credentials";
-            let errorTitle = "Login Failed";
-
-            if (err.detail) {
-                if (err.detail.includes("deactivated")) {
-                    const { title, message } = formatDeactivationMessage(err.detail);
-                    errorTitle = title;
-                    errorMessage = message;
-                } else {
-                    errorMessage = err.detail;
-                }
-            } else if (err.message) {
-                errorMessage = err.message;
-            } else if (err.error) {
-                errorMessage = err.error;
-            }
-
-            Alert.alert(errorTitle, errorMessage);
+            Alert.alert("Login Failed", err.detail || err.message || "Invalid credentials");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
-
-            {/* Background Orbs */}
-            <View style={styles.backgroundOrbs}>
-                <View style={[styles.orb, styles.orb1]} />
-                <View style={[styles.orb, styles.orb2]} />
-            </View>
-
+        <YStack f={1} bg={COLORS.royalBlue}>
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+            <ZStack pos="absolute" fullscreen pointerEvents="none">
+                <RNImage
+                    source={require('../../assets/images/bg.jpg')}
+                    style={{ width: '100%', height: '100%', position: 'absolute' }}
+                    resizeMode="cover"
+                />
+                <YStack fullscreen bg="black" opacity={0.2} />
+                <Animated.View style={{ opacity: textFade, position: 'absolute', top: '18%', width: '100%', paddingHorizontal: 32 }}>
+                    <SizableText size="$10" fow="900" color="white" ls={-1}>{typedLine1}</SizableText>
+                    {typedLine2.length > 0 && <SizableText size="$10" fow="900" color="white" ls={-1}>{typedLine2}</SizableText>}
+                </Animated.View>
+                <YStack pos="absolute" t={0} l={0} r={0} h={height * 0.42} jc="center" ai="center">
+                    <Animated.View style={{ opacity: logoFade, transform: [{ scale: logoScale }] }}>
+                        <RNImage
+                            source={require('../../assets/images/whitelogo.png')}
+                            style={{ width: 122, height: 122 }}
+                            resizeMode="contain"
+                        />
+                    </Animated.View>
+                </YStack>
+            </ZStack>
             <ScrollView
-                contentContainerStyle={styles.scrollContainer}
+                f={1}
+                contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                <Animated.View style={[
-                    styles.content,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }]
-                    }
-                ]}>
-
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <View style={styles.logoContainer}>
-                            <View style={styles.logoCircle}>
-                                <Shield size={28} color="#2563eb" />
-                            </View>
-                            <Text style={styles.logoText}>Articulink</Text>
-                        </View>
-                        <Text style={styles.welcomeTitle}>Welcome Back</Text>
-                        <Text style={styles.welcomeSubtitle}>
-                            Sign in to continue your communication journey
-                        </Text>
-                    </View>
-
-                    {/* Form */}
-                    <View style={styles.formContainer}>
-                        {/* Email Input */}
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputIcon}>
-                                <Mail size={20} color="#64748b" />
-                            </View>
-                            <TextInput
-                                placeholder="Email address"
-                                style={styles.input}
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                placeholderTextColor="#94a3b8"
-                                editable={!isLoading}
-                                autoCorrect={false}
-                                returnKeyType="next"
-                            />
-                        </View>
-
-                        {/* Password Input */}
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputIcon}>
-                                <Lock size={20} color="#64748b" />
-                            </View>
-                            <TextInput
-                                placeholder="Password"
-                                style={styles.input}
-                                secureTextEntry={!showPassword}
-                                value={password}
-                                onChangeText={setPassword}
-                                placeholderTextColor="#94a3b8"
-                                editable={!isLoading}
-                                autoCorrect={false}
-                                returnKeyType="done"
-                                onSubmitEditing={handleLogin}
-                            />
-                            <TouchableOpacity
-                                style={styles.eyeIcon}
-                                onPress={() => setShowPassword(!showPassword)}
-                                disabled={isLoading}
-                            >
-                                {showPassword ?
-                                    <EyeOff size={20} color="#64748b" /> :
-                                    <Eye size={20} color="#64748b" />
-                                }
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Login Button */}
-                        <TouchableOpacity
-                            style={[
-                                styles.loginButton,
-                                isLoading && styles.loginButtonDisabled
-                            ]}
-                            onPress={handleLogin}
-                            disabled={isLoading}
-                            activeOpacity={0.9}
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+                    <Animated.View style={{ flex: 1, transform: [{ translateY: slideHeight }], justifyContent: 'flex-end' }}>
+                        <YStack
+                            bg={COLORS.white}
+                            borderTopLeftRadius={40}
+                            borderTopRightRadius={40}
+                            px="$6"
+                            pt="$6"
+                            pb="$6"
+                            mt={height * 0.38}
+                            shadowColor="rgba(0,0,0,0.15)"
+                            shadowRadius={15}
+                            shadowOffset={{ width: 0, height: -8 }}
+                            shadowOpacity={0.08}
                         >
-                            {isLoading ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <>
-                                    <Text style={styles.loginButtonText}>Sign In</Text>
-                                    <View style={styles.buttonIcon}>
-                                        <ArrowRight size={20} color="white" />
-                                    </View>
-                                </>
-                            )}
-                        </TouchableOpacity>
+                            <YStack gap="$4">
+                                <YStack gap="$1">
+                                    <SizableText size="$7" fow="800" color={COLORS.royalBlue}>Get Started</SizableText>
+                                    <YStack w={30} h={3} bg={COLORS.teal} br={1.5} />
+                                </YStack>
+                                <YStack gap="$3">
+                                    <YStack gap="$1.5">
+                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Email address</SizableText>
+                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
+                                            <Mail size={16} color={COLORS.royalBlue} opacity={0.5} />
+                                            <Input
+                                                f={1}
+                                                placeholder="Enter your email"
+                                                value={email}
+                                                onChangeText={setEmail}
+                                                bg="transparent"
+                                                bw={0}
+                                                size="$3"
+                                                autoCapitalize="none"
+                                                keyboardType="email-address"
+                                                placeholderTextColor={COLORS.textMid}
+                                                disabled={isLoading}
+                                            />
+                                        </XStack>
+                                    </YStack>
 
-                        {/* Divider */}
-                        <View style={styles.divider}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>or</Text>
-                            <View style={styles.dividerLine} />
-                        </View>
-
-                        {/* Register Link */}
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("Register")}
-                            style={styles.registerContainer}
-                            disabled={isLoading}
-                        >
-                            <Text style={styles.registerText}>
-                                Don't have an account?{" "}
-                                <Text style={styles.registerLink}>Create one</Text>
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Security Info */}
-                    <View style={styles.securityInfo}>
-                        <View style={styles.securityIcon}>
-                            <Shield size={16} color="#64748b" />
-                        </View>
-                        <Text style={styles.securityText}>
-                            Your data is securely encrypted and protected
-                        </Text>
-                    </View>
-                </Animated.View>
+                                    <YStack gap="$1.5">
+                                        <XStack jc="space-between" ai="center">
+                                            <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Password</SizableText>
+                                            <Button chromeless p={0} h="auto" onPress={() => { }}><SizableText size="$1" fow="700" color={COLORS.teal}>Forgot?</SizableText></Button>
+                                        </XStack>
+                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
+                                            <Lock size={16} color={COLORS.royalBlue} opacity={0.5} />
+                                            <Input
+                                                f={1}
+                                                placeholder="Enter password"
+                                                value={password}
+                                                onChangeText={setPassword}
+                                                secureTextEntry={!showPassword}
+                                                bg="transparent"
+                                                bw={0}
+                                                size="$3"
+                                                placeholderTextColor={COLORS.textMid}
+                                                disabled={isLoading}
+                                            />
+                                            <Button
+                                                bg="transparent"
+                                                p={0}
+                                                onPress={() => setShowPassword(!showPassword)}
+                                                icon={showPassword ? <EyeOff size={16} color={COLORS.textMid} /> : <Eye size={16} color={COLORS.textMid} />}
+                                            />
+                                        </XStack>
+                                    </YStack>
+                                    <Button
+                                        bg={COLORS.royalBlue}
+                                        h={52}
+                                        br={16}
+                                        mt="$2"
+                                        onPress={handleLogin}
+                                        disabled={isLoading}
+                                        pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                        iconAfter={isLoading ? <Spinner color="white" /> : <ArrowRight size={18} color="white" />}
+                                        elevation={4}
+                                        shadowColor={COLORS.royalBlue}
+                                    >
+                                        <SizableText color="white" fow="700" size="$3" ls={0.5}>SIGN IN</SizableText>
+                                    </Button>
+                                    <YStack ai="center" gap="$3" mt="$1">
+                                        <XStack ai="center" gap="$3" w="100%">
+                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
+                                            <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.6}>OR SIGN IN WITH</SizableText>
+                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
+                                        </XStack>
+                                        <XStack gap="$4" jc="center" ai="center">
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Facebook size={16} color="#1877F2" /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Twitter size={16} color="#1DA1F2" /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Globe size={16} color={COLORS.deepNavy} /></Circle>
+                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Github size={16} color={COLORS.deepNavy} /></Circle>
+                                        </XStack>
+                                    </YStack>
+                                    <XStack jc="center" ai="center" gap="$2" mt="$1"><SizableText color={COLORS.textMid} size="$2">Don't have an account?</SizableText><Button chromeless p={0} h="auto" onPress={() => navigation.navigate("Register")}><SizableText color={COLORS.royalBlue} fow="700" size="$2" textDecorationLine="underline">Sign up</SizableText></Button></XStack>
+                                    <XStack jc="center" ai="center" gap="$3" mt="$2" opacity={0.5}><Button chromeless onPress={() => navigation.navigate('SecurityPrivacy')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">Privacy & Security</SizableText></Button><Circle size={3} bg={COLORS.sandMid} /><Button chromeless onPress={() => navigation.navigate('About')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">About</SizableText></Button></XStack>
+                                </YStack>
+                            </YStack>
+                        </YStack>
+                    </Animated.View>
+                </KeyboardAvoidingView>
             </ScrollView>
-        </View>
+        </YStack>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fafafa',
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        justifyContent: 'center',
-    },
-    backgroundOrbs: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-    },
-    orb: {
-        position: 'absolute',
-        borderRadius: 500,
-        opacity: 0.6,
-    },
-    orb1: {
-        width: width * 0.7,
-        height: width * 0.7,
-        top: -width * 0.3,
-        right: -width * 0.2,
-        backgroundColor: '#dbeafe',
-    },
-    orb2: {
-        width: width * 0.5,
-        height: width * 0.5,
-        bottom: -width * 0.2,
-        left: -width * 0.1,
-        backgroundColor: '#f0f9ff',
-    },
-    content: {
-        paddingHorizontal: 24,
-        paddingVertical: 40,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
-    logoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    logoCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'white',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    logoText: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#1e293b',
-        letterSpacing: -0.5,
-    },
-    welcomeTitle: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#0f172a',
-        marginBottom: 8,
-        textAlign: 'center',
-        letterSpacing: -0.5,
-    },
-    welcomeSubtitle: {
-        fontSize: 16,
-        color: '#64748b',
-        textAlign: 'center',
-        lineHeight: 22,
-        maxWidth: 280,
-    },
-    formContainer: {
-        backgroundColor: 'white',
-        borderRadius: 24,
-        padding: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        elevation: 8,
-        borderWidth: 1,
-        borderColor: '#f1f5f9',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc',
-        borderRadius: 16,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        overflow: 'hidden',
-    },
-    inputIcon: {
-        padding: 16,
-        paddingRight: 12,
-    },
-    input: {
-        flex: 1,
-        height: 56,
-        fontSize: 16,
-        color: '#0f172a',
-        paddingRight: 16,
-    },
-    eyeIcon: {
-        padding: 16,
-        paddingLeft: 12,
-    },
-    loginButton: {
-        backgroundColor: '#2563eb',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 16,
-        marginTop: 8,
-        marginBottom: 24,
-        shadowColor: '#2563eb',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    loginButtonDisabled: {
-        backgroundColor: '#94a3b8',
-        shadowOpacity: 0,
-        elevation: 0,
-    },
-    loginButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '600',
-        marginRight: 8,
-        letterSpacing: 0.5,
-    },
-    buttonIcon: {
-        opacity: 0.9,
-    },
-    divider: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#e2e8f0',
-    },
-    dividerText: {
-        color: '#94a3b8',
-        fontSize: 14,
-        fontWeight: '500',
-        marginHorizontal: 16,
-        letterSpacing: 0.5,
-    },
-    registerContainer: {
-        alignItems: 'center',
-    },
-    registerText: {
-        color: '#64748b',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    registerLink: {
-        color: '#2563eb',
-        fontWeight: '600',
-        letterSpacing: 0.3,
-    },
-    securityInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 32,
-        padding: 16,
-        backgroundColor: '#f8fafc',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-    },
-    securityIcon: {
-        marginRight: 8,
-        opacity: 0.7,
-    },
-    securityText: {
-        color: '#64748b',
-        fontSize: 14,
-        fontWeight: '500',
-        letterSpacing: 0.3,
-    },
-});
 
 export default LoginScreen;
