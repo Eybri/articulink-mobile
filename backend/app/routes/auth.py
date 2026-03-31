@@ -44,6 +44,8 @@ async def register(user: UserCreate):
     user_dict["status"] = "pending"
     user_dict["otp_code"] = otp_code
     user_dict["otp_expires_at"] = otp_expires_at
+    user_dict["last_sent_at"] = datetime.utcnow()
+    user_dict["resend_count"] = 0
     user_dict["created_at"] = datetime.utcnow()
     user_dict = {k: v for k, v in user_dict.items() if v is not None}
     
@@ -121,28 +123,38 @@ async def resend_otp(request: ResendOTPRequest):
     # 1. Check if registration exists in temp collection
     pending_user = await db.temp_users.find_one({"email": request.email.lower()})
     
-    if not pending_user:
-        # Check if already verified
-        existing = await get_user_by_email(request.email)
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Account is already active and verified."
-            )
-        
+    # 2. Check for resend limits
+    last_sent = pending_user.get("last_sent_at")
+    resend_count = pending_user.get("resend_count", 0)
+
+    if last_sent and (datetime.utcnow() - last_sent) < timedelta(seconds=60):
+        seconds_left = 60 - int((datetime.utcnow() - last_sent).total_seconds())
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Registration not found. Please register to get a code."
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Please wait {seconds_left} seconds before requesting a new code."
         )
 
-    # 2. Generate new OTP
+    if resend_count >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum resend attempts reached. Please register again if you still need a code."
+        )
+
+    # 3. Generate new OTP
     otp_code = str(secrets.randbelow(900000) + 100000)
     otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
 
-    # 3. Update temp_users with new OTP
+    # 4. Update temp_users with new OTP and increment count
     await db.temp_users.update_one(
         {"email": request.email.lower()},
-        {"$set": {"otp_code": otp_code, "otp_expires_at": otp_expires_at}}
+        {
+            "$set": {
+                "otp_code": otp_code, 
+                "otp_expires_at": otp_expires_at,
+                "last_sent_at": datetime.utcnow()
+            },
+            "$inc": {"resend_count": 1}
+        }
     )
 
     # 4. Send OTP Email
