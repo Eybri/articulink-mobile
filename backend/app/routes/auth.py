@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 from app.models.user import (
     UserCreate, UserOut, Token, LoginRequest, 
-    UserUpdate, UserUpdateResponse
+    UserUpdate, UserUpdateResponse, VerifyOTPRequest, ResendOTPRequest
 )
 from app.models.user import (
     get_user_by_email, get_user_by_id, create_user, update_user
@@ -14,8 +14,11 @@ from app.utils.cloudinary_helper import (
     delete_profile_picture,
     extract_public_id_from_url
 )
-from datetime import datetime
+from app.utils.email_service import email_service
+from datetime import datetime, timedelta
+from app.db.database import db
 import logging
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +26,8 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register(user: UserCreate):
-    """Register a new user account"""
+    """Register a new user account with OTP verification (stored in temp collection)"""
+    # 1. Check if user already exists in main users collection
     existing = await get_user_by_email(user.email)
     if existing:
         raise HTTPException(
@@ -31,25 +35,125 @@ async def register(user: UserCreate):
             detail="Email already registered"
         )
 
+    # Generate 6-digit OTP
+    otp_code = str(secrets.randbelow(900000) + 100000)
+    otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+
     user_dict = user.dict()
     user_dict["password"] = hash_password(user.password)
+    user_dict["status"] = "pending"
+    user_dict["otp_code"] = otp_code
+    user_dict["otp_expires_at"] = otp_expires_at
+    user_dict["created_at"] = datetime.utcnow()
     user_dict = {k: v for k, v in user_dict.items() if v is not None}
     
-    result = await create_user(user_dict)
+    # 2. Store in temp_users collection (upsert to handle retries before verification)
+    await db.temp_users.update_one(
+        {"email": user.email.lower()},
+        {"$set": user_dict},
+        upsert=True
+    )
+
+    # Send OTP Email
+    email_sent = await email_service.send_otp(user.email, otp_code)
+    if not email_sent:
+        logger.error(f"Failed to send registration OTP to {user.email}")
 
     return UserOut(
-        id=str(result["_id"]),
-        email=result["email"],
-        first_name=result.get("first_name"),
-        last_name=result.get("last_name"),
-        role=result.get("role", "user"),
-        profile_pic=result.get("profile_pic"),
-        birthdate=result.get("birthdate"),
-        gender=result.get("gender"),
-        status=result.get("status", "active"),
-        created_at=result.get("created_at"),
-        updated_at=result.get("updated_at")
+        id="pending", # ID is only assigned after verification
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=user.role or "user",
+        status="pending",
+        created_at=user_dict["created_at"]
     )
+
+@router.post("/verify-otp")
+async def verify_otp(request: VerifyOTPRequest):
+    """Verify registration OTP and migrate account to main users collection"""
+    # 1. Look for the pending registration in temp collection
+    pending_user = await db.temp_users.find_one({"email": request.email.lower()})
+    
+    if not pending_user:
+        # Check if already in main users (could happen if they verify twice)
+        existing = await get_user_by_email(request.email)
+        if existing:
+            return {"message": "Account is already active and verified", "status": "active"}
+        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Verification request not found. Please register again."
+        )
+
+    # 2. Check OTP and Expiration
+    if pending_user.get("otp_code") != request.otp_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code"
+        )
+
+    if datetime.utcnow() > pending_user.get("otp_expires_at"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired. Please request a new one."
+        )
+
+    # 3. Prepare data for main users collection
+    user_data = pending_user.copy()
+    user_data.pop("_id", None) # Remove temp ID
+    user_data.pop("otp_code", None)
+    user_data.pop("otp_expires_at", None)
+    user_data["status"] = "active"
+    user_data["updated_at"] = datetime.utcnow()
+
+    # 4. Create actual user in main collection
+    result = await create_user(user_data)
+
+    # 5. Cleanup temp collection
+    await db.temp_users.delete_one({"email": request.email.lower()})
+
+    return {"message": "Account verified and activated successfully", "user_id": str(result["_id"])}
+
+@router.post("/resend-otp")
+async def resend_otp(request: ResendOTPRequest):
+    """Resend a new OTP code to a pending registration"""
+    # 1. Check if registration exists in temp collection
+    pending_user = await db.temp_users.find_one({"email": request.email.lower()})
+    
+    if not pending_user:
+        # Check if already verified
+        existing = await get_user_by_email(request.email)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Account is already active and verified."
+            )
+        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Registration not found. Please register to get a code."
+        )
+
+    # 2. Generate new OTP
+    otp_code = str(secrets.randbelow(900000) + 100000)
+    otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    # 3. Update temp_users with new OTP
+    await db.temp_users.update_one(
+        {"email": request.email.lower()},
+        {"$set": {"otp_code": otp_code, "otp_expires_at": otp_expires_at}}
+    )
+
+    # 4. Send OTP Email
+    email_sent = await email_service.send_otp(request.email, otp_code)
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email. Please try again later."
+        )
+
+    return {"message": "New verification code sent successfully"}
 
 @router.post("/login", response_model=Token)
 async def login(login_data: LoginRequest):
@@ -68,7 +172,13 @@ async def login(login_data: LoginRequest):
     if user.get("role") != "user":
         raise invalid_credentials
 
-    # Check if user is deactivated
+    # Check if user is pending or deactivated
+    if user.get("status") == "pending":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email address before logging in."
+        )
+
     if user.get("status") == "inactive":
         deactivation_type = user.get("deactivation_type")
         deactivation_end_date = user.get("deactivation_end_date")

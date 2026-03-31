@@ -41,6 +41,8 @@ export interface AuthContextType {
     deleteMessage: (timestamp: string) => Promise<any>;
     fetchSpeechHistory: () => Promise<any[]>;
     deleteSpeechHistoryItem: (clipId: string) => Promise<any>;
+    verifyOTP: (email: string, otp_code: string) => Promise<any>;
+    resendOTP: (email: string) => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,6 +171,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         } catch (err: any) {
             await clearAuth();
             setUser(null);
+        }
+    };
+
+    const verifyOTP = async (email: string, otp_code: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/verify-otp`, { email, otp_code });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Verification failed" };
+        }
+    };
+
+    const resendOTP = async (email: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/resend-otp`, { email });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to resend OTP" };
         }
     };
 
@@ -332,7 +352,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             fetchChatHistory,
             deleteMessage,
             fetchSpeechHistory,
-            deleteSpeechHistoryItem
+            deleteSpeechHistoryItem,
+            verifyOTP,
+            resendOTP
         }}>
             {children}
         </AuthContext.Provider>

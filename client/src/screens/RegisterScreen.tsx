@@ -89,8 +89,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 last_name: lastName.trim()
             };
             await register(registerData);
-            Alert.alert("Success", "Registration complete! Please login.");
-            navigation.navigate("Login");
+            Alert.alert("Success", "Account created! Please verify your email with the code we sent.", [
+                { text: "Verify OTP", onPress: () => navigation.navigate("VerifyOTP", { email: email.toLowerCase().trim() }) }
+            ]);
         } catch (err: any) {
             const errorMessage = err.detail || err.message || "Registration failed. Please try again.";
             Alert.alert("Registration Failed", errorMessage);
@@ -178,9 +179,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     </XStack>
                                     <Input
                                         size="$4" br={16} bg="white" px="$4" h={56} bw={1} bc="#e2e8f0"
-                                        placeholder="Optional" placeholderTextColor="#94a3b8"
+                                        placeholder="Optional"
                                         value={firstName} onChangeText={setFirstName} autoCapitalize="words"
-                                        disabled={isLoading} elevation={2}
+                                        disabled={isLoading}
                                     />
                                 </YStack>
                                 <YStack f={1} gap="$2">
@@ -190,9 +191,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     </XStack>
                                     <Input
                                         size="$4" br={16} bg="white" px="$4" h={56} bw={1} bc="#e2e8f0"
-                                        placeholder="Optional" placeholderTextColor="#94a3b8"
+                                        placeholder="Optional"
                                         value={lastName} onChangeText={setLastName} autoCapitalize="words"
-                                        disabled={isLoading} elevation={2}
+                                        disabled={isLoading}
                                     />
                                 </YStack>
                             </XStack>
@@ -205,9 +206,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 </XStack>
                                 <Input
                                     size="$4" br={16} bg="white" px="$4" h={56} bw={1} bc="#e2e8f0"
-                                    placeholder="Enter your email" placeholderTextColor="#94a3b8"
+                                    placeholder="Enter your email"
                                     value={email} onChangeText={setEmail} autoCapitalize="none"
-                                    keyboardType="email-address" disabled={isLoading} elevation={2}
+                                    keyboardType="email-address" disabled={isLoading}
                                 />
                             </YStack>
 
@@ -220,9 +221,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 <XStack pos="relative">
                                     <Input
                                         f={1} size="$4" br={16} bg="white" px="$4" pr={50} h={56} bw={1} bc="#e2e8f0"
-                                        placeholder="Minimum 6 characters" placeholderTextColor="#94a3b8"
+                                        placeholder="Minimum 6 characters"
                                         value={password} onChangeText={setPassword} secureTextEntry={!showPassword}
-                                        autoCapitalize="none" disabled={isLoading} elevation={2}
+                                        autoCapitalize="none" disabled={isLoading}
                                     />
                                     <Button
                                         pos="absolute" r={0} t={0} h={56} chromeless
@@ -248,9 +249,9 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 <XStack pos="relative">
                                     <Input
                                         f={1} size="$4" br={16} bg="white" px="$4" pr={50} h={56} bw={1} bc="#e2e8f0"
-                                        placeholder="Re-enter your password" placeholderTextColor="#94a3b8"
+                                        placeholder="Re-enter your password"
                                         value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword}
-                                        autoCapitalize="none" disabled={isLoading} elevation={2}
+                                        autoCapitalize="none" disabled={isLoading}
                                     />
                                     <Button
                                         pos="absolute" r={0} t={0} h={56} chromeless

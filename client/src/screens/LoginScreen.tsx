@@ -153,7 +153,15 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 password: password.trim()
             });
         } catch (err: any) {
-            Alert.alert("Login Failed", err.detail || err.message || "Invalid credentials");
+            const detail = err.detail || "";
+            if (detail.includes("verify your email")) {
+                Alert.alert("Verification Required", detail, [
+                    { text: "Verify Now", onPress: () => navigation.navigate("VerifyOTP", { email }) },
+                    { text: "Cancel", style: "cancel" }
+                ]);
+            } else {
+                Alert.alert("Login Failed", detail || "Invalid credentials");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -224,7 +232,6 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                                 size="$3"
                                                 autoCapitalize="none"
                                                 keyboardType="email-address"
-                                                placeholderTextColor={COLORS.textMid}
                                                 disabled={isLoading}
                                             />
                                         </XStack>
@@ -246,7 +253,6 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                                 bg="transparent"
                                                 bw={0}
                                                 size="$3"
-                                                placeholderTextColor={COLORS.textMid}
                                                 disabled={isLoading}
                                             />
                                             <Button
