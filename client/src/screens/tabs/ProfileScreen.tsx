@@ -50,20 +50,20 @@ import Svg, { Path } from "react-native-svg";
 
 // ─── Brand Palette ────────────────────────────────────────────────
 const COLORS = {
-  cream: "#F0F7EC",
-  warmWhite: "#E8F4E3",
-  sandLight: "#D8EDD1",
-  sandMid: "#C4DEB9",
-  deepGreen: "#0F3A08",
-  royalGreen: "#1F5C14",
-  mediumGreen: "#2E7D22",
-  teal: "#2EB89A",
-  tealLight: "#3DCAB0",
-  orbGreen: "#C8EEC0",
-  orbTeal: "#BEE4D8",
-  orbSand: "#D8EDD1",
-  textDark: "#1C2E1A",
-  textMid: "#5A7050",
+  cream: "#FAF8F4",
+  warmWhite: "#F5F1EA",
+  sandLight: "#EDE8DF",
+  sandMid: "#DDD6C8",
+  deepNavy: "#0F2847",
+  royalBlue: "#1A4480",
+  mediumBlue: "#2A5FA8",
+  teal: "#2A8FA0",
+  tealLight: "#3DAFC4",
+  orbBlue: "#C8D8EE",
+  orbTeal: "#BEE4EC",
+  orbSand: "#E8E0D0",
+  textDark: "#1C2B3A",
+  textMid: "#4A5A6A",
   white: "#FFFFFF",
   amber: "#E8A23D",
   blue: "#3D7EE8",
@@ -187,12 +187,12 @@ const SpeechProgressCard: React.FC<SpeechProgressCardProps> = ({
   const totalArcLength = Math.PI * R; // ~141
 
   return (
-    <YStack bg={COLORS.royalGreen} br={28} p="$4" mb="$5" ov="hidden" elevation={8} shadowColor={COLORS.deepGreen}>
+    <YStack bg={COLORS.royalBlue} br={28} p="$4" mb="$5" ov="hidden" elevation={8} shadowColor={COLORS.deepNavy}>
       {/* Glossy top highlight */}
       <YStack pos="absolute" t={0} l={0} r={0} h={100} bg="rgba(255,255,255,0.03)" style={{ borderBottomLeftRadius: 100, borderBottomRightRadius: 100, transform: [{ scaleX: 2 }] }} />
       
       <XStack jc="space-between" ai="center" mb="$3">
-        <SizableText fow="700" size="$4" color="#c8f0b8" ls={0.3}>
+        <SizableText fow="700" size="$4" color={COLORS.orbBlue} ls={0.3}>
           Today Progress
         </SizableText>
         <YStack opacity={0.5}>
@@ -241,7 +241,7 @@ const SpeechProgressCard: React.FC<SpeechProgressCardProps> = ({
             <Path
               d="M15,65 A45,45 0 0,1 105,65"
               fill="none"
-              stroke="#86ef62"
+              stroke={COLORS.tealLight}
               strokeWidth={10}
               strokeLinecap="round"
               strokeDasharray="4 2"
@@ -256,7 +256,7 @@ const SpeechProgressCard: React.FC<SpeechProgressCardProps> = ({
         </YStack>
 
         <Button
-          bg="#86ef62"
+          bg={COLORS.teal}
           br={24}
           px="$5"
           h={42}
@@ -264,7 +264,7 @@ const SpeechProgressCard: React.FC<SpeechProgressCardProps> = ({
           pressStyle={{ scale: 0.95, opacity: 0.9 }}
           elevation={4}
         >
-          <SizableText fow="800" size="$3" color={COLORS.deepGreen}>
+          <SizableText fow="800" size="$3" color="white">
             Continue
           </SizableText>
         </Button>
@@ -319,7 +319,7 @@ const Accordion: React.FC<AccordionProps> = ({
   tagText,
   children,
   defaultOpen = false,
-  accentColor = COLORS.royalGreen,
+  accentColor = COLORS.royalBlue,
 }) => {
   const [expanded, setExpanded] = useState(defaultOpen);
   const rotateAnim = useRef(new Animated.Value(defaultOpen ? 1 : 0)).current;
@@ -351,8 +351,8 @@ const Accordion: React.FC<AccordionProps> = ({
               {title}
             </SizableText>
             {tagText && (
-              <YStack bg={`${COLORS.royalGreen}0A`} px="$2" py="$1" br={6}>
-                <SizableText size="$1" fow="800" color={COLORS.royalGreen} tt="uppercase" ls={0.6}>
+              <YStack bg={`${COLORS.royalBlue}0A`} px="$2" py="$1" br={6}>
+                <SizableText size="$1" fow="800" color={COLORS.royalBlue} tt="uppercase" ls={0.6}>
                   {tagText}
                 </SizableText>
               </YStack>
@@ -376,7 +376,7 @@ const Accordion: React.FC<AccordionProps> = ({
 // ─── Sub Components ───────────────────────────────────────────────
 const Bullet: React.FC<{ text: string | undefined; color?: string }> = ({
   text,
-  color = COLORS.royalGreen,
+  color = COLORS.royalBlue,
 }) => (
   <XStack ai="flex-start" mb="$2" gap="$2">
     <Circle size={5} mt={7} bg={color} />
@@ -388,7 +388,7 @@ const Bullet: React.FC<{ text: string | undefined; color?: string }> = ({
 
 const SubHeading: React.FC<{ text: string }> = ({ text }) => (
   <YStack mt="$3" mb="$2">
-    <SizableText size="$1" fow="800" color={COLORS.royalGreen} tt="uppercase" ls={1.2} opacity={0.75}>
+    <SizableText size="$1" fow="800" color={COLORS.royalBlue} tt="uppercase" ls={1.2} opacity={0.75}>
       {text}
     </SizableText>
   </YStack>
@@ -408,12 +408,12 @@ const InfoBox: React.FC<{ text: string; type?: "info" | "warning" }> = ({ text, 
     {type === "warning" ? (
       <AlertTriangle size={12} color="#D97706" mt={3} />
     ) : (
-      <CheckCircle size={12} color={COLORS.royalGreen} mt={3} />
+      <CheckCircle size={12} color={COLORS.royalBlue} mt={3} />
     )}
     <SizableText
       f={1}
       size="$2"
-      color={type === "warning" ? "#B45309" : COLORS.royalGreen}
+      color={type === "warning" ? "#B45309" : COLORS.royalBlue}
       lh={18}
       fow="600"
     >
@@ -426,7 +426,7 @@ const SectionLabel: React.FC<{ text: string }> = ({ text }) => (
   <SizableText
     size="$1"
     fow="800"
-    color={COLORS.mediumGreen}
+    color={COLORS.royalBlue}
     tt="uppercase"
     ls={1}
     mb="$2"
@@ -460,7 +460,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const orbs = useMemo(
     () => [
-      { color: COLORS.orbGreen, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
+      { color: COLORS.orbBlue, size: width * 0.65, x: width * 0.88, y: height * 0.07, duration: 6000, delay: 0 },
       { color: COLORS.orbTeal, size: width * 0.5, x: width * 0.1, y: height * 0.48, duration: 7200, delay: 1000 },
       { color: COLORS.orbSand, size: width * 0.38, x: width * 0.62, y: height * 0.8, duration: 5500, delay: 500 },
     ],
@@ -496,7 +496,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   if (authLoading || (refreshing && !user)) {
     return (
       <YStack f={1} jc="center" ai="center" bg={COLORS.cream}>
-        <Spinner size="large" color={COLORS.royalGreen} />
+        <Spinner size="large" color={COLORS.royalBlue} />
         <SizableText color={COLORS.textMid} mt="$2">Loading...</SizableText>
       </YStack>
     );
@@ -507,7 +507,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$5">
         <AlertTriangle size={50} color="#FF3B30" />
         <SizableText color="#DC2626" fow="600" ta="center" mt="$4">{error}</SizableText>
-        <Button bg={COLORS.royalGreen} mt="$4" onPress={loadProfile}>
+        <Button bg={COLORS.royalBlue} mt="$4" onPress={loadProfile}>
           <SizableText color="white" fow="800">Retry</SizableText>
         </Button>
       </YStack>
@@ -518,7 +518,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
       <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$5">
         <SizableText color={COLORS.textMid} mb="$4">No profile data</SizableText>
-        <Button bg={COLORS.royalGreen} onPress={() => logout()}>
+        <Button bg={COLORS.royalBlue} onPress={() => logout()}>
           <SizableText color="white" fow="800">Login</SizableText>
         </Button>
       </YStack>
@@ -544,16 +544,20 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Circle pos="absolute" t={-height * 0.1} r={-width * 0.15} size={width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
         <Circle pos="absolute" b={-height * 0.06} l={-width * 0.2} size={width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
         {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-        <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${COLORS.royalGreen}28`} br={6} />
+        <YStack pos="absolute" t={58} l={22} w={34} h={34} borderTopWidth={1.5} borderLeftWidth={1.5} bc={`${COLORS.royalBlue}28`} br={6} />
         <YStack pos="absolute" b={60} r={22} w={34} h={34} borderBottomWidth={1.5} borderRightWidth={1.5} bc={`${COLORS.teal}28`} br={6} />
       </ZStack>
 
       <ScrollView
         f={1}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 60, paddingTop: 8 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: 60,
+          paddingTop: Platform.OS === "android" ? 48 : 54,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.royalGreen} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.royalBlue} />
         }
       >
         {/* ── Identity Header (Copied from image) ── */}
@@ -569,8 +573,8 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   resizeMode="cover"
                 />
               ) : (
-                <YStack f={1} w="100%" bg={COLORS.mediumGreen} jc="center" ai="center">
-                  <SizableText size="$5" fow="900" color="#white">
+                <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
+                  <SizableText size="$5" fow="900" color="white">
                     {user.first_name?.[0] ?? ""}{user.last_name?.[0] ?? ""}
                   </SizableText>
                 </YStack>
@@ -637,21 +641,21 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             iconBg={`${COLORS.amber}14`}
           />
           <StatCard
-            icon={<Flame size={14} color={COLORS.royalGreen} />}
+            icon={<Flame size={14} color={COLORS.royalBlue} />}
             value={`${analytics.streakDays}`}
             label="Day Streak"
             delta="Personal best!"
-            accentColor={COLORS.royalGreen}
-            iconBg={`${COLORS.royalGreen}10`}
+            accentColor={COLORS.royalBlue}
+            iconBg={`${COLORS.royalBlue}10`}
           />
         </XStack>
 
         {/* ── Personal Info ── */}
         <Accordion
-          icon={<User size={16} color={COLORS.royalGreen} />}
+          icon={<User size={16} color={COLORS.royalBlue} />}
           title="Personal Information"
           defaultOpen
-          accentColor={COLORS.royalGreen}
+          accentColor={COLORS.royalBlue}
         >
           <SubHeading text="Contact Details" />
           <Bullet text={user.email} />
@@ -683,14 +687,14 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <YStack gap="$3" mt="$2">
           <Button
             size="$5"
-            bg={COLORS.royalGreen}
+            bg={COLORS.royalBlue}
             br={18}
             onPress={() => navigation.navigate("EditProfile", { user })}
             pressStyle={{ scale: 0.98 }}
             icon={<Edit3 size={16} color="white" />}
             iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.6)" />}
             elevation={6}
-            shadowColor={COLORS.royalGreen}
+            shadowColor={COLORS.royalBlue}
           >
             <SizableText color="white" fow="800" size="$4" ml="$2">Edit Profile</SizableText>
           </Button>
