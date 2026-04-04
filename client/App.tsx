@@ -1,3 +1,4 @@
+import "@tamagui/native/setup-zeego";
 import React from "react";
 import { TamaguiProvider } from "tamagui";
 import { useFonts } from "expo-font";

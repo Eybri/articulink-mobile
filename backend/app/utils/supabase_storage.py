@@ -3,7 +3,7 @@ Supabase Storage utility for uploading/deleting audio files.
 Reads config from environment variables:
   - SUPABASE_URL
   - SUPABASE_SERVICE_ROLE_KEY
-  - SUPABASE_BUCKET
+  - SUPABASE_BUCKET (e.g. articulink-audio)
 """
 
 import os
@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "audio-clips")
+# Use bucket name from env or default to audio-clips
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "articulink-audio")
 
 _STORAGE_BASE = f"{SUPABASE_URL}/storage/v1" if SUPABASE_URL else ""
 
@@ -26,14 +27,14 @@ _HEADERS = {
     "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
-
 async def upload_audio(file_bytes: bytes, user_id: str, extension: str = ".wav") -> str:
     """
     Upload audio bytes to Supabase Storage.
     Returns the public URL of the uploaded file.
-    Path format: clips/{user_id}/{uuid}{extension}
+    Organized path: clips/{user_id}/{filename}
     """
     filename = f"{uuid.uuid4().hex}{extension}"
+    # Standardizing path to: clips/user_id/filename
     file_path = f"clips/{user_id}/{filename}"
 
     url = f"{_STORAGE_BASE}/object/{SUPABASE_BUCKET}/{file_path}"
@@ -50,13 +51,7 @@ async def upload_audio(file_bytes: bytes, user_id: str, extension: str = ".wav")
         ".aac": "audio/aac",
         ".ogg": "audio/ogg",
     }
-    content_type = mime_types.get(extension.lower(), "application/octet-stream")
-    
-    # If the extension wasn't found, try to guess the content type or default to audio/wav if it's likely audio
-    if content_type == "application/octet-stream" and extension:
-        content_type = "audio/wav"  # Fallback for unknown audio extensions
-
-    print(f"Uploading {len(file_bytes)} bytes to {url} with Content-Type: {content_type}")
+    content_type = mime_types.get(extension.lower(), "audio/wav")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
@@ -81,14 +76,14 @@ async def upload_audio(file_bytes: bytes, user_id: str, extension: str = ".wav")
 async def delete_audio(file_path: str) -> bool:
     """
     Delete an audio file from Supabase Storage.
-    file_path should be the path within the bucket (e.g. clips/user_id/file.wav)
+    file_path can be a full public URL or a relative path.
     """
-    # Extract path from full URL if needed
+    # Extract relative path from full URL if needed
     prefix = f"/storage/v1/object/public/{SUPABASE_BUCKET}/"
     if prefix in file_path:
         file_path = file_path.split(prefix)[-1]
     elif file_path.startswith("http"):
-        # Handle full public URL
+        # Handle full public URL with bucket name
         parts = file_path.split(f"{SUPABASE_BUCKET}/")
         if len(parts) > 1:
             file_path = parts[-1]
