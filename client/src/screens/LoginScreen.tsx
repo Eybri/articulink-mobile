@@ -26,10 +26,6 @@ import {
     Eye,
     EyeOff,
     ArrowRight,
-    Globe,
-    Github,
-    Twitter,
-    Facebook,
     Mail,
     Lock
 } from "@tamagui/lucide-icons";
@@ -277,19 +273,6 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                     >
                                         <SizableText color="white" fow="700" size="$3" ls={0.5}>SIGN IN</SizableText>
                                     </Button>
-                                    <YStack ai="center" gap="$3" mt="$1">
-                                        <XStack ai="center" gap="$3" w="100%">
-                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
-                                            <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.6}>OR SIGN IN WITH</SizableText>
-                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.5} />
-                                        </XStack>
-                                        <XStack gap="$4" jc="center" ai="center">
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Facebook size={16} color="#1877F2" /></Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Twitter size={16} color="#1DA1F2" /></Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Globe size={16} color={COLORS.deepNavy} /></Circle>
-                                            <Circle size={40} bg={COLORS.cream} bw={1} bc={COLORS.sandMid} pressStyle={{ bg: COLORS.sandLight }}><Github size={16} color={COLORS.deepNavy} /></Circle>
-                                        </XStack>
-                                    </YStack>
                                     <XStack jc="center" ai="center" gap="$2" mt="$1"><SizableText color={COLORS.textMid} size="$2">Don't have an account?</SizableText><Button chromeless p={0} h="auto" onPress={() => navigation.navigate("Register")}><SizableText color={COLORS.royalBlue} fow="700" size="$2" textDecorationLine="underline">Sign up</SizableText></Button></XStack>
                                     <XStack jc="center" ai="center" gap="$3" mt="$2" opacity={0.5}><Button chromeless onPress={() => navigation.navigate('SecurityPrivacy')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">Privacy & Security</SizableText></Button><Circle size={3} bg={COLORS.sandMid} /><Button chromeless onPress={() => navigation.navigate('About')} padding={0} h="auto"><SizableText size="$1" color={COLORS.textMid} fow="600">About</SizableText></Button></XStack>
                                 </YStack>

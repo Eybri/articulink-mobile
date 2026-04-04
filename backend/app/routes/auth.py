@@ -5,7 +5,7 @@ from app.models.user import (
     ForgotPasswordRequest, ResetPasswordRequest
 )
 from app.models.user import (
-    get_user_by_email, get_user_by_id, create_user, update_user
+    get_user_by_email, get_user_by_id, create_user, update_user, convert_dates
 )
 from app.utils.security import hash_password, verify_password
 from app.utils.tokens import create_access_token
@@ -41,6 +41,7 @@ async def register(user: UserCreate):
     otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
 
     user_dict = user.dict()
+    user_dict = convert_dates(user_dict)
     user_dict["password"] = hash_password(user.password)
     user_dict["status"] = "pending"
     user_dict["otp_code"] = otp_code
