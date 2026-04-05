@@ -51,9 +51,30 @@ export const useHomeViewModel = () => {
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
             });
-            const { recording } = await Audio.Recording.createAsync(
-                Audio.RecordingOptionsPresets.LOW_QUALITY
-            );
+
+            // Standardize on WAV (Linear PCM) to ensure backend compatibility without FFmpeg
+            const { recording } = await Audio.Recording.createAsync({
+                android: {
+                    extension: ".wav",
+                    outputFormat: Audio.AndroidOutputFormat.DEFAULT,
+                    audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
+                    sampleRate: 16000,
+                    numberOfChannels: 1,
+                    bitRate: 128000,
+                },
+                ios: {
+                    extension: ".wav",
+                    outputFormat: Audio.IOSOutputFormat.LINEARPCM,
+                    sampleRate: 16000,
+                    numberOfChannels: 1,
+                    bitRate: 128000,
+                    linearPCMBitDepth: 16,
+                    linearPCMIsBigEndian: false,
+                    linearPCMIsFloat: false,
+                },
+                web: {}
+            } as any);
+
             setRecording(recording);
         } catch (err) {
             Alert.alert("Error", "Could not start recording");
