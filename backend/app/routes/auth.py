@@ -66,8 +66,7 @@ async def register(user: UserCreate):
     return UserOut(
         id="pending", # ID is only assigned after verification
         email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
+        username=user.username,
         role=user.role or "user",
         status="pending",
         created_at=user_dict["created_at"]
@@ -300,8 +299,7 @@ async def login(login_data: LoginRequest):
     user_data = {
         "_id": str(user["_id"]),
         "email": user["email"],
-        "first_name": user.get("first_name"),
-        "last_name": user.get("last_name"),
+        "username": user.get("username"),
         "role": user.get("role", "user"),
         "profile_pic": user.get("profile_pic"),
         "birthdate": user.get("birthdate"),
@@ -335,8 +333,7 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
     return UserOut(
         id=str(user["_id"]),
         email=user["email"],
-        first_name=user.get("first_name"),
-        last_name=user.get("last_name"),
+        username=user.get("username"),
         role=user.get("role"),
         profile_pic=user.get("profile_pic"),
         birthdate=user.get("birthdate"),
@@ -356,7 +353,7 @@ async def update_profile(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    update_data = profile_data.dict(exclude_none=True)
+    update_data = profile_data.dict(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided")
     
@@ -367,8 +364,7 @@ async def update_profile(
     return UserUpdateResponse(
         id=str(updated_user["_id"]),
         email=updated_user["email"],
-        first_name=updated_user.get("first_name"),
-        last_name=updated_user.get("last_name"),
+        username=updated_user.get("username"),
         role=updated_user.get("role"),
         profile_pic=updated_user.get("profile_pic"),
         birthdate=updated_user.get("birthdate"),
@@ -402,8 +398,7 @@ async def upload_profile_pic(
         return UserUpdateResponse(
             id=str(updated_user["_id"]),
             email=updated_user["email"],
-            first_name=updated_user.get("first_name"),
-            last_name=updated_user.get("last_name"),
+            username=updated_user.get("username"),
             role=updated_user.get("role"),
             profile_pic=updated_user.get("profile_pic"),
             birthdate=updated_user.get("birthdate"),
