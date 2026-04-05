@@ -1,15 +1,15 @@
 import React, { useRef, useEffect } from "react";
 import { Platform, Animated, Image as RNImage } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator as createStackNavigator } from "@react-navigation/native-stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
-import HomeScreen from "../screens/HomeScreen";
-import HistoryScreen from "../screens/tabs/HistoryScreen";
-import ProfileScreen from "../screens/tabs/ProfileScreen";
-import SettingsScreen from "../screens/tabs/SettingsScreen";
-import MapScreen from "../screens/tabs/MapScreen";
-import EditProfileScreen from '../screens/Extras/EditProfileScreen';
-import ChatbotScreen from '../screens/Extras/ChatbotScreen';
+import HomeScreen from "../screens/tabs/home";
+import HistoryScreen from "../screens/tabs/history";
+import ProfileScreen from "../screens/tabs/profile";
+import SettingsScreen from "../screens/tabs/settings";
+import MapScreen from "../screens/tabs/map";
+import EditProfileScreen from '../screens/Extras/edit-profile';
+import ChatbotScreen from '../screens/Extras/chatbot';
 import {
   Home,
   History,
@@ -41,16 +41,12 @@ const COLORS = {
 const headerOptions = {
   headerStyle: {
     backgroundColor: COLORS.cream,
-    borderBottomColor: 'rgba(221, 214, 200, 0.5)',
-    borderBottomWidth: 1,
-    elevation: 0,
-    shadowOpacity: 0,
   },
+  headerShadowVisible: false, // native-stack equivalent of shadowOpacity: 0
   headerTitleStyle: {
     color: COLORS.textDark,
     fontSize: 20,
     fontWeight: "900" as const,
-    letterSpacing: -0.6,
   },
   headerTintColor: COLORS.royalBlue,
   headerTitleAlign: "center" as const,
@@ -67,7 +63,12 @@ const HomeStack = () => (
         headerLeft: () => (
           <RNImage
             source={require("../../assets/images/logo2-nobg.png")}
-            style={{ width: 50, height: 50, marginLeft: 16 }}
+            style={{ 
+              width: 50, 
+              height: 50, 
+              marginLeft: 16,
+              marginTop: Platform.OS === "android" ? 12 : 0 
+            }}
             resizeMode="contain"
           />
         ),
@@ -78,6 +79,7 @@ const HomeStack = () => (
             icon={<MessageCircle size={23} color={COLORS.royalBlue} />}
             onPress={() => navigation.navigate("Chatbot")}
             mr="$2"
+            mt={Platform.OS === "android" ? 12 : 0}
             pressStyle={{ scale: 0.95, opacity: 0.9 }}
           />
         ),
@@ -90,7 +92,7 @@ const HomeStack = () => (
 // ─── Profile Stack ───────────────────────────────────────────────
 const ProfileStack = () => (
   <Stack.Navigator screenOptions={headerOptions}>
-    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ title: "Your Profile" }} />
+    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: "Edit Profile" }} />
   </Stack.Navigator>
 );

@@ -14,8 +14,7 @@ import {
 export interface User {
     id?: string;
     email: string;
-    first_name?: string;
-    last_name?: string;
+    username?: string;
     role: string;
     profile_pic?: string;
     birthdate?: string;
@@ -41,6 +40,10 @@ export interface AuthContextType {
     deleteMessage: (timestamp: string) => Promise<any>;
     fetchSpeechHistory: () => Promise<any[]>;
     deleteSpeechHistoryItem: (clipId: string) => Promise<any>;
+    verifyOTP: (email: string, otp_code: string) => Promise<any>;
+    resendOTP: (email: string) => Promise<any>;
+    forgotPassword: (email: string) => Promise<any>;
+    resetPassword: (data: any) => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -91,9 +94,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             async (error: any) => {
                 const { status, url, data } = error.response || {};
 
-                if (data?.detail?.includes("deactivated")) {
-                    await clearAuth();
-                    setUser(null);
+                // Handle deactivated user or explicit authentication failures
+                if (data?.detail?.includes("deactivated") || status === 403) {
+                    // Only clear if it's a real auth error, not a standard permission error
+                    if (data?.detail?.includes("Not authenticated") || data?.detail?.includes("deactivated")) {
+                        await clearAuth();
+                        setUser(null);
+                    }
                 }
 
                 if (status === 401 && !url?.includes('/auth/login') && !url?.includes('/auth/register')) {
@@ -109,7 +116,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             axios.interceptors.request.eject(requestInterceptor);
             axios.interceptors.response.eject(responseInterceptor);
         };
-    }, [user]);
+    }, []); // FIXED: Removed [user] dependency to prevent race condition when user state updates
 
     const register = async (data: any) => {
         try {
@@ -133,8 +140,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const userData: User = {
                 id: res.data.user?._id || res.data.user?.id,
                 email: res.data.user?.email || data.email,
-                first_name: res.data.user?.first_name,
-                last_name: res.data.user?.last_name,
+                username: res.data.user?.username,
                 role: res.data.user?.role || "user",
                 profile_pic: res.data.user?.profile_pic,
                 birthdate: res.data.user?.birthdate,
@@ -172,6 +178,42 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
+    const verifyOTP = async (email: string, otp_code: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/verify-otp`, { email, otp_code });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Verification failed" };
+        }
+    };
+
+    const resendOTP = async (email: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/resend-otp`, { email });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to resend OTP" };
+        }
+    };
+
+    const forgotPassword = async (email: string) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/forgot-password`, { email });
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to process forgot password" };
+        }
+    };
+
+    const resetPassword = async (data: any) => {
+        try {
+            const res = await axios.post(`${baseURL}/auth/reset-password`, data);
+            return res.data;
+        } catch (err: any) {
+            throw err.response?.data || { detail: "Failed to reset password" };
+        }
+    };
+
     const fetchUserProfile = async () => {
         try {
             const response = await axios.get(`${baseURL}/auth/me`);
@@ -185,8 +227,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const userData: User = {
                 id: response.data.id,
                 email: response.data.email,
-                first_name: response.data.first_name,
-                last_name: response.data.last_name,
+                username: response.data.username,
                 role: response.data.role,
                 profile_pic: response.data.profile_pic,
                 birthdate: response.data.birthdate,
@@ -332,7 +373,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             fetchChatHistory,
             deleteMessage,
             fetchSpeechHistory,
-            deleteSpeechHistoryItem
+            deleteSpeechHistoryItem,
+            verifyOTP,
+            resendOTP,
+            forgotPassword,
+            resetPassword
         }}>
             {children}
         </AuthContext.Provider>

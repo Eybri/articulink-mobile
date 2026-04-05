@@ -1,12 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+import numpy as np
+import av
 import torch
-import librosa
-import soundfile as sf
 import tempfile
 import os
 import traceback
 import asyncio
-from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from faster_whisper import WhisperModel
 from app.utils.authMiddleware import require_auth, get_current_user_id
 from app.utils.supabase_storage import upload_audio
 from app.models.transcription import create_audio_clip, get_clips_by_user, delete_audio_clip
@@ -14,18 +14,11 @@ from app.models.transcription import create_audio_clip, get_clips_by_user, delet
 router = APIRouter(prefix="/api/v1", tags=["Transcription"])
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-dtype = torch.float16 if device == "cuda" else torch.float32
+# Using float16 for GPU or int8 for CPU to maximize speed
+compute_type = "float16" if device == "cuda" else "int8"
 
-processor = WhisperProcessor.from_pretrained("openai/whisper-small")
-model = WhisperForConditionalGeneration.from_pretrained(
-    "openai/whisper-small",
-    torch_dtype=dtype
-).to(device)
-
-model.eval()
-# Use generation_config instead of model.config for generation settings
-model.generation_config.forced_decoder_ids = None
-model.generation_config.suppress_tokens = []
+print(f"--- Initializing Optimized Whisper Model (Small) on {device} ({compute_type}) ---")
+model = WhisperModel("small", device=device, compute_type=compute_type)
 
 @router.post("/transcribe", dependencies=[Depends(require_auth)])
 async def transcribe_audio(
@@ -51,34 +44,31 @@ async def transcribe_audio(
             tmp_path = tmp.name
 
         # ─── Parallel Execution ───
-        # 1. Start upload task (I/O bound)
-        upload_task = upload_audio(content, user_id, suffix)
+        # 1. Start audio decoding (supports 3GP, M4A, etc. via 'av')
+        transcription_task = asyncio.to_thread(decode_audio_to_numpy, tmp_path)
         
-        # 2. Start audio loading (can be slow, run in thread)
-        transcription_task = asyncio.to_thread(librosa.load, tmp_path, sr=16000, mono=True)
-        
-        # Wait for audio to be loaded so we can start Whisper
-        audio, sr = await transcription_task
+        # Wait for audio to be decoded so we can start Whisper
+        audio = await transcription_task
+        sr = 16000  # Our decoder always outputs 16kHz
         
         # Clean up temp file as soon as it's loaded into memory
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
             tmp_path = None
         
-        # 3. Normalize to a standard WAV for the upload (Ensures playability everywhere)
-        # We use a second temp file for the clean wav export
+        # 3. Normalize to a standard WAV for the upload
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav", mode='wb') as clean_tmp:
             clean_wav_path = clean_tmp.name
-            # Re-save the normalized audio we loaded (16kHz, float) as a standard wav
+            # Re-save the normalized audio as a standard wav for storage
+            import soundfile as sf
             sf.write(clean_wav_path, audio, sr)
         
         with open(clean_wav_path, 'rb') as f:
             clean_content = f.read()
 
-        # 4. Start Whisper transcription (Compute bound) and Upload in parallel
-        # We upload the normalized clean_content (always .wav) instead of raw bytes
+        # 4. Start Whisper transcription and Upload in parallel
         text_result, audio_url = await asyncio.gather(
-            asyncio.to_thread(run_transcription_sync, audio, sr),
+            asyncio.to_thread(decode_whisper, audio),
             upload_audio(clean_content, user_id, ".wav")
         )
         
@@ -112,23 +102,60 @@ async def transcribe_audio(
     except Exception as e:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
-        print(f"GENERAL ERROR: {str(e)}")
+        print(f"CRITICAL ERROR: {str(e)}")
         print(traceback.format_exc())
-        return {"error": "transcription_error", "detail": str(e)}
-
-def run_transcription_sync(audio, sr):
-    """Whisper inference - should be run in a separate thread to avoid blocking the event loop."""
-    inputs = processor(audio, sampling_rate=sr, return_tensors="pt")
-    input_features = inputs.input_features.to(device, dtype=dtype)
-    with torch.no_grad():
-        predicted_ids = model.generate(
-            input_features,
-            task="transcribe",
-            max_new_tokens=128,
-            do_sample=False,
-            num_beams=1
+        raise HTTPException(
+            status_code=500,
+            detail=f"Transcription failed: {str(e)}"
         )
-    return processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
+
+def decode_audio_to_numpy(path):
+    """Robust audio decoding using 'av' (FFmpeg based) for various formats like 3GP, M4A, etc."""
+    container = av.open(path)
+    stream = container.streams.audio[0]
+    resampler = av.AudioResampler(
+        format='fltp',   # float32 Planar (Whisper expects float32/16)
+        layout='mono',
+        rate=16000,      # Whisper requires 16kHz
+    )
+    
+    frames = []
+    
+    # 1. Decode stream
+    for frame in container.decode(stream):
+        resampled_frames = resampler.resample(frame)
+        if resampled_frames:
+            for rf in resampled_frames:
+                # Convert resampled frame to a 1D numpy array
+                frames.append(rf.to_ndarray().flatten())
+    
+    # 2. Flush resampler buffer
+    final_resampled = resampler.resample(None)
+    if final_resampled:
+        for rf in final_resampled:
+            frames.append(rf.to_ndarray().flatten())
+
+    container.close()
+    
+    if not frames:
+        raise Exception("Could not decode any audio frames from the file.")
+    
+    # Standardize result as a single float32 numpy array
+    return np.concatenate(frames).astype(np.float32)
+
+def decode_whisper(audio_data):
+    """Whisper inference - using faster-whisper for 4x-10x speed boost."""
+    # beam_size=1 and language="tl" maximize speed for Filipino speech
+    segments, info = model.transcribe(
+        audio_data, 
+        beam_size=1, 
+        language="tl", 
+        task="transcribe"
+    )
+    
+    # Concatenate segments into one string
+    text = " ".join([segment.text for segment in segments])
+    return text.strip()
 
 @router.get("/history", dependencies=[Depends(require_auth)])
 async def get_history(

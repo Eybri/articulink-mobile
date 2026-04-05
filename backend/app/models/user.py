@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = "user"
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
@@ -29,12 +28,12 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: str
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = None
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
+
     status: Optional[str] = "active"
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -45,8 +44,7 @@ class UserOut(BaseModel):
 class UserUpdateResponse(BaseModel):
     id: str
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = None
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
@@ -74,14 +72,32 @@ class LoginRequest(BaseModel):
         return v.lower()
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    birthdate: Optional[str] = None
+    username: Optional[str] = None
+    profile_pic: Optional[str] = None
+    birthdate: Optional[date] = None
     gender: Optional[str] = None
+    status: Optional[str] = None
+    otp_code: Optional[str] = None
+    otp_expires_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
         extra = "ignore"
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+    new_password: str = Field(min_length=6)
+
+class ResendOTPRequest(BaseModel):
+    email: EmailStr
 
 # ============================================================================
 # USER CRUD OPERATIONS
@@ -99,8 +115,18 @@ async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         logger.error(f"Error getting user by ID {user_id}: {e}")
         return None
 
+def convert_dates(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to convert date objects to datetime for MongoDB compatibility"""
+    if not data:
+        return data
+    for key, value in data.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            data[key] = datetime.combine(value, datetime.min.time())
+    return data
+
 async def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a new user account"""
+    user_data = convert_dates(user_data)
     user_data.update({
         "email": user_data["email"].lower(),
         "created_at": datetime.utcnow(),
@@ -114,6 +140,7 @@ async def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
 async def update_user(user_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Update user profile information"""
     try:
+        update_data = convert_dates(update_data)
         update_data["updated_at"] = datetime.utcnow()
         await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
         return await get_user_by_id(user_id)
