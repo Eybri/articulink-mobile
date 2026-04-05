@@ -17,10 +17,12 @@ export const useRegisterViewModel = (navigation: any) => {
     const [lastName, setLastName] = useState("");
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState<Date | null>(null);
+    const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
     
     // UI State
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showGenderSheet, setShowGenderSheet] = useState(false);
+    const [showIconModal, setShowIconModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +79,7 @@ export const useRegisterViewModel = (navigation: any) => {
                 last_name: lastName.trim() || undefined,
                 gender: gender || undefined,
                 birthdate: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
+                profile_pic: selectedIcon || undefined,
             };
             await register(registerData);
             Alert.alert("Success", "Account created! Please verify your email with the code we sent.", [
@@ -105,8 +108,10 @@ export const useRegisterViewModel = (navigation: any) => {
         lastName, setLastName,
         gender, setGender,
         birthdate, setBirthdate,
+        selectedIcon, setSelectedIcon,
         showDatePicker, setShowDatePicker,
         showGenderSheet, setShowGenderSheet,
+        showIconModal, setShowIconModal,
         showPassword, setShowPassword,
         showConfirmPassword, setShowConfirmPassword,
         isLoading,

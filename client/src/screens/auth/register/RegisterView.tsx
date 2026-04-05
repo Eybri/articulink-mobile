@@ -65,7 +65,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                     resizeMode="cover"
                 />
                 <YStack fullscreen bg="black" opacity={0.25} />
-                
+
                 {/* Bottom text + logo */}
                 <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.22} jc="center" ai="center" gap="$1">
                     <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
@@ -112,29 +112,82 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                             </YStack>
 
                             <YStack gap="$3">
-                                {/* Name Row */}
-                                <XStack gap="$2">
-                                    <YStack f={1} gap="$1.5">
-                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>First Name</SizableText>
-                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
-                                            <User size={16} color={COLORS.royalBlue} opacity={0.5} />
-                                            <Input
-                                                f={1} placeholder="Optional" value={vm.firstName}
-                                                onChangeText={vm.setFirstName} autoCapitalize="words"
-                                                bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
-                                            />
-                                        </XStack>
+                                {/* Top Profile Section (Icon + Names) */}
+                                <XStack gap="$4" ai="center" mb="$1">
+                                    {/* Left: Avatar Trigger */}
+                                    <YStack ai="center" gap="$1.5">
+                                        <Pressable onPress={() => vm.setShowIconModal(true)} disabled={vm.isLoading}>
+                                            <YStack
+                                                w={100}
+                                                h={100}
+                                                br={50}
+                                                bg={COLORS.cream}
+                                                bw={1}
+                                                bc={vm.selectedIcon ? COLORS.teal : COLORS.sandMid}
+                                                jc="center"
+                                                ai="center"
+                                                shadowColor={vm.selectedIcon ? "rgba(42, 143, 160, 0.2)" : "transparent"}
+                                                shadowRadius={10}
+                                                elevation={vm.selectedIcon ? 4 : 0}
+                                            >
+                                                {vm.selectedIcon ? (
+                                                    <RNImage
+                                                        source={
+                                                            vm.selectedIcon === "ampalaya.jpg" ? require("../../../../assets/icons/ampalaya.jpg") :
+                                                                vm.selectedIcon === "banana.jpg" ? require("../../../../assets/icons/banana.jpg") :
+                                                                    vm.selectedIcon === "pineapple.jpg" ? require("../../../../assets/icons/pineapple.jpg") :
+                                                                        require("../../../../assets/icons/strawberry.jpg")
+                                                        }
+                                                        style={{ width: 84, height: 84, borderRadius: 42 }}
+                                                        resizeMode="cover"
+                                                    />
+                                                ) : (
+                                                    <YStack ai="center" gap="$1">
+                                                        <User size={32} color={COLORS.royalBlue} opacity={0.3} />
+                                                        <SizableText size="$1" fow="700" color={COLORS.royalBlue} opacity={0.5}>ADD ICON</SizableText>
+                                                    </YStack>
+                                                )}
+
+                                                {/* Edit Badge */}
+                                                <Circle
+                                                    size={24}
+                                                    bg={COLORS.royalBlue}
+                                                    pos="absolute"
+                                                    b={0}
+                                                    r={0}
+                                                    bw={2}
+                                                    bc="white"
+                                                    jc="center"
+                                                    ai="center"
+                                                >
+                                                    <ChevronDown size={14} color="white" />
+                                                </Circle>
+                                            </YStack>
+                                        </Pressable>
                                     </YStack>
-                                    <YStack f={1} gap="$1.5">
-                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Last Name</SizableText>
-                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
-                                            <User size={16} color={COLORS.royalBlue} opacity={0.5} />
-                                            <Input
-                                                f={1} placeholder="Optional" value={vm.lastName}
-                                                onChangeText={vm.setLastName} autoCapitalize="words"
-                                                bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
-                                            />
-                                        </XStack>
+
+                                    {/* Right: Stacked Name Fields */}
+                                    <YStack f={1} gap="$3">
+                                        <YStack gap="$1.5">
+                                            <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>First Name</SizableText>
+                                            <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
+                                                <Input
+                                                    f={1} placeholder="First Name" value={vm.firstName}
+                                                    onChangeText={vm.setFirstName} autoCapitalize="words"
+                                                    bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
+                                                />
+                                            </XStack>
+                                        </YStack>
+                                        <YStack gap="$1.5">
+                                            <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Last Name</SizableText>
+                                            <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
+                                                <Input
+                                                    f={1} placeholder="Last Name" value={vm.lastName}
+                                                    onChangeText={vm.setLastName} autoCapitalize="words"
+                                                    bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
+                                                />
+                                            </XStack>
+                                        </YStack>
                                     </YStack>
                                 </XStack>
 
@@ -342,6 +395,103 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                     />
                 )
             )}
+
+            {/* Profile Icon Picker Modal */}
+            <Modal
+                visible={vm.showIconModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => vm.setShowIconModal(false)}
+            >
+                <Pressable
+                    style={{ flex: 1, backgroundColor: COLORS.modalOverlay, justifyContent: 'flex-end' }}
+                    onPress={() => vm.setShowIconModal(false)}
+                >
+                    <Pressable onPress={(e) => e.stopPropagation()}>
+                        <YStack
+                            bg={COLORS.white}
+                            borderTopLeftRadius={28}
+                            borderTopRightRadius={28}
+                            p="$5"
+                            pb="$8"
+                            maxHeight={height * 0.7}
+                        >
+                            <YStack ai="center" mb="$2">
+                                <YStack w={36} h={4} bg={COLORS.sandMid} br={2} />
+                            </YStack>
+
+                            <XStack jc="space-between" ai="center" mb="$4">
+                                <SizableText size="$5" fow="800" color={COLORS.royalBlue}>Choose Character</SizableText>
+                                {vm.selectedIcon && (
+                                    <Button size="$2" chromeless onPress={() => { vm.setSelectedIcon(null); vm.setShowIconModal(false); }}>
+                                        <SizableText color={COLORS.error} size="$2" fow="600">Remove</SizableText>
+                                    </Button>
+                                )}
+                            </XStack>
+
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                <XStack fw="wrap" jc="flex-start" gap="$4">
+                                    {[
+                                        { name: "ampalaya.jpg", source: require("../../../../assets/icons/ampalaya.jpg") },
+                                        { name: "banana.jpg", source: require("../../../../assets/icons/banana.jpg") },
+                                        { name: "pineapple.jpg", source: require("../../../../assets/icons/pineapple.jpg") },
+                                        { name: "strawberry.jpg", source: require("../../../../assets/icons/strawberry.jpg") },
+                                    ].map((icon) => {
+                                        const isSelected = vm.selectedIcon === icon.name;
+                                        return (
+                                            <Pressable
+                                                key={icon.name}
+                                                onPress={() => { vm.setSelectedIcon(icon.name); vm.setShowIconModal(false); }}
+                                                style={{ width: '28%' }}
+                                            >
+                                                <YStack ai="center" gap="$2">
+                                                    <YStack
+                                                        w={74}
+                                                        h={74}
+                                                        br={37}
+                                                        bw={isSelected ? 3 : 1}
+                                                        bc={isSelected ? COLORS.teal : COLORS.sandMid}
+                                                        jc="center"
+                                                        ai="center"
+                                                        bg={isSelected ? COLORS.warmWhite : COLORS.cream}
+                                                        shadowColor={isSelected ? "rgba(42, 143, 160, 0.4)" : "transparent"}
+                                                        shadowRadius={8}
+                                                        elevation={isSelected ? 4 : 1}
+                                                    >
+                                                        <RNImage
+                                                            source={icon.source}
+                                                            style={{ width: 60, height: 60, borderRadius: 30 }}
+                                                            resizeMode="cover"
+                                                        />
+                                                    </YStack>
+                                                    <SizableText
+                                                        size="$1"
+                                                        fow={isSelected ? "700" : "500"}
+                                                        color={isSelected ? COLORS.teal : COLORS.textMid}
+                                                        tt="capitalize"
+                                                    >
+                                                        {icon.name.split('.')[0]}
+                                                    </SizableText>
+                                                </YStack>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </XStack>
+                            </ScrollView>
+
+                            <Button
+                                bg={COLORS.royalBlue}
+                                br={16}
+                                h={52}
+                                mt="$5"
+                                onPress={() => vm.setShowIconModal(false)}
+                            >
+                                <SizableText color="white" fow="700">Done</SizableText>
+                            </Button>
+                        </YStack>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </YStack>
     );
 };
