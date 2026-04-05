@@ -1,35 +1,31 @@
-# --- Core API ---
+# --- Core API (FastAPI) ---
 fastapi==0.121.3
 uvicorn==0.38.0
 starlette==0.50.0
+pydantic==2.10.1
+python-multipart==0.0.20
 
-# --- Environment & config ---
+# --- Environment & Config ---
 python-dotenv==1.2.1
 
-# --- Auth & security ---
+# --- Auth & Security ---
 passlib==1.7.4
 bcrypt==4.0.1
 python-jose==3.5.0
 email-validator==2.3.0
 
-# --- Database (MongoDB) ---
+# --- Database (MongoDB & Motor) ---
 pymongo==4.15.5
 motor==3.7.1
 
-# --- File uploads ---
-python-multipart==0.0.20
-cloudinary==1.44.1
-
-# --- Gemini (Google AI) ---
-google-generativeai==0.8.6
-
-# --- Audio processing (if you still use speech/audio) ---
-librosa==0.11.0
+# --- AI & Transcription (High Performance) ---
+faster-whisper==1.2.1
+av==17.0.0
 soundfile==0.13.1
-audioread==3.1.0
-
-# --- Utilities ---
 numpy==2.3.5
 torch==2.10.0
-transformers==5.1.0
+
+# --- Cloud & External Services ---
+cloudinary==1.44.1
+google-generativeai==0.8.6
 fastapi-mail==1.4.1
