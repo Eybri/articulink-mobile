@@ -14,8 +14,7 @@ import {
 export interface User {
     id?: string;
     email: string;
-    first_name?: string;
-    last_name?: string;
+    username?: string;
     role: string;
     profile_pic?: string;
     birthdate?: string;
@@ -95,9 +94,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             async (error: any) => {
                 const { status, url, data } = error.response || {};
 
-                if (data?.detail?.includes("deactivated")) {
-                    await clearAuth();
-                    setUser(null);
+                // Handle deactivated user or explicit authentication failures
+                if (data?.detail?.includes("deactivated") || status === 403) {
+                    // Only clear if it's a real auth error, not a standard permission error
+                    if (data?.detail?.includes("Not authenticated") || data?.detail?.includes("deactivated")) {
+                        await clearAuth();
+                        setUser(null);
+                    }
                 }
 
                 if (status === 401 && !url?.includes('/auth/login') && !url?.includes('/auth/register')) {
@@ -113,7 +116,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             axios.interceptors.request.eject(requestInterceptor);
             axios.interceptors.response.eject(responseInterceptor);
         };
-    }, [user]);
+    }, []); // FIXED: Removed [user] dependency to prevent race condition when user state updates
 
     const register = async (data: any) => {
         try {
@@ -137,8 +140,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const userData: User = {
                 id: res.data.user?._id || res.data.user?.id,
                 email: res.data.user?.email || data.email,
-                first_name: res.data.user?.first_name,
-                last_name: res.data.user?.last_name,
+                username: res.data.user?.username,
                 role: res.data.user?.role || "user",
                 profile_pic: res.data.user?.profile_pic,
                 birthdate: res.data.user?.birthdate,
@@ -225,8 +227,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             const userData: User = {
                 id: response.data.id,
                 email: response.data.email,
-                first_name: response.data.first_name,
-                last_name: response.data.last_name,
+                username: response.data.username,
                 role: response.data.role,
                 profile_pic: response.data.profile_pic,
                 birthdate: response.data.birthdate,

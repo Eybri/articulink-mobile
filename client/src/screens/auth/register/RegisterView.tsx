@@ -32,6 +32,7 @@ import {
 } from "@tamagui/lucide-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { COLORS } from "./../../../constants/colors";
+import { getProfileSource } from "./../../../utils/imageHelper";
 
 const { height } = Dimensions.get('window');
 
@@ -132,12 +133,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                                             >
                                                 {vm.selectedIcon ? (
                                                     <RNImage
-                                                        source={
-                                                            vm.selectedIcon === "ampalaya.jpg" ? require("../../../../assets/icons/ampalaya.jpg") :
-                                                                vm.selectedIcon === "banana.jpg" ? require("../../../../assets/icons/banana.jpg") :
-                                                                    vm.selectedIcon === "pineapple.jpg" ? require("../../../../assets/icons/pineapple.jpg") :
-                                                                        require("../../../../assets/icons/strawberry.jpg")
-                                                        }
+                                                        source={getProfileSource(vm.selectedIcon)}
                                                         style={{ width: 84, height: 84, borderRadius: 42 }}
                                                         resizeMode="cover"
                                                     />
@@ -166,28 +162,16 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                                         </Pressable>
                                     </YStack>
 
-                                    {/* Right: Stacked Name Fields */}
-                                    <YStack f={1} gap="$3">
-                                        <YStack gap="$1.5">
-                                            <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>First Name</SizableText>
-                                            <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
-                                                <Input
-                                                    f={1} placeholder="First Name" value={vm.firstName}
-                                                    onChangeText={vm.setFirstName} autoCapitalize="words"
-                                                    bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
-                                                />
-                                            </XStack>
-                                        </YStack>
-                                        <YStack gap="$1.5">
-                                            <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Last Name</SizableText>
-                                            <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3" gap="$2.5">
-                                                <Input
-                                                    f={1} placeholder="Last Name" value={vm.lastName}
-                                                    onChangeText={vm.setLastName} autoCapitalize="words"
-                                                    bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
-                                                />
-                                            </XStack>
-                                        </YStack>
+                                    {/* Right: Username Field */}
+                                    <YStack f={1} jc="center" gap="$1.5">
+                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Username</SizableText>
+                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={52} px="$3" gap="$2.5">
+                                            <Input
+                                                f={1} placeholder="Pick a username" value={vm.username}
+                                                onChangeText={vm.setUsername} autoCapitalize="none"
+                                                bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
+                                            />
+                                        </XStack>
                                     </YStack>
                                 </XStack>
 
@@ -431,17 +415,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
 
                             <ScrollView showsVerticalScrollIndicator={false}>
                                 <XStack fw="wrap" jc="flex-start" gap="$4">
-                                    {[
-                                        { name: "ampalaya.jpg", source: require("../../../../assets/icons/ampalaya.jpg") },
-                                        { name: "banana.jpg", source: require("../../../../assets/icons/banana.jpg") },
-                                        { name: "pineapple.jpg", source: require("../../../../assets/icons/pineapple.jpg") },
-                                        { name: "strawberry.jpg", source: require("../../../../assets/icons/strawberry.jpg") },
-                                    ].map((icon) => {
-                                        const isSelected = vm.selectedIcon === icon.name;
+                                    {["ampalaya.jpg", "banana.jpg", "pineapple.jpg", "strawberry.jpg"].map((icon) => {
+                                        const isSelected = vm.selectedIcon === icon;
                                         return (
                                             <Pressable
-                                                key={icon.name}
-                                                onPress={() => { vm.setSelectedIcon(icon.name); vm.setShowIconModal(false); }}
+                                                key={icon}
+                                                onPress={() => { vm.setSelectedIcon(icon); vm.setShowIconModal(false); }}
                                                 style={{ width: '28%' }}
                                             >
                                                 <YStack ai="center" gap="$2">
@@ -458,11 +437,13 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                                                         shadowRadius={8}
                                                         elevation={isSelected ? 4 : 1}
                                                     >
-                                                        <RNImage
-                                                            source={icon.source}
-                                                            style={{ width: 60, height: 60, borderRadius: 30 }}
-                                                            resizeMode="cover"
-                                                        />
+                                                        <YStack w={60} h={60} br={30} bg={COLORS.cream} bw={isSelected ? 2 : 1} bc={isSelected ? COLORS.teal : COLORS.sandMid} jc="center" ai="center" ov="hidden">
+                                                            <RNImage
+                                                                source={getProfileSource(icon)}
+                                                                style={{ width: 50, height: 50, borderRadius: 25 }}
+                                                                resizeMode="cover"
+                                                            />
+                                                        </YStack>
                                                     </YStack>
                                                     <SizableText
                                                         size="$1"
@@ -470,7 +451,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                                                         color={isSelected ? COLORS.teal : COLORS.textMid}
                                                         tt="capitalize"
                                                     >
-                                                        {icon.name.split('.')[0]}
+                                                        {icon.replace(".jpg", "")}
                                                     </SizableText>
                                                 </YStack>
                                             </Pressable>

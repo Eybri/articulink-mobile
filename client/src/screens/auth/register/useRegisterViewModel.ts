@@ -13,8 +13,7 @@ export const useRegisterViewModel = (navigation: any) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [username, setUsername] = useState("");
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState<Date | null>(null);
     const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
@@ -75,8 +74,7 @@ export const useRegisterViewModel = (navigation: any) => {
             const registerData: any = {
                 email: email.toLowerCase().trim(),
                 password: password,
-                first_name: firstName.trim() || undefined,
-                last_name: lastName.trim() || undefined,
+                username: username.trim() || undefined,
                 gender: gender || undefined,
                 birthdate: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
                 profile_pic: selectedIcon || undefined,
@@ -104,8 +102,7 @@ export const useRegisterViewModel = (navigation: any) => {
         email, setEmail,
         password, setPassword,
         confirmPassword, setConfirmPassword,
-        firstName, setFirstName,
-        lastName, setLastName,
+        username, setUsername,
         gender, setGender,
         birthdate, setBirthdate,
         selectedIcon, setSelectedIcon,

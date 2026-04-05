@@ -1,239 +1,225 @@
 import React, { useMemo } from "react";
 import {
-  Platform,
-  StatusBar,
-  Image as RNImage,
+    Platform,
+    StatusBar,
+    Image as RNImage,
+    Modal,
+    Pressable,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
+import Svg, { Path } from "react-native-svg";
 import {
-  YStack,
-  XStack,
-  ZStack,
-  Button,
-  Circle,
-  SizableText,
-  Card,
-  ScrollView,
-  Spinner,
-  Input,
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Circle,
+    SizableText,
+    Card,
+    Spinner,
+    Input,
+    ScrollView,
 } from "tamagui";
 import {
-  Camera,
-  Trash2,
-  Save,
-  X,
-  Calendar,
-  ChevronRight,
-  UserCircle,
-  User,
+    Camera,
+    Trash2,
+    Save,
+    X,
+    Calendar,
+    ChevronRight,
+    UserCircle,
+    User,
+    Shield,
+    Fingerprint,
+    AtSign,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
-import { SoftOrb, SectionHeader, FieldLabel } from "./components/EditProfileComponents";
+import { SoftOrb, SectionHeader, FieldLabel, AvatarPickerSheet, EditProfileRow, EditProfileCard } from "./components/EditProfileComponents";
+import { getProfileSource } from "./../../../utils/imageHelper";
 
 interface EditProfileViewProps {
     vm: any;
     navigation: any;
 }
 
-export const EditProfileView: React.FC<EditProfileViewProps> = ({ vm, navigation }) => {
-    const orbs = useMemo(() => ([
-        { color: COLORS.orbBlue, size: vm.width * 0.65, x: vm.width * 0.88, y: vm.height * 0.07, duration: 6000, delay: 0 },
-        { color: COLORS.orbTeal, size: vm.width * 0.5, x: vm.width * 0.08, y: vm.height * 0.46, duration: 7200, delay: 900 },
-        { color: COLORS.orbSand, size: vm.width * 0.38, x: vm.width * 0.65, y: vm.height * 0.82, duration: 5500, delay: 500 },
-    ]), [vm.width, vm.height]);
+const BackgroundDecor = React.memo(({ width, height }: { width: number; height: number }) => (
+    <ZStack pos="absolute" fullscreen pointerEvents="none">
+        <Circle pos="absolute" t={-height * 0.1} r={-width * 0.25} size={width * 0.9} bg={COLORS.sandLight} opacity={0.35} />
+        <Circle pos="absolute" b={-height * 0.15} l={-width * 0.2} size={width * 0.8} bg={COLORS.orbTeal} opacity={0.15} />
+        <Circle pos="absolute" t={height * 0.4} r={-width * 0.1} size={width * 0.2} bg={COLORS.orbSand} opacity={0.2} />
+    </ZStack>
+));
 
-    const genderOptions = [
+export const EditProfileView: React.FC<EditProfileViewProps> = ({ vm, navigation }) => {
+    const genderOptions = useMemo(() => [
         { label: "Male", value: "male" },
         { label: "Female", value: "female" },
         { label: "Other", value: "other" },
         { label: "Prefer not to say", value: "prefer_not_to_say" },
-    ];
+    ], []);
 
     return (
-        <YStack f={1} bg="#F0F5FB">
+        <YStack f={1} bg={COLORS.cream}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-            {/* Background Orbs */}
-            <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <Circle pos="absolute" t={-vm.height * 0.1} r={-vm.width * 0.15} size={vm.width * 0.95} bg={COLORS.orbBlue} opacity={0.5} />
-                <Circle pos="absolute" b={-vm.height * 0.06} l={-vm.width * 0.2} size={vm.width * 0.8} bg={COLORS.orbTeal} opacity={0.2} />
-                {orbs.map((orb: any, i: number) => <SoftOrb key={i} {...orb} />)}
-            </ZStack>
+            <BackgroundDecor width={vm.width} height={vm.height} />
 
-            <ScrollView f={1} contentContainerStyle={{ padding: 20, paddingTop: Platform.OS === "android" ? 44 : 56, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-                {/* Banner */}
-                <Card bg="white" br={24} mb="$4" ov="hidden" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.orbBlue} flexDirection="row">
-                    <YStack w={4} bg={COLORS.mediumBlue} br={24} />
-                    <YStack pos="absolute" t={0} l={0} r={0} h={65} bg={`${COLORS.mediumBlue}07`} br={24} />
-                    
-                    <XStack f={1} p="$4" py="$5" ai="center" gap="$4">
-                        <YStack pos="relative" w={80} h={80} jc="center" ai="center">
-                            <Circle pos="absolute" size={80} bg={COLORS.orbBlue} opacity={0.5} />
-                            <YStack w={68} h={68} br={20} bg={`${COLORS.mediumBlue}0D`} bw={1.5} bc={`${COLORS.mediumBlue}22`} jc="center" ai="center" ov="hidden">
-                                {vm.uploading ? (
-                                    <Spinner size="small" color={COLORS.mediumBlue} />
-                                ) : vm.profilePic ? (
-                                    <RNImage source={{ uri: vm.profilePic }} style={{ width: 68, height: 68, borderRadius: 20 }} />
-                                ) : (
-                                    <UserCircle size={38} color={COLORS.mediumBlue} strokeWidth={1.5} />
-                                )}
+            <ScrollView f={1} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+                {/* Sophisticated Header Backdrop (Lowered & Ambient) */}
+                <YStack h={180} bg={COLORS.royalBlue} pos="relative" bblr={42} bbrr={42} ov="hidden">
+                    <YStack pos="absolute" t={0} l={0} r={0} b={0} bg="black" opacity={0.15} />
+
+                    {/* Header Identity Card (Premium Finish) */}
+                    <XStack
+                        pos="absolute" b={28} l="$5" r="$5"
+                        bg="white" br={26} p="$3.5" ai="center" gap="$4"
+                        elevation={15} shadowColor="rgba(0,0,0,0.12)"
+                        bw={1.5} bc="rgba(255,255,255,0.4)"
+                    >
+                        {/* Avatar on Left */}
+                        <Pressable onPress={() => vm.setShowIconModal(true)}>
+                            <YStack w={94} h={94} jc="center" ai="center">
+                                <Circle size={94} bg={COLORS.warmWhite} bw={1.5} bc={COLORS.sandMid} ov="hidden">
+                                    {vm.uploading ? (
+                                        <Spinner color={COLORS.royalBlue} />
+                                    ) : vm.profilePic ? (
+                                        <RNImage source={getProfileSource(vm.profilePic)} style={{ width: 88, height: 88, borderRadius: 44 }} />
+                                    ) : (
+                                        <UserCircle size={52} color={COLORS.royalBlue} strokeWidth={1} opacity={0.3} />
+                                    )}
+                                </Circle>
+                                <Circle 
+                                    pos="absolute" b={0} r={0} size={28} bg={COLORS.teal} 
+                                    jc="center" ai="center" bw={2} bc="white" elevation={4}
+                                >
+                                    <Camera size={11} color="white" />
+                                </Circle>
                             </YStack>
-                            <Button
-                                pos="absolute"
-                                b={2}
-                                r={2}
-                                w={26}
-                                h={26}
-                                br={9}
-                                bg={COLORS.mediumBlue}
-                                p={0}
-                                onPress={vm.handlePickImage}
-                                disabled={vm.uploading}
-                                icon={<Camera size={12} color="white" />}
-                            />
-                        </YStack>
+                        </Pressable>
 
-                        <YStack f={1}>
-                            <SizableText size="$5" fow="800" color={COLORS.textDark} ls={-0.4}>
-                                {vm.firstName || vm.lastName ? `${vm.firstName} ${vm.lastName}`.trim() : "Your Name"}
+                        {/* Details on Right */}
+                        <YStack f={1} gap="$1.5">
+                            <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.4}>
+                                @{vm.username || "username"}
                             </SizableText>
-                            <SizableText size="$2" color={COLORS.textMid} fow="500">Tap camera to update photo</SizableText>
-                            {vm.profilePic && (
-                                <XStack ai="center" mt="$2" gap="$1" onPress={vm.handleDeleteProfilePic}>
-                                    <Trash2 size={11} color={COLORS.error} />
-                                    <SizableText size="$1" fow="700" color={COLORS.error} textTransform="uppercase">Remove photo</SizableText>
-                                </XStack>
-                            )}
+                            
+                            <XStack gap="$2.5">
+                                <Button
+                                    h={30} br={15} px="$4" bg={COLORS.royalBlue}
+                                    onPress={() => vm.setShowIconModal(true)}
+                                    pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                >
+                                    <SizableText color="white" fow="700" size="$1" ls={0.5} tt="uppercase">Modify</SizableText>
+                                </Button>
+
+                                {vm.profilePic && !vm.availableIcons.includes(vm.profilePic) && (
+                                    <Button
+                                        h={30} br={15} px="$4" bg="white" bw={1} bc={`${COLORS.error}40`}
+                                        onPress={vm.handleDeleteProfilePic}
+                                        pressStyle={{ scale: 0.98, bg: `${COLORS.error}08` }}
+                                    >
+                                        <SizableText size="$1" fow="700" color={COLORS.error} ls={0.5} tt="uppercase">Remove</SizableText>
+                                    </Button>
+                                )}
+                            </XStack>
                         </YStack>
                     </XStack>
-                </Card>
+                </YStack>
 
-                {/* Personal Info */}
-                <Card bg="white" br={24} p="$5" mb="$4" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.orbBlue} ov="hidden">
-                    <YStack pos="absolute" t={0} l={0} r={0} h={4} bg={COLORS.royalBlue} />
-                    <YStack pos="absolute" t={0} l={0} r={0} h={40} bg={`${COLORS.royalBlue}05`} />
-                    
-                    <SectionHeader icon={<User size={15} color={COLORS.royalBlue} />} title="Personal Information" />
+                {/* Simplified Identity Form (Settings Style) */}
+                <YStack px="$5" mt="$8" gap="$5">
+                    <XStack ai="center" gap="$2" mb="$1" ml="$2">
+                        <Fingerprint size={14} color={COLORS.royalBlue} />
+                        <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Identity & Profile</SizableText>
+                    </XStack>
 
-                    <YStack gap="$4">
-                        <YStack>
-                            <FieldLabel text="First Name" />
+                    <EditProfileCard>
+                        <EditProfileRow icon={<AtSign size={18} color={COLORS.royalBlue} />} title="Personal Username">
                             <Input
-                                bg={COLORS.warmWhite}
-                                br={14}
-                                h={50}
-                                px="$4"
-                                size="$4"
-                                bw={1.5}
-                                bc={COLORS.sandMid}
-                                focusStyle={{ bc: COLORS.mediumBlue }}
-                                value={vm.firstName}
-                                onChangeText={vm.setFirstName}
-                                placeholder="Enter first name"
+                                f={1} bg="transparent" bw={0} size="$4"
+                                fontWeight="500" color={COLORS.textDark}
+                                value={vm.username} onChangeText={vm.setUsername}
+                                placeholder="Username" autoCapitalize="none"
+                                p={0} h={36} textAlign="left"
+                                w="100%"
                             />
-                        </YStack>
+                        </EditProfileRow>
 
-                        <YStack>
-                            <FieldLabel text="Last Name" />
-                            <Input
-                                bg={COLORS.warmWhite}
-                                br={14}
-                                h={50}
-                                px="$4"
-                                size="$4"
-                                bw={1.5}
-                                bc={COLORS.sandMid}
-                                focusStyle={{ bc: COLORS.mediumBlue }}
-                                value={vm.lastName}
-                                onChangeText={vm.setLastName}
-                                placeholder="Enter last name"
-                            />
-                        </YStack>
-
-                        <YStack>
-                            <FieldLabel text="Gender" />
-                            <YStack bg={COLORS.warmWhite} br={14} bw={1.5} bc={COLORS.sandMid} ov="hidden">
+                        <EditProfileRow icon={<User size={18} color={COLORS.royalBlue} />} title="Gender Identity">
+                            <YStack f={1} h={52} jc="center">
                                 <Picker
                                     selectedValue={vm.gender}
                                     onValueChange={(itemValue) => vm.setGender(itemValue)}
-                                    style={{ height: 50, color: COLORS.textDark }}
+                                    style={{ height: 50, width: 220, color: COLORS.textDark, backgroundColor: 'transparent', marginLeft: -12 }}
+                                    dropdownIconColor={COLORS.royalBlue}
+                                    mode="dropdown"
                                 >
-                                    <Picker.Item label="Select gender" value="" color={COLORS.textMid} />
+                                    <Picker.Item label="Select Gender" value="" color={COLORS.textMid} />
                                     {genderOptions.map(opt => (
-                                        <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
+                                        <Picker.Item key={opt.value} label={opt.label} value={opt.value} color={COLORS.textDark} />
                                     ))}
                                 </Picker>
                             </YStack>
-                        </YStack>
+                        </EditProfileRow>
 
-                        <YStack>
-                            <FieldLabel text="Birthdate" />
-                            <Button
-                                bg={COLORS.warmWhite}
-                                br={14}
-                                h={50}
-                                px="$4"
-                                jc="space-between"
-                                bw={1.5}
-                                bc={COLORS.sandMid}
-                                onPress={() => vm.setShowDatePicker(true)}
-                            >
-                                <SizableText color={vm.birthdate ? COLORS.textDark : `${COLORS.textMid}60`} fow="500">
-                                    {vm.birthdate ? vm.birthdate.toDateString() : "Select birthdate"}
-                                </SizableText>
-                                <Calendar size={18} color={COLORS.mediumBlue} />
-                            </Button>
-                        </YStack>
+                        <EditProfileRow 
+                            icon={<Calendar size={18} color={COLORS.royalBlue} />} 
+                            title="Date of Birth"
+                            isLast
+                            onPress={() => vm.setShowDatePicker(true)}
+                            description={vm.birthdate ? vm.birthdate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : (vm.birthdateText || "Not Set")}
+                        >
+                            <ChevronRight size={18} color={COLORS.sandMid} />
+                        </EditProfileRow>
+                    </EditProfileCard>
+
+                    {/* Action Buttons */}
+                    <YStack gap="$3" mt="$6" pb="$2">
+                        <Button
+                            bg={COLORS.royalBlue} h={62} br={22}
+                            elevation={8} shadowColor={COLORS.royalBlue}
+                            onPress={vm.handleUpdateProfile} disabled={vm.loading}
+                            iconAfter={vm.loading ? <Spinner color="white" /> : <Save size={20} color="white" />}
+                            pressStyle={{ scale: 0.97, opacity: 0.95 }}
+                        >
+                            <SizableText color="white" fow="800" size="$4" ls={0.5}>SAVE CHANGES</SizableText>
+                        </Button>
+
+                        <Button
+                            bg="rgba(138, 150, 164, 0.08)" h={54} br={20}
+                            onPress={() => navigation.goBack()} disabled={vm.loading}
+                            pressStyle={{ bg: `rgba(138, 150, 164, 0.15)`, scale: 0.98 }}
+                        >
+                            <SizableText color={COLORS.textMid} fow="700" size="$3" ls={0.2}>Cancel & Discard</SizableText>
+                        </Button>
                     </YStack>
-                </Card>
-
-                {vm.showDatePicker && (
-                    <DateTimePicker
-                        value={vm.birthdate || new Date()}
-                        mode="date"
-                        display="default"
-                        onChange={(e, d) => {
-                            vm.setShowDatePicker(false);
-                            if (d) vm.setBirthdate(d);
-                        }}
-                    />
-                )}
-
-                {/* Action Buttons */}
-                <YStack gap="$3" mt="$4">
-                    <Button
-                        bg={COLORS.mediumBlue}
-                        h={56}
-                        br={16}
-                        elevation={4}
-                        onPress={vm.handleUpdateProfile}
-                        disabled={vm.loading}
-                        iconAfter={vm.loading ? <Spinner color="white" /> : <Save size={16} color="white" />}
-                        pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                    >
-                        <SizableText color="white" fow="800" size="$4">Save Changes</SizableText>
-                        <YStack f={1} />
-                        <ChevronRight size={18} color="rgba(255,255,255,0.6)" />
-                    </Button>
-
-                    <Button
-                        bg="white"
-                        h={56}
-                        br={16}
-                        bw={1}
-                        bc={COLORS.sandMid}
-                        onPress={() => navigation.goBack()}
-                        disabled={vm.loading}
-                        iconAfter={<X size={16} color={COLORS.textMid} />}
-                        pressStyle={{ scale: 0.98, bg: COLORS.warmWhite }}
-                    >
-                        <SizableText color={COLORS.textMid} fow="800" size="$4">Cancel</SizableText>
-                        <YStack f={1} />
-                        <ChevronRight size={18} color={`${COLORS.textMid}50`} />
-                    </Button>
                 </YStack>
             </ScrollView>
+
+            <AvatarPickerSheet 
+                visible={vm.showIconModal}
+                onClose={() => vm.setShowIconModal(false)}
+                onPickImage={vm.handlePickImage}
+                onSelectIcon={vm.handleSelectIcon}
+                selectedIcon={vm.profilePic}
+                availableIcons={vm.availableIcons}
+            />
+
+            {vm.showDatePicker && (
+                <DateTimePicker
+                    value={vm.birthdate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event: any, selectedDate?: Date) => {
+                        vm.setShowDatePicker(Platform.OS === 'ios');
+                        if (selectedDate) {
+                            vm.setBirthdate(selectedDate);
+                            vm.setBirthdateText("");
+                        }
+                    }}
+                />
+            )}
         </YStack>
     );
 };

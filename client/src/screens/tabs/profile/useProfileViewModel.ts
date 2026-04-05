@@ -61,7 +61,7 @@ export const useProfileViewModel = (navigation: any) => {
         navigation.navigate("EditProfile", { user });
     };
 
-    const fullName = user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : "Articulink User";
+    const displayName = user?.username ? `@${user.username}` : "Articulink User";
 
     const memberSince = user?.created_at
         ? `Member since ${new Date(user.created_at).toLocaleDateString("en-US", {
@@ -81,7 +81,7 @@ export const useProfileViewModel = (navigation: any) => {
         onRefresh,
         handleLogout,
         handleEditProfile,
-        fullName,
+        displayName,
         memberSince
     };
 };

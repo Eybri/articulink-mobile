@@ -39,6 +39,7 @@ import {
   InfoBox, 
   SectionLabel 
 } from "./components/ProfileComponents";
+import { getProfileSource } from "./../../../utils/imageHelper";
 
 interface ProfileViewProps {
     vm: any;
@@ -116,14 +117,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             {vm.user.profile_pic ? (
                                 <RNImage
                                     key={vm.user.profile_pic}
-                                    source={{ uri: vm.user.profile_pic }}
+                                    source={getProfileSource(vm.user.profile_pic)}
                                     style={{ width: 56, height: 56, borderRadius: 28 }}
                                     resizeMode="cover"
                                 />
                             ) : (
                                 <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
                                     <SizableText size="$5" fow="900" color="white">
-                                        {vm.user.first_name?.[0] ?? ""}{vm.user.last_name?.[0] ?? ""}
+                                        {vm.user.username?.[0]?.toUpperCase() ?? "U"}
                                     </SizableText>
                                 </YStack>
                             )}
@@ -134,7 +135,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                                 Good Afternoon,
                             </SizableText>
                             <SizableText size="$7" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4}>
-                                {vm.user.first_name || "Speaker"}!
+                                {vm.user.username || "Speaker"}!
                             </SizableText>
                         </YStack>
                     </XStack>
