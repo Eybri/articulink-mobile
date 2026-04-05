@@ -3,7 +3,7 @@ import { Platform, Animated, Image as RNImage } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
-import HomeScreen from "../screens/HomeScreen";
+import HomeScreen from "../screens/tabs/home";
 import HistoryScreen from "../screens/tabs/history";
 import ProfileScreen from "../screens/tabs/profile";
 import SettingsScreen from "../screens/tabs/settings";

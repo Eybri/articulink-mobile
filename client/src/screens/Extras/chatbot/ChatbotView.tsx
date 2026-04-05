@@ -1,23 +1,23 @@
 import React from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  StatusBar,
-  Image as RNImage,
+    KeyboardAvoidingView,
+    Platform,
+    Animated,
+    StatusBar,
+    Image as RNImage,
 } from "react-native";
 import {
-  YStack,
-  XStack,
-  ZStack,
-  Button,
-  Circle,
-  SizableText,
-  Card,
-  ScrollView,
-  Spinner,
-  Input,
-  Theme,
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Circle,
+    SizableText,
+    Card,
+    ScrollView,
+    Spinner,
+    Input,
+    Theme,
 } from "tamagui";
 import { Send, Trash2 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
@@ -62,14 +62,16 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
 
             {/* Main Chat Area */}
             <ZStack f={1}>
-                {/* Background Logo */}
-                <YStack fullscreen o={0.05} jc="center" ai="center">
-                    <RNImage
-                        source={require("../../../../assets/images/logo2-nobg.png")}
-                        style={{ width: vm.width * 0.7, height: vm.width * 0.7 }}
-                        resizeMode="contain"
-                    />
-                </YStack>
+                {/* Background Logo - Only show when there's an actual conversation to avoid cluttering the intro */}
+                {vm.messages.length > 1 && (
+                    <YStack fullscreen o={0.03} jc="center" ai="center" pointerEvents="none">
+                        <RNImage
+                            source={require("../../../../assets/images/logo2-nobg.png")}
+                            style={{ width: vm.width * 0.7, height: vm.width * 0.7 }}
+                            resizeMode="contain"
+                        />
+                    </YStack>
+                )}
 
                 <ScrollView
                     ref={vm.scrollViewRef}
@@ -86,11 +88,13 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                             <ZStack w={100} h={100} jc="center" ai="center">
                                 <Circle size={100} bg={`${COLORS.teal}08`} />
                                 <Circle size={80} bg={`${COLORS.teal}0F`} />
-                                <RNImage
-                                    source={require("../../../../assets/images/logo2-nobg.png")}
-                                    style={{ width: 60, height: 60 }}
-                                    resizeMode="contain"
-                                />
+                                <YStack fullscreen jc="center" ai="center">
+                                    <RNImage
+                                        source={require("../../../../assets/images/logo2-nobg.png")}
+                                        style={{ width: 100, height: 100 }}
+                                        resizeMode="contain"
+                                    />
+                                </YStack>
                             </ZStack>
                             <YStack ai="center" gap="$1">
                                 <SizableText size="$6" fow="800" color={COLORS.textDark} ta="center">
