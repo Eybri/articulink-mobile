@@ -90,7 +90,7 @@ const HomeStack = () => (
 // ─── Profile Stack ───────────────────────────────────────────────
 const ProfileStack = () => (
   <Stack.Navigator screenOptions={headerOptions}>
-    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ title: "Your Profile" }} />
+    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: "Edit Profile" }} />
   </Stack.Navigator>
 );
