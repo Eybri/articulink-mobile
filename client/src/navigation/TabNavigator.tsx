@@ -4,12 +4,12 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/HomeScreen";
-import HistoryScreen from "../screens/tabs/HistoryScreen";
-import ProfileScreen from "../screens/tabs/ProfileScreen";
-import SettingsScreen from "../screens/tabs/SettingsScreen";
-import MapScreen from "../screens/tabs/MapScreen";
-import EditProfileScreen from '../screens/Extras/EditProfileScreen';
-import ChatbotScreen from '../screens/Extras/ChatbotScreen';
+import HistoryScreen from "../screens/tabs/history";
+import ProfileScreen from "../screens/tabs/profile";
+import SettingsScreen from "../screens/tabs/settings";
+import MapScreen from "../screens/tabs/map";
+import EditProfileScreen from '../screens/Extras/edit-profile';
+import ChatbotScreen from '../screens/Extras/chatbot';
 import {
   Home,
   History,
