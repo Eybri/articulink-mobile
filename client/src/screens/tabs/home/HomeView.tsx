@@ -1,30 +1,31 @@
 import React from "react";
 import {
-  Platform,
-  StatusBar,
-  Animated,
-  Image as RNImage,
+    Platform,
+    StatusBar,
+    Animated,
+    Image as RNImage,
 } from "react-native";
 import {
-  YStack,
-  XStack,
-  ZStack,
-  Button,
-  Circle,
-  H1,
-  SizableText,
-  TextArea,
-  Card,
-  Spinner,
-  AnimatePresence,
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Circle,
+    H1,
+    SizableText,
+    TextArea,
+    Card,
+    Spinner,
+    AnimatePresence,
+    ScrollView, // Added ScrollView
 } from "tamagui";
 import {
-  Mic,
-  Square,
-  Volume2,
-  Trash2,
-  ChevronRight,
-  FileText,
+    Mic,
+    Square,
+    Volume2,
+    Trash2,
+    ChevronRight,
+    FileText,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SoftOrb, AnimatedWaveform, PulseRing } from "./components/HomeComponents";
@@ -35,7 +36,7 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
     const isRecording = !!vm.recording;
-    const statusText = vm.loading ? "Processing your speech..." : isRecording ? "Listening..." : "Tap the mic to start";
+    const statusText = vm.loading ? "Processing speech..." : isRecording ? "Listening..." : "Tap the mic to start";
 
     return (
         <YStack f={1} bg={COLORS.cream}>
@@ -44,189 +45,169 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
             {/* ── Layered Background ── */}
             <ZStack pos="absolute" fullscreen pointerEvents="none">
                 <YStack fullscreen bg={COLORS.cream} />
-                
                 {vm.orbs.map((orb: any, i: number) => <SoftOrb key={i} {...orb} />)}
-
-                {vm.dotGrid.map((d: any, i: number) => (
-                    <Circle
-                        key={i}
-                        pos="absolute"
-                        size={2}
-                        bg={COLORS.royalBlue}
-                        opacity={0.04}
-                        l={d.left}
-                        t={d.top}
-                    />
-                ))}
-
-                <YStack
-                    pos="absolute" t={58} l={22} w={34} h={34}
-                    borderTopWidth={1.5} borderLeftWidth={1.5}
-                    borderColor={`${COLORS.royalBlue}25`}
-                    br={6}
-                />
-                <YStack
-                    pos="absolute" b={60} r={22} w={34} h={34}
-                    borderBottomWidth={1.5} borderRightWidth={1.5}
-                    borderColor={`${COLORS.teal}25`}
-                    br={6}
-                />
             </ZStack>
 
-            {/* ── Main Content ── */}
-            <YStack f={1} px="$5" pt={Platform.OS === "android" ? 48 : 60} pb={Platform.OS === "android" ? 20 : 30} gap="$4">
-                
-                {/* Header */}
-                <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                    <YStack ai="center" gap="$1">
-                        <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={2.5} tt="uppercase">
-                            SPEECH CLARITY ENGINE
-                        </SizableText>
-                        <H1 fow="900" size="$10" color={COLORS.textDark} ls={-0.5}>
-                            Articulink
-                        </H1>
-                        <SizableText size="$3" color={COLORS.textMid} fow="500">
-                            Tap, speak, and let AI understand you
-                        </SizableText>
-                    </YStack>
-                </Animated.View>
+            <ScrollView
+                f={1}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingBottom: Platform.OS === 'ios' ? 200 : 180, // Significant spacer for floating tab bar
+                    paddingTop: Platform.OS === "android" ? 40 : 50,
+                }}
+            >
+                <YStack px="$5" gap="$5">
 
-                <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ scale: vm.fadeAnim }] }}>
-                    <YStack ai="center" gap="$2">
-                        <YStack w={120} h={120} jc="center" ai="center">
-                            <PulseRing active={isRecording} />
-                            <AnimatePresence>
-                                {isRecording && (
-                                    <Circle
-                                        key="active-bg"
-                                        pos="absolute"
-                                        size={120}
-                                        bg={COLORS.teal}
-                                        opacity={0.12}
-                                    />
-                                )}
-                            </AnimatePresence>
-
-                            <Button
-                                size={88}
-                                br={44}
-                                bg={isRecording ? '#DC2626' : COLORS.teal}
-                                onPress={isRecording ? vm.stopRecording : vm.startRecording}
-                                disabled={vm.loading}
-                                pressStyle={{ scale: 0.92, opacity: 0.85 }}
-                                elevation={10}
-                                shadowColor={isRecording ? '#DC2626' : '#2A8FA0'}
-                                icon={vm.loading ? <Spinner size="large" color="white" /> : (isRecording ? <Square size={28} color="white" fill="white" /> : <Mic size={32} color="white" />)}
-                            />
+                    {/* Header - iOS Style (Refined) */}
+                    <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
+                        <YStack ai="center" gap="$1.5">
+                            <YStack bg={`${COLORS.teal}10`} px="$2.5" py="$0.5" br={100} bw={1} bc={`${COLORS.teal}20`}>
+                                <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={1.2} tt="uppercase">
+                                    AI Clarity Engine
+                                </SizableText>
+                            </YStack>
+                            <H1 fow="900" size="$9" color={COLORS.textDark} ls={-0.8} ta="center">
+                                Articulink
+                            </H1>
+                            <SizableText size="$3" color={COLORS.textMid} fow="500" ta="center" px="$4" opacity={0.75}>
+                                Enhancing speech clarity with premium AI
+                            </SizableText>
                         </YStack>
+                    </Animated.View>
 
-                        <SizableText size="$3" fow="600" color={isRecording ? '#DC2626' : COLORS.textMid}>
-                            {statusText}
-                        </SizableText>
+                    {/* Mic Section (Compact) */}
+                    <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ scale: vm.fadeAnim }] }}>
+                        <YStack ai="center" gap="$4">
+                            <YStack w={110} h={110} jc="center" ai="center">
+                                <PulseRing active={isRecording} />
+                                <AnimatePresence>
+                                    {isRecording && (
+                                        <Circle
+                                            key="active-bg"
+                                            pos="absolute"
+                                            size={110}
+                                            bg={COLORS.teal}
+                                            opacity={0.08}
+                                        />
+                                    )}
+                                </AnimatePresence>
 
-                        <AnimatePresence>
-                            {isRecording && (
-                                <YStack
-                                    key="waveform"
-                                    mt="$2"
-                                >
-                                    <AnimatedWaveform color={COLORS.teal} />
-                                </YStack>
-                            )}
-                        </AnimatePresence>
-                    </YStack>
-                </Animated.View>
+                                <Button
+                                    size={80}
+                                    br={40}
+                                    bg={isRecording ? '#DC2626' : COLORS.royalBlue}
+                                    onPress={isRecording ? vm.stopRecording : vm.startRecording}
+                                    disabled={vm.loading}
+                                    pressStyle={{ scale: 0.95, opacity: 0.9 }}
+                                    elevation={12}
+                                    shadowColor={isRecording ? '#DC2626' : COLORS.royalBlue}
+                                    shadowOffset={{ width: 0, height: 8 }}
+                                    shadowOpacity={0.15}
+                                    shadowRadius={15}
+                                    icon={vm.loading ? <Spinner size="small" color="white" /> : (isRecording ? <Square size={24} color="white" fill="white" /> : <Mic size={30} color="white" />)}
+                                />
+                            </YStack>
 
-                {/* Transcript Card */}
-                <Animated.View style={{ flex: 1, opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                    <Card f={1} bg="white" br={22} elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid} ov="hidden">
-                        <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={COLORS.royalBlue} />
-                        <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${COLORS.royalBlue}07`} />
+                            <YStack ai="center" mt="$-2">
+                                <SizableText size="$3" fow="700" color={isRecording ? '#DC2626' : COLORS.textDark}>
+                                    {statusText}
+                                </SizableText>
+                                {isRecording && <YStack mt="$1"><AnimatedWaveform color={COLORS.teal} /></YStack>}
+                            </YStack>
+                        </YStack>
+                    </Animated.View>
 
-                        <YStack f={1} p="$4">
-                            <XStack ai="center" gap="$2" mb="$2">
-                                <YStack w={30} h={30} br={9} bg={`${COLORS.royalBlue}0C`} jc="center" ai="center">
+                    {/* Transcript Area - Sophisticated Card (Refined) */}
+                    <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
+                        <Card
+                            bg="white"
+                            br={24}
+                            elevation={8}
+                            shadowColor={COLORS.deepNavy}
+                            shadowOpacity={0.05}
+                            shadowRadius={20}
+                            bw={1}
+                            bc="rgba(221, 214, 200, 0.4)"
+                            ov="hidden"
+                            p="$4"
+                        >
+                            <XStack ai="center" gap="$2" mb="$3">
+                                <YStack w={28} h={28} br={10} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
                                     <FileText size={14} color={COLORS.royalBlue} />
                                 </YStack>
-                                <SizableText fow="800" size="$3" color={COLORS.textDark} ls={-0.2}>
+                                <SizableText fow="800" size="$3" color={COLORS.textDark}>
                                     Transcript
                                 </SizableText>
-                                <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.7} />
-                                {vm.transcript.length > 0 && (
-                                    <YStack bg={`${COLORS.teal}14`} px="$2" py="$1" br={8}>
-                                        <SizableText fow="700" size="$1" color={COLORS.teal}>
-                                            {vm.transcript.length}
-                                        </SizableText>
-                                    </YStack>
-                                )}
+                                <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
                             </XStack>
 
                             <TextArea
-                                flex={1}
-                                bg={`${COLORS.royalBlue}04`}
-                                borderColor={COLORS.sandMid}
-                                br={14}
-                                p="$3"
+                                h={180}
+                                bg="transparent"
+                                borderColor="transparent"
+                                p="$0"
                                 size="$4"
                                 fontWeight="500"
                                 color={COLORS.textDark}
                                 value={vm.transcript}
                                 onChangeText={vm.setTranscript}
-                                placeholder="Your speech will appear here..."
+                                placeholder="Start speaking..."
                                 placeholderTextColor={COLORS.textMid as any}
-                                borderWidth={1.5}
                             />
 
-                            <YStack pos="absolute" b={12} r={14}>
-                                <AnimatedWaveform color={COLORS.royalBlue} />
-                            </YStack>
+                            {vm.transcript.length > 0 && (
+                                <XStack jc="flex-end" mt="$1">
+                                    <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.4}>
+                                        {vm.transcript.split(' ').length} words
+                                    </SizableText>
+                                </XStack>
+                            )}
+                        </Card>
+                    </Animated.View>
+
+                    {/* Action Buttons - Primary Style (Compact) */}
+                    <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
+                        <YStack gap="$2.5">
+                            <Button
+                                h={54}
+                                bg={COLORS.royalBlue}
+                                br={16}
+                                onPress={vm.speakText}
+                                disabled={!vm.transcript}
+                                opacity={!vm.transcript ? 0.4 : 1}
+                                pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                icon={<Volume2 size={18} color="white" />}
+                                iconAfter={<ChevronRight size={16} color="rgba(255,255,255,0.4)" />}
+                                elevation={6}
+                                shadowColor={COLORS.royalBlue}
+                                shadowOpacity={0.15}
+                            >
+                                <SizableText fow="800" size="$4" color="white" ml="$1.5">
+                                    Play Clarity Voice
+                                </SizableText>
+                            </Button>
+
+                            <Button
+                                h={54}
+                                bg="white"
+                                br={16}
+                                onPress={vm.clearTranscript}
+                                disabled={!vm.transcript}
+                                opacity={!vm.transcript ? 0.4 : 1}
+                                pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                                borderWidth={1}
+                                borderColor="#FEE2E2"
+                                icon={<Trash2 size={16} color="#DC2626" />}
+                            >
+                                <SizableText fow="710" size="$3" color="#DC2626" ml="$1">
+                                    Reset Transcript
+                                </SizableText>
+                            </Button>
                         </YStack>
-                    </Card>
-                </Animated.View>
+                    </Animated.View>
 
-                {/* Action Buttons */}
-                <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                    <YStack gap="$2">
-                        <Button
-                            size="$5"
-                            bg={COLORS.teal}
-                            br={18}
-                            onPress={vm.speakText}
-                            disabled={!vm.transcript}
-                            opacity={!vm.transcript ? 0.45 : 1}
-                            pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                            icon={<Volume2 size={18} color="white" />}
-                            iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.5)" />}
-                            elevation={6}
-                            shadowColor="#2A8FA0"
-                        >
-                            <SizableText fow="800" size="$4" color="white" ml="$2">
-                                Speak
-                            </SizableText>
-                        </Button>
-
-                        <Button
-                            size="$5"
-                            bg="white"
-                            br={18}
-                            onPress={vm.clearTranscript}
-                            disabled={!vm.transcript}
-                            opacity={!vm.transcript ? 0.45 : 1}
-                            pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                            borderWidth={1}
-                            borderColor="rgba(220,38,38,0.18)"
-                            icon={<Trash2 size={16} color="#DC2626" />}
-                            iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.35)" />}
-                            elevation={5}
-                            shadowColor="#8A96A4"
-                        >
-                            <SizableText fow="800" size="$4" color="#DC2626" ml="$2">
-                                Clear
-                            </SizableText>
-                        </Button>
-                    </YStack>
-                </Animated.View>
-            </YStack>
+                </YStack>
+            </ScrollView>
         </YStack>
     );
 };

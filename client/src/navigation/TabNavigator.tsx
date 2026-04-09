@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { Platform, Animated, Image as RNImage } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createNativeStackNavigator as createStackNavigator } from "@react-navigation/native-stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/tabs/home";
@@ -113,123 +114,119 @@ const TabItem: React.FC<{
   onPress: () => void;
 }> = ({ isFocused, config, onPress }) => {
   const liftAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
-  const glowAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(liftAnim, {
-        toValue: isFocused ? 1 : 0,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-      Animated.timing(glowAnim, {
-        toValue: isFocused ? 1 : 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(liftAnim, {
+      toValue: isFocused ? 1 : 0,
+      tension: 60,
+      friction: 10,
+      useNativeDriver: true,
+    }).start();
   }, [isFocused]);
 
-  const translateY = liftAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -3],
-  });
   const iconScale = liftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.12],
+    outputRange: [1, 1.15],
   });
-  const pillOpacity = glowAnim.interpolate({
+
+  const highlightOpacity = liftAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
   });
-  const labelOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.55, 1],
-  });
 
   return (
-    <YStack f={1} ai="center" jc="center" py="$1" onPress={onPress}>
-      {/* Icon with subtle pop */}
+    <YStack f={1} ai="center" jc="center" h={70} onPress={onPress}>
+      {/* Subtle Background Highlight */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: '85%',
+        height: '85%',
+        borderRadius: 16,
+        backgroundColor: 'rgba(26, 68, 128, 0.05)', // Extremely light COLORS.royalBlue
+        opacity: highlightOpacity,
+        transform: [{ scale: liftAnim }],
+      }} />
+
       <Animated.View style={{
         alignItems: 'center',
         justifyContent: 'center',
-        transform: [{ translateY }, { scale: iconScale }],
+        transform: [{ scale: iconScale }],
       }}>
         {React.createElement(config.icon, {
-          size: isFocused ? 28 : 24,
+          size: 20,
           color: isFocused ? COLORS.royalBlue : COLORS.textMid,
-          strokeWidth: isFocused ? 2.4 : 1.8,
+          strokeWidth: isFocused ? 2.5 : 1.8,
         })}
       </Animated.View>
 
-      {/* Label - tight to icon */}
-      <Animated.View style={{ opacity: labelOpacity, marginTop: 3 }}>
-        <SizableText
-          size="$1"
-          fow={isFocused ? "800" : "500"}
-          ls={isFocused ? 0.3 : 0}
-          color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-        >
-          {config.label}
-        </SizableText>
-      </Animated.View>
-
-      {/* Active indicator bar */}
-      <Animated.View style={{
-        width: 14,
-        height: 2.5,
-        borderRadius: 1.25,
-        backgroundColor: COLORS.royalBlue,
-        marginTop: 3,
-        opacity: pillOpacity,
-        transform: [{ scaleX: liftAnim }],
-      }} />
+      <SizableText
+        mt="$1"
+        size="$1"
+        color={isFocused ? COLORS.royalBlue : COLORS.textMid}
+        fow={isFocused ? "700" : "500"}
+        opacity={isFocused ? 1 : 0.7}
+      >
+        {config.label}
+      </SizableText>
     </YStack>
   );
 };
 
 // ─── Premium Custom Tab Bar ──────────────────────────────────────
-const CustomTabBar = ({ state, navigation }: any) => (
-  <YStack
-    bg="rgba(255,255,255,0.96)"
-    borderTopWidth={1}
-    borderTopColor="rgba(221,214,200,0.45)"
-    pb={Platform.OS === "ios" ? 24 : 8}
-    pt={6}
-    elevation={12}
-    shadowColor={COLORS.deepNavy}
-    shadowOffset={{ width: 0, height: -4 }}
-    shadowOpacity={0.08}
-    shadowRadius={16}
-  >
-    <XStack jc="space-around" ai="center">
-      {state.routes.map((route: any, index: number) => {
-        const isFocused = state.index === index;
-        const config = TAB_CONFIG.find(t => t.name === route.name)!;
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const focusedOptions = descriptors[state.routes[state.index].key].options;
 
-        return (
-          <TabItem
-            key={route.key}
-            isFocused={isFocused}
-            config={config}
-            onPress={onPress}
-          />
-        );
-      })}
-    </XStack>
-  </YStack>
-);
+  // Respect the tabBarStyle: { display: 'none' } option from screen config
+  if (focusedOptions.tabBarStyle?.display === 'none') {
+    return null;
+  }
+
+  return (
+    <YStack
+      position="absolute"
+      bottom={Platform.OS === 'ios' ? 32 : 24}
+      left={16}
+      right={16}
+      bg="rgba(250, 248, 244, 0.95)" // COLORS.cream
+      borderRadius={24} // Less rounded as requested
+      borderWidth={1}
+      borderColor="rgba(221, 214, 200, 0.5)" // COLORS.sandMid
+      elevation={8}
+      shadowColor={COLORS.deepNavy}
+      shadowOffset={{ width: 0, height: 4 }}
+      shadowOpacity={0.1}
+      shadowRadius={12}
+      h={85} // Taller for text
+      jc="center"
+    >
+      <XStack jc="space-around" ai="center" px="$2">
+        {state.routes.map((route: any, index: number) => {
+          const isFocused = state.index === index;
+          const config = TAB_CONFIG.find(t => t.name === route.name)!;
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TabItem
+              key={route.key}
+              isFocused={isFocused}
+              config={config}
+              onPress={onPress}
+            />
+          );
+        })}
+      </XStack>
+    </YStack>
+  );
+};
 
 // ─── Tab Navigator ───────────────────────────────────────────────
 const TabNavigator = () => (
@@ -237,10 +234,32 @@ const TabNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{ ...headerOptions } as any}
   >
-    <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+    <Tab.Screen 
+      name="Home" 
+      component={HomeStack} 
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        // Hide tab bar on Chatbot screen
+        if (routeName === "Chatbot") {
+          return { headerShown: false, tabBarStyle: { display: "none" } };
+        }
+        return { headerShown: false };
+      }} 
+    />
     <Tab.Screen name="History" component={HistoryScreen} options={{ title: "Translation History" }} />
     <Tab.Screen name="Map" component={MapScreen} options={{ title: "Nearby Centers" }} />
-    <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
+    <Tab.Screen 
+      name="Profile" 
+      component={ProfileStack} 
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        // Hide tab bar on EditProfile screen
+        if (routeName === "EditProfile") {
+          return { headerShown: false, tabBarStyle: { display: "none" } };
+        }
+        return { headerShown: false };
+      }} 
+    />
     <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
   </Tab.Navigator>
 );
