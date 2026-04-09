@@ -126,12 +126,7 @@ const TabItem: React.FC<{
 
   const iconScale = liftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.1],
-  });
-
-  const highlightScale = liftAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.6, 1],
+    outputRange: [1, 1.15],
   });
 
   const highlightOpacity = liftAnim.interpolate({
@@ -140,16 +135,16 @@ const TabItem: React.FC<{
   });
 
   return (
-    <YStack f={1} ai="center" jc="center" h={60} onPress={onPress}>
-      {/* Background Highlight Pill */}
+    <YStack f={1} ai="center" jc="center" h={70} onPress={onPress}>
+      {/* Subtle Background Highlight */}
       <Animated.View style={{
         position: 'absolute',
-        width: 50,
-        height: 42,
-        borderRadius: 21,
-        backgroundColor: 'rgba(26, 68, 128, 0.08)', // Faded COLORS.royalBlue
+        width: '85%',
+        height: '85%',
+        borderRadius: 16,
+        backgroundColor: 'rgba(26, 68, 128, 0.05)', // Extremely light COLORS.royalBlue
         opacity: highlightOpacity,
-        transform: [{ scale: highlightScale }],
+        transform: [{ scale: liftAnim }],
       }} />
 
       <Animated.View style={{
@@ -158,11 +153,21 @@ const TabItem: React.FC<{
         transform: [{ scale: iconScale }],
       }}>
         {React.createElement(config.icon, {
-          size: 24,
+          size: 20,
           color: isFocused ? COLORS.royalBlue : COLORS.textMid,
           strokeWidth: isFocused ? 2.5 : 1.8,
         })}
       </Animated.View>
+
+      <SizableText
+        mt="$1"
+        size="$1"
+        color={isFocused ? COLORS.royalBlue : COLORS.textMid}
+        fow={isFocused ? "700" : "500"}
+        opacity={isFocused ? 1 : 0.7}
+      >
+        {config.label}
+      </SizableText>
     </YStack>
   );
 };
@@ -180,22 +185,21 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     <YStack
       position="absolute"
       bottom={Platform.OS === 'ios' ? 32 : 24}
-      left={20}
-      right={20}
-      bg="rgba(250, 248, 244, 0.92)" // rgba version of COLORS.cream
-      borderRadius={100}
-      borderWidth={1.5}
-      borderColor="rgba(221, 214, 200, 0.6)" // faded COLORS.sandMid
-      elevation={12}
+      left={16}
+      right={16}
+      bg="rgba(250, 248, 244, 0.95)" // COLORS.cream
+      borderRadius={24} // Less rounded as requested
+      borderWidth={1}
+      borderColor="rgba(221, 214, 200, 0.5)" // COLORS.sandMid
+      elevation={8}
       shadowColor={COLORS.deepNavy}
-      shadowOffset={{ width: 0, height: 6 }}
-      shadowOpacity={0.12}
+      shadowOffset={{ width: 0, height: 4 }}
+      shadowOpacity={0.1}
       shadowRadius={12}
-      px="$2"
-      h={72}
+      h={85} // Taller for text
       jc="center"
     >
-      <XStack jc="space-around" ai="center">
+      <XStack jc="space-around" ai="center" px="$2">
         {state.routes.map((route: any, index: number) => {
           const isFocused = state.index === index;
           const config = TAB_CONFIG.find(t => t.name === route.name)!;
