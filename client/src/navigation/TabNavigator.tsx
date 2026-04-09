@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { Platform, Animated, Image as RNImage } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createNativeStackNavigator as createStackNavigator } from "@react-navigation/native-stack";
 import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/tabs/home";
@@ -167,7 +168,14 @@ const TabItem: React.FC<{
 };
 
 // ─── Premium Custom Tab Bar ──────────────────────────────────────
-const CustomTabBar = ({ state, navigation }: any) => {
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const focusedOptions = descriptors[state.routes[state.index].key].options;
+
+  // Respect the tabBarStyle: { display: 'none' } option from screen config
+  if (focusedOptions.tabBarStyle?.display === 'none') {
+    return null;
+  }
+
   return (
     <YStack
       position="absolute"
@@ -222,10 +230,32 @@ const TabNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{ ...headerOptions } as any}
   >
-    <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+    <Tab.Screen 
+      name="Home" 
+      component={HomeStack} 
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        // Hide tab bar on Chatbot screen
+        if (routeName === "Chatbot") {
+          return { headerShown: false, tabBarStyle: { display: "none" } };
+        }
+        return { headerShown: false };
+      }} 
+    />
     <Tab.Screen name="History" component={HistoryScreen} options={{ title: "Translation History" }} />
     <Tab.Screen name="Map" component={MapScreen} options={{ title: "Nearby Centers" }} />
-    <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
+    <Tab.Screen 
+      name="Profile" 
+      component={ProfileStack} 
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        // Hide tab bar on EditProfile screen
+        if (routeName === "EditProfile") {
+          return { headerShown: false, tabBarStyle: { display: "none" } };
+        }
+        return { headerShown: false };
+      }} 
+    />
     <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
   </Tab.Navigator>
 );
