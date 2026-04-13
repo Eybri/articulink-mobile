@@ -7,7 +7,6 @@ import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/tabs/home";
 import HistoryScreen from "../screens/tabs/history";
 import ProfileScreen from "../screens/tabs/profile";
-import SettingsScreen from "../screens/tabs/settings";
 import MapScreen from "../screens/tabs/map";
 import EditProfileScreen from '../screens/Extras/edit-profile';
 import ChatbotScreen from '../screens/Extras/chatbot';
@@ -16,7 +15,6 @@ import {
   History,
   MapPin,
   User,
-  Settings,
   MessageCircle,
 } from "@tamagui/lucide-icons";
 
@@ -104,7 +102,6 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },
-  { name: "Settings", label: "Settings", icon: Settings },
 ];
 
 // ─── Animated Tab Item ───────────────────────────────────────────
@@ -260,8 +257,8 @@ const TabNavigator = () => (
         return { headerShown: false };
       }} 
     />
-    <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
   </Tab.Navigator>
 );
 
 export default TabNavigator;
+
