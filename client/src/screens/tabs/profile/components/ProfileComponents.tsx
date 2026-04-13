@@ -11,6 +11,7 @@ import {
 } from "tamagui";
 import {
   ChevronDown,
+  ChevronRight,
   CheckCircle,
   AlertTriangle,
 } from "@tamagui/lucide-icons";
@@ -348,4 +349,49 @@ export const SettingRow = ({ icon, title, description, children, isLast = false,
       </YStack>
     </YStack>
   );
+
+export const SettingsItem = ({ 
+    icon, 
+    title, 
+    value, 
+    onPress, 
+    isLast = false,
+    children
+  }: { 
+    icon: any, 
+    title: string, 
+    value?: string, 
+    onPress?: () => void, 
+    isLast?: boolean,
+    children?: React.ReactNode
+  }) => (
+    <TouchableOpacity onPress={onPress} disabled={!onPress && !children} activeOpacity={0.7}>
+      <YStack bg="white">
+        <XStack ai="center" jc="space-between" px="$5" h={60}>
+          <XStack ai="center" gap="$3" f={1}>
+            <YStack w={32} ai="center">
+              {icon}
+            </YStack>
+            <SizableText size="$4" fow="600" color={COLORS.textDark}>{title}</SizableText>
+          </XStack>
+          
+          <XStack ai="center" gap="$2">
+            {value && <SizableText size="$3" color={COLORS.textMid} opacity={0.6}>{value}</SizableText>}
+            {children}
+            {!children && <ChevronRight size={16} color={COLORS.sandMid} />}
+          </XStack>
+        </XStack>
+        {!isLast && <Separator ml={60} bc="rgba(221, 214, 200, 0.3)" />}
+      </YStack>
+    </TouchableOpacity>
+  );
+  
+  export const SettingsSectionHeader = ({ title }: { title: string }) => (
+    <YStack bg="#F9FAFB" py="$3" px="$5" bw={1} bc="rgba(221, 214, 200, 0.15)">
+      <SizableText size="$1" fow="800" color={COLORS.textMid} tt="uppercase" ls={1} opacity={0.6}>
+        {title}
+      </SizableText>
+    </YStack>
+  );
+
 
