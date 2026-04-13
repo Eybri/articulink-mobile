@@ -15,6 +15,9 @@ import {
   SizableText,
   ScrollView,
   Spinner,
+  Switch,
+  Card,
+  Separator,
 } from "tamagui";
 import {
   User,
@@ -27,6 +30,13 @@ import {
   Flame,
   BarChart2,
   Bell,
+  Settings,
+  History,
+  Smartphone,
+  Volume2,
+  Mic,
+  Trash2,
+  Lock,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { 
@@ -37,7 +47,9 @@ import {
   Bullet, 
   SubHeading, 
   InfoBox, 
-  SectionLabel 
+  SectionLabel,
+  SettingRow,
+  SliderSetting
 } from "./components/ProfileComponents";
 import { getProfileSource } from "./../../../utils/imageHelper";
 
@@ -102,7 +114,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 f={1}
                 contentContainerStyle={{
                     paddingHorizontal: 20,
-                    paddingBottom: 60,
+                    paddingBottom: 120,
                     paddingTop: Platform.OS === "android" ? 48 : 54,
                 }}
                 showsVerticalScrollIndicator={false}
@@ -203,7 +215,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 <Accordion
                     icon={<User size={16} color={COLORS.royalBlue} />}
                     title="Personal Information"
-                    defaultOpen
                     accentColor={COLORS.royalBlue}
                 >
                     <SubHeading text="Contact Details" />
@@ -215,6 +226,38 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         text={vm.user.gender ? `Gender: ${vm.user.gender.charAt(0).toUpperCase() + vm.user.gender.slice(1)}` : "Gender not set"}
                     />
                     <InfoBox text="Your personal information is securely stored and never shared without consent." />
+                </Accordion>
+
+                {/* App Settings & Preferences */}
+                <Accordion
+                    icon={<Settings size={16} color={COLORS.royalBlue} />}
+                    title="Settings & Preferences"
+                    accentColor={COLORS.royalBlue}
+                    defaultOpen
+                >
+                    <SubHeading text="Preferences" />
+                    <SettingRow icon={<Bell size={18} color={COLORS.royalBlue} />} title="Push Notifications" description="Daily exercise reminders">
+                        <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
+                            <Switch.Thumb bg="white" />
+                        </Switch>
+                    </SettingRow>
+                    
+                    <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Store History" description="Keep logs on this device">
+                        <Switch size="$3" bg={vm.saveHistory ? COLORS.royalBlue : COLORS.sandMid} checked={vm.saveHistory} onCheckedChange={vm.setSaveHistory}>
+                            <Switch.Thumb bg="white" />
+                        </Switch>
+                    </SettingRow>
+                    
+                    <SettingRow icon={<Smartphone size={18} color={COLORS.royalBlue} />} title="Haptic Feedback" description="Vibrate on interaction" isLast>
+                        <Switch size="$3" bg={vm.vibrationFeedback ? COLORS.royalBlue : COLORS.sandMid} checked={vm.vibrationFeedback} onCheckedChange={vm.setVibrationFeedback}>
+                            <Switch.Thumb bg="white" />
+                        </Switch>
+                    </SettingRow>
+
+                    <SubHeading text="Audio Engine" />
+                    <SliderSetting icon={<Volume2 size={18} color={COLORS.teal} />} title="Output Volume" value={vm.voiceVolume} onValueChange={vm.setVoiceVolume} />
+                    <Separator bc="rgba(221, 214, 200, 0.4)" />
+                    <SliderSetting icon={<Mic size={18} color={COLORS.teal} />} title="Mic Recording" value={vm.micSensitivity} onValueChange={vm.setMicSensitivity} />
                 </Accordion>
 
                 {/* Account Security */}
@@ -230,10 +273,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         color={COLORS.teal}
                     />
                     <InfoBox text="Keep your account secure by reviewing your security settings regularly." type="warning" />
+                    
+                    <SubHeading text="Privacy" />
+                    <SettingRow 
+                        icon={<Trash2 size={18} color="#DC2626" />} 
+                        title="Clear Local Cache" 
+                        description="Remove all local message data"
+                        onPress={vm.handleClearHistory}
+                    >
+                        <ChevronRight size={18} color={COLORS.sandMid} />
+                    </SettingRow>
                 </Accordion>
 
                 {/* Actions */}
-                <YStack gap="$3" mt="$2">
+                <YStack gap="$3" mt="$4">
                     <Button
                         size="$5"
                         bg={COLORS.royalBlue}
@@ -264,7 +317,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         <SizableText color="#DC2626" fow="800" size="$4" ml="$2">Logout</SizableText>
                     </Button>
                 </YStack>
+
+                {/* Footer Info */}
+                <YStack ai="center" gap="$1" mt="$8" opacity={0.4}>
+                    <SizableText size="$1" color={COLORS.textMid} fow="800" ls={1}>ARTICULINK v1.0.4 PRO</SizableText>
+                    <SizableText size="$1" color={COLORS.textMid} fow="600">Built for Articulation Support</SizableText>
+                </YStack>
             </ScrollView>
         </YStack>
     );
 };
+
