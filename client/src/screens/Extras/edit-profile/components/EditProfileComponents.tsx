@@ -189,11 +189,12 @@ export const AvatarPickerSheet = ({
                             }}
                             onPress={onClose}
                         >
-                            {(YStack as any).fullscreen({
-                                enterStyle: { opacity: 0 },
-                                exitStyle: { opacity: 0 },
-                                animation: "lazy"
-                            })}
+                            <YStack 
+                                fullscreen
+                                enterStyle={{ opacity: 0 }}
+                                exitStyle={{ opacity: 0 }}
+                                animation="lazy"
+                            />
                         </Pressable>
                         
                         {/* Slide up content */}
