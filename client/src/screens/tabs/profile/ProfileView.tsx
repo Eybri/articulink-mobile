@@ -15,6 +15,9 @@ import {
   SizableText,
   ScrollView,
   Spinner,
+  Switch,
+  Card,
+  Separator,
 } from "tamagui";
 import {
   User,
@@ -27,6 +30,13 @@ import {
   Flame,
   BarChart2,
   Bell,
+  Settings,
+  History,
+  Smartphone,
+  Volume2,
+  Mic,
+  Trash2,
+  Lock,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { 
@@ -37,7 +47,10 @@ import {
   Bullet, 
   SubHeading, 
   InfoBox, 
-  SectionLabel 
+  SectionLabel,
+  SettingsItem,
+  SettingsSectionHeader,
+  SliderSetting
 } from "./components/ProfileComponents";
 import { getProfileSource } from "./../../../utils/imageHelper";
 
@@ -101,8 +114,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
             <ScrollView
                 f={1}
                 contentContainerStyle={{
-                    paddingHorizontal: 20,
-                    paddingBottom: 60,
+                    paddingBottom: 140,
                     paddingTop: Platform.OS === "android" ? 48 : 54,
                 }}
                 showsVerticalScrollIndicator={false}
@@ -111,7 +123,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 }
             >
                 {/* Identity Header */}
-                <XStack ai="center" jc="space-between" mb="$5" pt="$2">
+                <XStack ai="center" jc="space-between" mb="$5" pt="$2" px="$5">
                     <XStack ai="center" gap="$3">
                         <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc={COLORS.sandMid} ov="hidden">
                             {vm.user.profile_pic ? (
@@ -152,117 +164,133 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 </XStack>
 
                 {/* Speech Progress Arc */}
-                <SpeechProgressCard
-                    sessions={vm.analytics.todaySessions}
-                    hoursToday={vm.analytics.todayHours}
-                    clarityPct={vm.analytics.todayClarityPct}
-                    progressPct={vm.analytics.todayProgressPct}
-                    onContinue={() => navigation.navigate("Home")}
-                />
+                <YStack px="$5">
+                    <SpeechProgressCard
+                        sessions={vm.analytics.todaySessions}
+                        hoursToday={vm.analytics.todayHours}
+                        clarityPct={vm.analytics.todayClarityPct}
+                        progressPct={vm.analytics.todayProgressPct}
+                        onContinue={() => navigation.navigate("Home")}
+                    />
+                </YStack>
 
                 {/* Analytics Stats */}
-                <SectionLabel text="Analytics" />
-                <XStack gap="$3" mb="$3">
-                    <StatCard
-                        icon={<TrendingUp size={14} color={COLORS.teal} />}
-                        value={`${vm.analytics.clarityScore}%`}
-                        label="Clarity Score"
-                        delta="↑ +6% this week"
-                        accentColor={COLORS.teal}
-                        iconBg={`${COLORS.teal}14`}
-                    />
-                    <StatCard
-                        icon={<BarChart2 size={14} color={COLORS.blue} />}
-                        value={`${vm.analytics.totalSessions}`}
-                        label="Total Sessions"
-                        delta="↑ +12 this week"
-                        accentColor={COLORS.blue}
-                        iconBg={`${COLORS.blue}14`}
-                    />
-                </XStack>
-                <XStack gap="$3" mb="$4">
-                    <StatCard
-                        icon={<Zap size={14} color={COLORS.amber} />}
-                        value={`${vm.analytics.avgResponseSec}s`}
-                        label="Avg. Response"
-                        delta="↓ −0.4s improved"
-                        accentColor={COLORS.amber}
-                        iconBg={`${COLORS.amber}14`}
-                    />
-                    <StatCard
-                        icon={<Flame size={14} color={COLORS.royalBlue} />}
-                        value={`${vm.analytics.streakDays}`}
-                        label="Day Streak"
-                        delta="Personal best!"
-                        accentColor={COLORS.royalBlue}
-                        iconBg={`${COLORS.royalBlue}10`}
-                    />
-                </XStack>
+                <YStack px="$5" mt="$4">
+                    <SectionLabel text="Your Analytics" />
+                    <XStack gap="$3" mb="$3">
+                        <StatCard
+                            icon={<TrendingUp size={14} color={COLORS.teal} />}
+                            value={`${vm.analytics.clarityScore}%`}
+                            label="Clarity Score"
+                            delta="↑ +6% this week"
+                            accentColor={COLORS.teal}
+                            iconBg={`${COLORS.teal}14`}
+                        />
+                        <StatCard
+                            icon={<BarChart2 size={14} color={COLORS.blue} />}
+                            value={`${vm.analytics.totalSessions}`}
+                            label="Total Sessions"
+                            delta="↑ +12 this week"
+                            accentColor={COLORS.blue}
+                            iconBg={`${COLORS.blue}14`}
+                        />
+                    </XStack>
+                    <XStack gap="$3" mb="$4">
+                        <StatCard
+                            icon={<Zap size={14} color={COLORS.amber} />}
+                            value={`${vm.analytics.avgResponseSec}s`}
+                            label="Avg. Response"
+                            delta="↓ −0.4s improved"
+                            accentColor={COLORS.amber}
+                            iconBg={`${COLORS.amber}14`}
+                        />
+                        <StatCard
+                            icon={<Flame size={14} color={COLORS.royalBlue} />}
+                            value={`${vm.analytics.streakDays}`}
+                            label="Day Streak"
+                            delta="Personal best!"
+                            accentColor={COLORS.royalBlue}
+                            iconBg={`${COLORS.royalBlue}10`}
+                        />
+                    </XStack>
+                </YStack>
 
-                {/* Personal Info */}
-                <Accordion
-                    icon={<User size={16} color={COLORS.royalBlue} />}
-                    title="Personal Information"
-                    defaultOpen
-                    accentColor={COLORS.royalBlue}
-                >
-                    <SubHeading text="Contact Details" />
-                    <Bullet text={vm.user.email} />
-                    <Bullet
-                        text={vm.user.birthdate ? `Born: ${new Date(vm.user.birthdate).toLocaleDateString()}` : "Birthdate not set"}
+                {/* Settings Style Implementation */}
+                <YStack mt="$2">
+                    <SettingsSectionHeader title="Account" />
+                    <SettingsItem 
+                        icon={<User size={18} color={COLORS.textMid} />} 
+                        title="Manage Profile" 
+                        onPress={vm.handleEditProfile} 
                     />
-                    <Bullet
-                        text={vm.user.gender ? `Gender: ${vm.user.gender.charAt(0).toUpperCase() + vm.user.gender.slice(1)}` : "Gender not set"}
+                    <SettingsItem 
+                        icon={<Lock size={18} color={COLORS.textMid} />} 
+                        title="Password & Security" 
+                        onPress={() => {}} 
                     />
-                    <InfoBox text="Your personal information is securely stored and never shared without consent." />
-                </Accordion>
-
-                {/* Account Security */}
-                <Accordion
-                    icon={<Shield size={16} color={COLORS.teal} />}
-                    title="Account Security"
-                    accentColor={COLORS.teal}
-                >
-                    <SubHeading text="Access Levels" />
-                    <Bullet text={`Role: ${vm.user.role || "Standard User"}`} color={COLORS.teal} />
-                    <Bullet
-                        text={`Account Status: ${vm.user.status === "active" ? "Active" : "Pending/Inactive"}`}
-                        color={COLORS.teal}
-                    />
-                    <InfoBox text="Keep your account secure by reviewing your security settings regularly." type="warning" />
-                </Accordion>
-
-                {/* Actions */}
-                <YStack gap="$3" mt="$2">
-                    <Button
-                        size="$5"
-                        bg={COLORS.royalBlue}
-                        br={18}
-                        onPress={vm.handleEditProfile}
-                        pressStyle={{ scale: 0.98 }}
-                        icon={<Edit3 size={16} color="white" />}
-                        iconAfter={<ChevronRight size={18} color="rgba(255,255,255,0.6)" />}
-                        elevation={6}
-                        shadowColor={COLORS.royalBlue}
+                    <SettingsItem 
+                        icon={<Bell size={18} color={COLORS.textMid} />} 
+                        title="Notifications" 
                     >
-                        <SizableText color="white" fow="800" size="$4" ml="$2">Edit Profile</SizableText>
-                    </Button>
+                        <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
+                            <Switch.Thumb bg="white" />
+                        </Switch>
+                    </SettingsItem>
+                    <SettingsItem 
+                        icon={<History size={18} color={COLORS.textMid} />} 
+                        title="Language" 
+                        value="English"
+                        onPress={() => {}} 
+                        isLast
+                    />
 
-                    <Button
-                        size="$5"
-                        bg="white"
-                        br={18}
-                        onPress={vm.handleLogout}
-                        pressStyle={{ scale: 0.98 }}
-                        icon={<LogOut size={16} color="#DC2626" />}
-                        iconAfter={<ChevronRight size={18} color="rgba(220,38,38,0.4)" />}
-                        bw={1}
-                        bc="rgba(220,38,38,0.18)"
-                        elevation={5}
-                        shadowColor="#8A96A4"
+                    <SettingsSectionHeader title="Audio Engine" />
+                    <YStack bg="white" px="$5" py="$2">
+                        <SliderSetting icon={<Volume2 size={18} color={COLORS.teal} />} title="Output Volume" value={vm.voiceVolume} onValueChange={vm.setVoiceVolume} />
+                        <Separator bc="rgba(221, 214, 200, 0.4)" />
+                        <SliderSetting icon={<Mic size={18} color={COLORS.teal} />} title="Mic Recording" value={vm.micSensitivity} onValueChange={vm.setMicSensitivity} />
+                    </YStack>
+
+                    <SettingsSectionHeader title="Preferences" />
+                    <SettingsItem 
+                        icon={<Shield size={18} color={COLORS.textMid} />} 
+                        title="About Us" 
+                        onPress={() => {}} 
+                    />
+                    <SettingsItem 
+                        icon={<Smartphone size={18} color={COLORS.textMid} />} 
+                        title="Theme" 
+                        value="Light"
+                        onPress={() => {}} 
+                    />
+                    <SettingsItem 
+                        icon={<Flame size={18} color={COLORS.textMid} />} 
+                        title="Haptic Feedback" 
+                        isLast
                     >
-                        <SizableText color="#DC2626" fow="800" size="$4" ml="$2">Logout</SizableText>
-                    </Button>
+                        <Switch size="$3" bg={vm.vibrationFeedback ? COLORS.royalBlue : COLORS.sandMid} checked={vm.vibrationFeedback} onCheckedChange={vm.setVibrationFeedback}>
+                            <Switch.Thumb bg="white" />
+                        </Switch>
+                    </SettingsItem>
+
+                    <SettingsSectionHeader title="Privacy & Security" />
+                    <SettingsItem 
+                        icon={<Trash2 size={18} color="#DC2626" />} 
+                        title="Clear Local Cache" 
+                        onPress={vm.handleClearHistory} 
+                    />
+                    <SettingsItem 
+                        icon={<LogOut size={18} color="#DC2626" />} 
+                        title="Logout Session" 
+                        onPress={vm.handleLogout} 
+                        isLast
+                    />
+                </YStack>
+
+                {/* Info Footer */}
+                <YStack ai="center" gap="$1" mt="$8" opacity={0.4}>
+                    <SizableText size="$1" color={COLORS.textMid} fow="800" ls={1}>ARTICULINK v1.0.4 PRO</SizableText>
+                    <SizableText size="$1" color={COLORS.textMid} fow="600">Built for Articulation Support</SizableText>
                 </YStack>
             </ScrollView>
         </YStack>

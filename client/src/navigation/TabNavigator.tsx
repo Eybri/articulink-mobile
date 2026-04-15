@@ -7,7 +7,6 @@ import { YStack, XStack, SizableText, Button, Circle } from "tamagui";
 import HomeScreen from "../screens/tabs/home";
 import HistoryScreen from "../screens/tabs/history";
 import ProfileScreen from "../screens/tabs/profile";
-import SettingsScreen from "../screens/tabs/settings";
 import MapScreen from "../screens/tabs/map";
 import EditProfileScreen from '../screens/Extras/edit-profile';
 import ChatbotScreen from '../screens/Extras/chatbot';
@@ -16,7 +15,6 @@ import {
   History,
   MapPin,
   User,
-  Settings,
   MessageCircle,
 } from "@tamagui/lucide-icons";
 
@@ -104,7 +102,6 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },
-  { name: "Settings", label: "Settings", icon: Settings },
 ];
 
 // ─── Animated Tab Item ───────────────────────────────────────────
@@ -126,7 +123,7 @@ const TabItem: React.FC<{
 
   const iconScale = liftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.15],
+    outputRange: [1, 1.1],
   });
 
   const highlightOpacity = liftAnim.interpolate({
@@ -135,14 +132,14 @@ const TabItem: React.FC<{
   });
 
   return (
-    <YStack f={1} ai="center" jc="center" h={70} onPress={onPress}>
+    <YStack f={1} ai="center" jc="center" h={58} onPress={onPress}>
       {/* Subtle Background Highlight */}
       <Animated.View style={{
         position: 'absolute',
-        width: '85%',
-        height: '85%',
-        borderRadius: 16,
-        backgroundColor: 'rgba(26, 68, 128, 0.05)', // Extremely light COLORS.royalBlue
+        width: '80%',
+        height: '80%',
+        borderRadius: 14,
+        backgroundColor: 'rgba(26, 68, 128, 0.05)', 
         opacity: highlightOpacity,
         transform: [{ scale: liftAnim }],
       }} />
@@ -153,18 +150,19 @@ const TabItem: React.FC<{
         transform: [{ scale: iconScale }],
       }}>
         {React.createElement(config.icon, {
-          size: 20,
+          size: 19,
           color: isFocused ? COLORS.royalBlue : COLORS.textMid,
           strokeWidth: isFocused ? 2.5 : 1.8,
         })}
       </Animated.View>
 
       <SizableText
-        mt="$1"
+        mt="$0.5"
         size="$1"
+        style={{ fontSize: 10 }}
         color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-        fow={isFocused ? "700" : "500"}
-        opacity={isFocused ? 1 : 0.7}
+        fow={isFocused ? "800" : "500"}
+        opacity={isFocused ? 1 : 0.6}
       >
         {config.label}
       </SizableText>
@@ -176,7 +174,6 @@ const TabItem: React.FC<{
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const focusedOptions = descriptors[state.routes[state.index].key].options;
 
-  // Respect the tabBarStyle: { display: 'none' } option from screen config
   if (focusedOptions.tabBarStyle?.display === 'none') {
     return null;
   }
@@ -184,19 +181,19 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <YStack
       position="absolute"
-      bottom={Platform.OS === 'ios' ? 32 : 24}
-      left={16}
-      right={16}
-      bg="rgba(250, 248, 244, 0.95)" // COLORS.cream
-      borderRadius={24} // Less rounded as requested
+      bottom={Platform.OS === 'ios' ? 24 : 16}
+      left={20}
+      right={20}
+      bg="rgba(250, 248, 244, 0.98)" 
+      borderRadius={20}
       borderWidth={1}
-      borderColor="rgba(221, 214, 200, 0.5)" // COLORS.sandMid
-      elevation={8}
+      borderColor="rgba(221, 214, 200, 0.4)"
+      elevation={5}
       shadowColor={COLORS.deepNavy}
-      shadowOffset={{ width: 0, height: 4 }}
-      shadowOpacity={0.1}
-      shadowRadius={12}
-      h={85} // Taller for text
+      shadowOffset={{ width: 0, height: 3 }}
+      shadowOpacity={0.08}
+      shadowRadius={10}
+      h={68} 
       jc="center"
     >
       <XStack jc="space-around" ai="center" px="$2">
@@ -227,6 +224,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     </YStack>
   );
 };
+
 
 // ─── Tab Navigator ───────────────────────────────────────────────
 const TabNavigator = () => (
@@ -260,8 +258,8 @@ const TabNavigator = () => (
         return { headerShown: false };
       }} 
     />
-    <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
   </Tab.Navigator>
 );
 
 export default TabNavigator;
+

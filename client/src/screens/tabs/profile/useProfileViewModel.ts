@@ -13,6 +13,13 @@ export const useProfileViewModel = (navigation: any) => {
     const [error, setError] = useState<string | null>(null);
     const { width, height } = useWindowDimensions();
 
+    // Settings States (Moved from Settings Screen)
+    const [saveHistory, setSaveHistory] = useState(true);
+    const [vibrationFeedback, setVibrationFeedback] = useState(true);
+    const [voiceVolume, setVoiceVolume] = useState(0.7);
+    const [micSensitivity, setMicSensitivity] = useState(0.8);
+    const [notifications, setNotifications] = useState(true);
+
     const analytics = {
         clarityScore: 84,
         totalSessions: 147,
@@ -50,6 +57,21 @@ export const useProfileViewModel = (navigation: any) => {
 
     const onRefresh = () => { setRefreshing(true); loadProfile(); };
 
+    const handleClearHistory = () => {
+        Alert.alert(
+            "Clear History",
+            "Are you sure you want to clear all translation history? This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Clear", style: "destructive", onPress: () => {
+                        Alert.alert("Success", "Translation history cleared successfully!");
+                    }
+                }
+            ]
+        );
+    };
+
     const handleLogout = () => {
         Alert.alert("Logout", "Are you sure?", [
             { text: "Cancel" },
@@ -81,7 +103,15 @@ export const useProfileViewModel = (navigation: any) => {
         onRefresh,
         handleLogout,
         handleEditProfile,
+        handleClearHistory,
         displayName,
-        memberSince
+        memberSince,
+        // Settings exports
+        saveHistory, setSaveHistory,
+        vibrationFeedback, setVibrationFeedback,
+        voiceVolume, setVoiceVolume,
+        micSensitivity, setMicSensitivity,
+        notifications, setNotifications,
     };
 };
+
