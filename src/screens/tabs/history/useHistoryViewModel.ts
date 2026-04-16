@@ -165,6 +165,15 @@ export const useHistoryViewModel = () => {
         );
     };
 
+    const stats = {
+        totalRecordings: history.length,
+        avgConfidence: history.length > 0 
+            ? (history.reduce((acc, curr) => acc + (curr.confidence_score || 0.95), 0) / history.length) * 100 
+            : 0,
+        totalDuration: history.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0),
+        totalWords: history.reduce((acc, curr) => acc + (curr.corrected_transcript?.split(' ').length || 0), 0)
+    };
+
     return {
         searchQuery, setSearchQuery,
         filteredHistory,
@@ -177,6 +186,7 @@ export const useHistoryViewModel = () => {
         formatTimestamp,
         playAudio,
         playingId,
+        stats,
         animations: {
             fadeAnim,
             slideAnim
