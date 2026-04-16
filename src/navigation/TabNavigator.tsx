@@ -160,28 +160,18 @@ const TabItem: React.FC<{
   });
 
   return (
-    <YStack f={1} ai="center" jc="center" h={64} onPress={onPress}>
+    <YStack f={1} ai="center" jc="center" h={50} onPress={onPress}>
       <Animated.View style={{
         alignItems: 'center',
         justifyContent: 'center',
         transform: [{ scale: iconScale }],
       }}>
         {React.createElement(config.icon, {
-          size: 22,
+          size: 20,
           color: isFocused ? COLORS.royalBlue : COLORS.textMid,
           strokeWidth: isFocused ? 2.5 : 2,
         })}
       </Animated.View>
-
-      <SizableText
-        mt="$1"
-        size="$1"
-        style={{ fontSize: 11, fontWeight: isFocused ? "700" : "500" }}
-        color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-        opacity={isFocused ? 1 : 0.7}
-      >
-        {config.label}
-      </SizableText>
     </YStack>
   );
 };
@@ -226,7 +216,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           tint="extraLight"
           style={styles.tabBarContainer}
         >
-          <XStack jc="space-around" ai="center" px="$2" h={74}>
+          <XStack jc="space-around" ai="center" px="$2" h={62}>
             {state.routes.map((route: any, index: number) => {
               const isFocused = state.index === index;
               const config = TAB_CONFIG.find(t => t.name === route.name)!;
@@ -256,7 +246,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         <YStack
           style={[styles.tabBarContainer, { backgroundColor: 'rgba(250, 248, 244, 0.98)' }]}
         >
-          <XStack jc="space-around" ai="center" px="$2" h={74}>
+          <XStack jc="space-around" ai="center" px="$2" h={62}>
             {state.routes.map((route: any, index: number) => {
               const isFocused = state.index === index;
               const config = TAB_CONFIG.find(t => t.name === route.name)!;
