@@ -82,7 +82,15 @@ const HomeStack = () => (
             resizeMode="contain"
           />
         ),
-        headerTitle: "ArticuLink", // Explicit title for Large Title effect
+        headerTitle: "ArticuLink",
+        headerTitleAlign: "center" as const,
+        headerLargeTitle: false, // Centered titles look better without Large Title mode
+        headerTitleStyle: {
+          color: COLORS.textDark,
+          fontSize: 18,
+          fontWeight: "800" as const,
+          letterSpacing: -0.5,
+        },
         headerRight: () => (
           <Button
             chromeless
