@@ -173,29 +173,48 @@ const TabItem: React.FC<{
 // ─── Premium Custom Tab Bar ──────────────────────────────────────
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const focusedOptions = descriptors[state.routes[state.index].key].options;
+  const currentRouteName = state.routes[state.index].name;
+  const isMap = currentRouteName === "Map";
+
+  const translateY = useRef(new Animated.Value(isMap ? 120 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(translateY, {
+      toValue: isMap ? 120 : 0,
+      useNativeDriver: true,
+      tension: 40,
+      friction: 10,
+    }).start();
+  }, [isMap]);
 
   if (focusedOptions.tabBarStyle?.display === 'none') {
     return null;
   }
 
   return (
-    <YStack
-      position="absolute"
-      bottom={Platform.OS === 'ios' ? 24 : 16}
-      left={20}
-      right={20}
-      bg="rgba(250, 248, 244, 0.98)" 
-      borderRadius={20}
-      borderWidth={1}
-      borderColor="rgba(221, 214, 200, 0.4)"
-      elevation={5}
-      shadowColor={COLORS.deepNavy}
-      shadowOffset={{ width: 0, height: 3 }}
-      shadowOpacity={0.08}
-      shadowRadius={10}
-      h={68} 
-      jc="center"
+    <Animated.View
+      style={{
+        position: "absolute",
+        bottom: Platform.OS === "ios" ? 24 : 16,
+        left: 20,
+        right: 20,
+        zIndex: 1000,
+        transform: [{ translateY }],
+      }}
     >
+      <YStack
+        bg="rgba(250, 248, 244, 0.98)"
+        borderRadius={20}
+        borderWidth={1}
+        borderColor="rgba(221, 214, 200, 0.4)"
+        elevation={5}
+        shadowColor={COLORS.deepNavy}
+        shadowOffset={{ width: 0, height: 3 }}
+        shadowOpacity={0.08}
+        shadowRadius={10}
+        h={68}
+        jc="center"
+      >
       <XStack jc="space-around" ai="center" px="$2">
         {state.routes.map((route: any, index: number) => {
           const isFocused = state.index === index;
@@ -222,6 +241,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         })}
       </XStack>
     </YStack>
+  </Animated.View>
   );
 };
 
