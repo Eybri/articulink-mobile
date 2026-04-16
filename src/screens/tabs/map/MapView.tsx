@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Linking, Platform, StatusBar, Animated } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import {
   YStack,
@@ -30,7 +31,8 @@ import {
   Mic, 
   Activity as ActivityIcon, 
   GraduationCap, 
-  Accessibility 
+  Accessibility,
+  Home
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { Center } from "./useMapViewModel";
@@ -118,6 +120,7 @@ interface MapViewProps {
 }
 
 export const MapView: React.FC<MapViewProps> = ({ vm }) => {
+    const navigation = useNavigation<any>();
     const mapHTML = useMemo(() => {
         if (!vm.location) return '<html><body></body></html>';
         return generateMapHTML(vm.location.latitude, vm.location.longitude);
@@ -154,10 +157,23 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
 
             <YStack pt="$4" px="$4" pb="$2.5" bg="transparent" mt="$4">
                 <XStack ai="center" jc="space-between" mb="$2">
-                    <YStack>
-                        <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Articulink Maps</H1>
-                        <SizableText size="$2" color={COLORS.textMid} fow="600" opacity={0.8}>Nearby Clinics</SizableText>
-                    </YStack>
+                    <XStack ai="center" gap="$3">
+                        <Button 
+                            circular 
+                            size="$3.5" 
+                            bg="white" 
+                            bw={1} 
+                            bc={COLORS.sandMid} 
+                            elevation={2}
+                            icon={<Home size={18} color={COLORS.royalBlue} />} 
+                            onPress={() => navigation.navigate("Home")}
+                            pressStyle={{ scale: 0.9, opacity: 0.8 }}
+                        />
+                        <YStack>
+                            <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Articulink Maps</H1>
+                            <SizableText size="$2" color={COLORS.textMid} fow="600" opacity={0.8}>Nearby Clinics</SizableText>
+                        </YStack>
+                    </XStack>
                     <Circle size={40} circular bg="white" bw={1} bc={COLORS.sandMid} elevation={2} shadowColor={COLORS.deepNavy} shadowOpacity={0.1} onPress={vm.getCurrentLocation}>
                         <RefreshCw size={18} color={COLORS.royalBlue} />
                     </Circle>
