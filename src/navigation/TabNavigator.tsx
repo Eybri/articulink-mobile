@@ -143,59 +143,67 @@ const TabItem: React.FC<{
   config: { name: string; label: string; icon: any };
   onPress: () => void;
 }> = ({ isFocused, config, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(isFocused ? 1 : 0.9)).current;
-  const opacityAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+  const widthAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: isFocused ? 1 : 0.9,
-        useNativeDriver: true,
-        tension: 150,
-        friction: 15,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: isFocused ? 1 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(widthAnim, {
+      toValue: isFocused ? 1 : 0,
+      useNativeDriver: false, // Width cannot be animated with native driver
+      tension: 100,
+      friction: 12,
+    }).start();
   }, [isFocused]);
 
+  const pillWidth = widthAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [48, 110], // Adjusted for better fit
+  });
+
+  const textOpacity = widthAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
   return (
-    <YStack 
-      onPress={onPress} 
-      ai="center" 
-      jc="center" 
-      px={isFocused ? "$4" : "$3"} 
-      py="$2.5"
-      br={100}
-      bg={isFocused ? COLORS.white : 'transparent'}
-      pressStyle={{ opacity: 0.8, scale: 0.98 }}
+    <Animated.View 
+      style={{
+        width: pillWidth,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: isFocused ? COLORS.white : 'transparent',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
     >
-      <XStack ai="center" gap="$2.5">
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          {React.createElement(config.icon, {
-            size: 20,
-            color: isFocused ? COLORS.deepNavy : 'rgba(255, 255, 255, 0.5)',
-            strokeWidth: isFocused ? 2.5 : 2,
-          })}
-        </Animated.View>
+      <XStack 
+        onPress={onPress} 
+        ai="center" 
+        jc="center" 
+        w="100%"
+        h="100%"
+        gap="$2"
+      >
+        {React.createElement(config.icon, {
+          size: 19,
+          color: isFocused ? COLORS.deepNavy : 'rgba(255, 255, 255, 0.4)',
+          strokeWidth: isFocused ? 3 : 2,
+        })}
         
         {isFocused && (
-          <Animated.View style={{ opacity: opacityAnim }}>
+          <Animated.View style={{ opacity: textOpacity }}>
             <SizableText 
               color={COLORS.deepNavy} 
               fow="900" 
               size="$2" 
-              ls={-0.2}
+              ls={-0.3}
             >
               {config.label}
             </SizableText>
           </Animated.View>
         )}
       </XStack>
-    </YStack>
+    </Animated.View>
   );
 };
 
