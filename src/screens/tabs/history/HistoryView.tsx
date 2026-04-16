@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     Modal,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import {
     YStack,
@@ -150,44 +151,54 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 150 }}
                     ListHeaderComponent={
                         <YStack gap="$4" mb="$5">
-                            <XStack ai="center" jc="space-between">
-                                <SizableText size="$5" fow="900" color={COLORS.textDark}>Performance Insights</SizableText>
-                                <Button 
-                                    size="$2.5" 
-                                    br={10} 
-                                    bg={COLORS.royalBlue} 
-                                    onPress={vm.generateAIAnalysis}
-                                    disabled={vm.isAnalyzing}
-                                    icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={14} color="white" />}
-                                >
-                                    <SizableText color="white" fow="800" size="$1">AI DEEP DIVE</SizableText>
-                                </Button>
-                            </XStack>
+                            <XStack ai="center" gap="$4">
+                                <Image 
+                                    source={require("../../../../assets/images/parrot.png")} 
+                                    style={{ width: 90, height: 90 }}
+                                    resizeMode="contain"
+                                />
+                                <YStack f={1} gap="$3">
+                                    <XStack ai="center" jc="space-between">
+                                        <SizableText size="$5" fow="900" color={COLORS.textDark} ls={-0.5}>My Progress</SizableText>
+                                        <Button 
+                                            size="$2" 
+                                            br={8} 
+                                            bg={COLORS.royalBlue} 
+                                            onPress={vm.generateAIAnalysis}
+                                            disabled={vm.isAnalyzing}
+                                            icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={12} color="white" />}
+                                            px="$2"
+                                        >
+                                            <SizableText color="white" fow="800" size="$1">DEEP DIVE</SizableText>
+                                        </Button>
+                                    </XStack>
 
-                            <ScrollView 
-                                horizontal 
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ gap: 12, paddingRight: 20 }}
-                            >
-                                <StatCard 
-                                    icon={<TrendingUp size={12} color={COLORS.teal} />} 
-                                    label="Accuracy" 
-                                    value={`${Math.round(vm.stats.avgConfidence)}%`} 
-                                    bg={`${COLORS.teal}10`}
-                                />
-                                <StatCard 
-                                    icon={<Activity size={12} color={COLORS.royalBlue} />} 
-                                    label="Time" 
-                                    value={`${vm.stats.totalDuration.toFixed(1)}s`} 
-                                    bg={`${COLORS.royalBlue}10`}
-                                />
-                                <StatCard 
-                                    icon={<BarChart2 size={12} color="#F59E0B" />} 
-                                    label="Words" 
-                                    value={vm.stats.totalWords.toString()} 
-                                    bg="#F59E0B15"
-                                />
-                            </ScrollView>
+                                    <ScrollView 
+                                        horizontal 
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                                    >
+                                        <StatCard 
+                                            icon={<TrendingUp size={12} color={COLORS.teal} />} 
+                                            label="Accuracy" 
+                                            value={`${Math.round(vm.stats.avgConfidence)}%`} 
+                                            bg={`${COLORS.teal}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<Activity size={12} color={COLORS.royalBlue} />} 
+                                            label="Time" 
+                                            value={`${vm.stats.totalDuration.toFixed(1)}s`} 
+                                            bg={`${COLORS.royalBlue}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<BarChart2 size={12} color="#F59E0B" />} 
+                                            label="Words" 
+                                            value={vm.stats.totalWords.toString()} 
+                                            bg="#F59E0B15"
+                                        />
+                                    </ScrollView>
+                                </YStack>
+                            </XStack>
 
                             <XStack 
                                 bg={COLORS.white} 
