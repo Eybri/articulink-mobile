@@ -38,7 +38,7 @@ const COLORS = {
 };
 
 // ─── Header Options ──────────────────────────────────────────────
-const headerOptions = {
+const getHeaderOptions = () => ({
   headerStyle: {
     backgroundColor: Platform.OS === 'ios' ? 'transparent' : COLORS.cream,
   },
@@ -61,11 +61,11 @@ const headerOptions = {
   headerTintColor: COLORS.royalBlue,
   headerTitleAlign: Platform.OS === 'ios' ? "center" as const : "left" as const,
   headerBackTitleVisible: false,
-};
+});
 
 // ─── Home Stack ──────────────────────────────────────────────────
 const HomeStack = () => (
-  <Stack.Navigator screenOptions={headerOptions}>
+  <Stack.Navigator screenOptions={getHeaderOptions()}>
     <Stack.Screen
       name="HomeMain"
       component={HomeScreen}
@@ -116,7 +116,7 @@ const HomeStack = () => (
 
 // ─── Profile Stack ───────────────────────────────────────────────
 const ProfileStack = () => (
-  <Stack.Navigator screenOptions={headerOptions}>
+  <Stack.Navigator screenOptions={getHeaderOptions()}>
     <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
     <Stack.Screen 
       name="EditProfile" 
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <CustomTabBar {...props} />}
-    screenOptions={{ ...headerOptions } as any}
+    screenOptions={{ ...getHeaderOptions() } as any}
   >
     <Tab.Screen 
       name="Home" 
