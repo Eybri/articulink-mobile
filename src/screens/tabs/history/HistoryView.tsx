@@ -25,6 +25,8 @@ import {
     Clock,
     Trash2,
     CheckCircle,
+    Play,
+    Pause,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { HistoryItem } from "./useHistoryViewModel";
@@ -36,13 +38,13 @@ interface HistoryViewProps {
 export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
     const renderItem = ({ item }: { item: HistoryItem }) => (
         <Card
-            bg="white"
+            bg={vm.playingId === item.id ? `${COLORS.royalBlue}05` : "white"}
             br={20}
             p="$3.5"
             mb="$3"
-            bw={1}
-            bc={COLORS.sandMid}
-            elevation={2}
+            bw={1.5}
+            bc={vm.playingId === item.id ? COLORS.royalBlue : COLORS.sandMid}
+            elevation={vm.playingId === item.id ? 5 : 2}
             shadowColor={COLORS.deepNavy}
             shadowOpacity={0.06}
             pressStyle={{ scale: 0.98, bg: COLORS.warmWhite }}
@@ -82,7 +84,30 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
             </YStack>
 
             <XStack jc="space-between" ai="center" pt="$2.5" borderTopWidth={1} borderTopColor={COLORS.sandLight} mt="$1">
-                <XStack gap="$4">
+                <XStack gap="$3" ai="center" f={1} fw="wrap">
+                    {item.audio_url && (
+                        <TouchableOpacity
+                            onPress={() => vm.playAudio(item.audio_url, item.id)}
+                            style={{ 
+                                flexDirection: 'row', 
+                                alignItems: 'center', 
+                                gap: 6,
+                                backgroundColor: vm.playingId === item.id ? COLORS.royalBlue : `${COLORS.royalBlue}10`,
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 12,
+                            }}
+                        >
+                            {vm.playingId === item.id ? (
+                                <Pause size={12} color="white" fill="white" />
+                            ) : (
+                                <Play size={12} color={COLORS.royalBlue} fill={COLORS.royalBlue} />
+                            )}
+                            <SizableText size="$1" fow="800" color={vm.playingId === item.id ? "white" : COLORS.royalBlue} textTransform="uppercase" ls={0.5}>
+                                {vm.playingId === item.id ? 'Playing' : 'Play Clip'}
+                            </SizableText>
+                        </TouchableOpacity>
+                    )}
                     <XStack ai="center" gap="$1.5">
                         <CheckCircle size={10} color={COLORS.teal} />
                         <SizableText size="$1" fow="800" color={COLORS.teal}>{Math.round((item.confidence_score || 0.95) * 100)}% Match</SizableText>
