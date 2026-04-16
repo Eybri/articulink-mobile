@@ -126,7 +126,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                         bw={0}
                         size="$4"
                         placeholder="Search transcriptions..."
-                        placeholderTextColor={`${COLORS.textMid}80`}
+                        placeholderTextColor={COLORS.textMid}
                         value={vm.searchQuery}
                         onChangeText={vm.setSearchQuery}
                         fontWeight="600"
