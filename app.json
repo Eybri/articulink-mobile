@@ -4,10 +4,10 @@
     "slug": "articulink",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-icon.png",
+    "icon": "./assets/images/app-icon.jfif",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/logo2-nobg.png",
+      "image": "./assets/images/app-icon.jfif",
       "resizeMode": "contain",
       "backgroundColor": "#FAF8F4"
     },
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
-        "foregroundImage": "./assets/images/logo2-nobg.png",
+        "foregroundImage": "./assets/images/app-icon.jfif",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
