@@ -21,7 +21,7 @@ export interface HistoryItem {
  * ViewModel for the History Screen.
  */
 export const useHistoryViewModel = () => {
-    const { fetchSpeechHistory, deleteSpeechHistoryItem } = useContext(AuthContext)!;
+    const { fetchSpeechHistory, deleteSpeechHistoryItem, fetchSpeechAnalysis } = useContext(AuthContext)!;
     const [searchQuery, setSearchQuery] = useState('');
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
@@ -29,6 +29,8 @@ export const useHistoryViewModel = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [playingId, setPlayingId] = useState<string | null>(null);
+    const [analysisReport, setAnalysisReport] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const soundRef = useRef<Audio.Sound | null>(null);
     const { width, height } = useWindowDimensions();
 
@@ -50,6 +52,20 @@ export const useHistoryViewModel = () => {
         } finally {
             if (isRefreshing) setRefreshing(false);
             else setLoading(false);
+        }
+    };
+
+    const generateAIAnalysis = async () => {
+        setIsAnalyzing(true);
+        try {
+            const result = await fetchSpeechAnalysis();
+            setAnalysisReport(result.report);
+            return result;
+        } catch (error) {
+            console.error("AI Analysis error:", error);
+            Alert.alert("Analysis Error", "Failed to generate AI insights. Please try again with more records.");
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
@@ -187,6 +203,10 @@ export const useHistoryViewModel = () => {
         playAudio,
         playingId,
         stats,
+        analysisReport,
+        isAnalyzing,
+        generateAIAnalysis,
+        setAnalysisReport,
         animations: {
             fadeAnim,
             slideAnim
