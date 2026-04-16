@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Animated, Alert, useWindowDimensions } from 'react-native';
+import { Audio } from 'expo-av';
 import { AuthContext } from './../../../context/AuthContext';
 
 export interface HistoryItem {
@@ -27,6 +28,8 @@ export const useHistoryViewModel = () => {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [playingId, setPlayingId] = useState<string | null>(null);
+    const soundRef = useRef<Audio.Sound | null>(null);
     const { width, height } = useWindowDimensions();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -67,7 +70,53 @@ export const useHistoryViewModel = () => {
             Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
             Animated.spring(slideAnim, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
         ]).start();
+
+        return () => {
+            if (soundRef.current) {
+                soundRef.current.unloadAsync();
+            }
+        };
     }, []);
+
+    const playAudio = async (url: string, id: string) => {
+        try {
+            if (playingId === id) {
+                if (soundRef.current) {
+                    await soundRef.current.stopAsync();
+                    setPlayingId(null);
+                }
+                return;
+            }
+
+            if (soundRef.current) {
+                await soundRef.current.unloadAsync();
+            }
+
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                staysActiveInBackground: false,
+                shouldDuckAndroid: true,
+            });
+
+            setPlayingId(id);
+            const { sound } = await Audio.Sound.createAsync(
+                { uri: url },
+                { shouldPlay: true }
+            );
+            soundRef.current = sound;
+
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.isLoaded && status.didJustFinish) {
+                    setPlayingId(null);
+                }
+            });
+        } catch (error) {
+            console.error("Error playing audio:", error);
+            Alert.alert("Error", "Could not play audio recording");
+            setPlayingId(null);
+        }
+    };
 
     const formatTimestamp = (dateStr?: string) => {
         if (!dateStr) return 'Just now';
@@ -116,6 +165,15 @@ export const useHistoryViewModel = () => {
         );
     };
 
+    const stats = {
+        totalRecordings: history.length,
+        avgConfidence: history.length > 0 
+            ? (history.reduce((acc, curr) => acc + (curr.confidence_score || 0.95), 0) / history.length) * 100 
+            : 0,
+        totalDuration: history.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0),
+        totalWords: history.reduce((acc, curr) => acc + (curr.corrected_transcript?.split(' ').length || 0), 0)
+    };
+
     return {
         searchQuery, setSearchQuery,
         filteredHistory,
@@ -126,6 +184,9 @@ export const useHistoryViewModel = () => {
         loadHistory,
         handleDelete,
         formatTimestamp,
+        playAudio,
+        playingId,
+        stats,
         animations: {
             fadeAnim,
             slideAnim

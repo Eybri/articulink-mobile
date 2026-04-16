@@ -20,6 +20,7 @@ export interface User {
     birthdate?: string;
     gender?: string;
     status: string;
+    privacy_accepted: boolean;
     created_at?: string;
     updated_at?: string;
 }
@@ -44,6 +45,7 @@ export interface AuthContextType {
     resendOTP: (email: string) => Promise<any>;
     forgotPassword: (email: string) => Promise<any>;
     resetPassword: (data: any) => Promise<any>;
+    updateProfile: (data: Partial<User>) => Promise<User>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -146,6 +148,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 birthdate: res.data.user?.birthdate,
                 gender: res.data.user?.gender,
                 status: res.data.user?.status || "active",
+                privacy_accepted: res.data.user?.privacy_accepted || false,
                 created_at: res.data.user?.created_at,
                 updated_at: res.data.user?.updated_at
             };
@@ -233,6 +236,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 birthdate: response.data.birthdate,
                 gender: response.data.gender,
                 status: response.data.status || "active",
+                privacy_accepted: response.data.privacy_accepted || false,
                 created_at: response.data.created_at,
                 updated_at: response.data.updated_at
             };
@@ -253,6 +257,32 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             }
 
             throw error;
+        }
+    };
+
+    const updateProfile = async (data: Partial<User>) => {
+        try {
+            const res = await axios.put(`${baseURL}/auth/profile`, data);
+            
+            const userData: User = {
+                id: res.data.id || user?.id,
+                email: res.data.email || user?.email || "",
+                username: res.data.username || user?.username,
+                role: res.data.role || user?.role || "user",
+                profile_pic: res.data.profile_pic || user?.profile_pic,
+                birthdate: res.data.birthdate || user?.birthdate,
+                gender: res.data.gender || user?.gender,
+                status: res.data.status || user?.status || "active",
+                privacy_accepted: res.data.privacy_accepted !== undefined ? res.data.privacy_accepted : (user?.privacy_accepted || false),
+                created_at: res.data.created_at || user?.created_at,
+                updated_at: res.data.updated_at || user?.updated_at
+            };
+
+            await storeUser(userData);
+            setUser(userData);
+            return userData;
+        } catch (error: any) {
+            throw error.response?.data || { detail: "Failed to update profile" };
         }
     };
 
@@ -377,7 +407,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             verifyOTP,
             resendOTP,
             forgotPassword,
-            resetPassword
+            resetPassword,
+            updateProfile
         }}>
             {children}
         </AuthContext.Provider>

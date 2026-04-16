@@ -137,56 +137,77 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "Profile", label: "Profile", icon: User },
 ];
 
-// ─── Animated Tab Item ───────────────────────────────────────────
+// ─── Animated Tab Item (Pill Style) ─────────────────────────────
 const TabItem: React.FC<{
   isFocused: boolean;
   config: { name: string; label: string; icon: any };
   onPress: () => void;
 }> = ({ isFocused, config, onPress }) => {
-  const liftAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+  const widthAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(liftAnim, {
+    Animated.spring(widthAnim, {
       toValue: isFocused ? 1 : 0,
-      tension: 100, // Faster/snappier
+      useNativeDriver: false, // Width cannot be animated with native driver
+      tension: 100,
       friction: 12,
-      useNativeDriver: true,
     }).start();
   }, [isFocused]);
 
-  const iconScale = liftAnim.interpolate({
+  const pillWidth = widthAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.15],
+    outputRange: [48, 110], // Adjusted for better fit
+  });
+
+  const textOpacity = widthAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
   });
 
   return (
-    <YStack f={1} ai="center" jc="center" h={64} onPress={onPress}>
-      <Animated.View style={{
-        alignItems: 'center',
+    <Animated.View 
+      style={{
+        width: pillWidth,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: isFocused ? COLORS.white : 'transparent',
         justifyContent: 'center',
-        transform: [{ scale: iconScale }],
-      }}>
-        {React.createElement(config.icon, {
-          size: 22,
-          color: isFocused ? COLORS.royalBlue : COLORS.textMid,
-          strokeWidth: isFocused ? 2.5 : 2,
-        })}
-      </Animated.View>
-
-      <SizableText
-        mt="$1"
-        size="$1"
-        style={{ fontSize: 11, fontWeight: isFocused ? "700" : "500" }}
-        color={isFocused ? COLORS.royalBlue : COLORS.textMid}
-        opacity={isFocused ? 1 : 0.7}
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <XStack 
+        onPress={onPress} 
+        ai="center" 
+        jc="center" 
+        w="100%"
+        h="100%"
+        gap="$2"
       >
-        {config.label}
-      </SizableText>
-    </YStack>
+        {React.createElement(config.icon, {
+          size: 19,
+          color: isFocused ? COLORS.deepNavy : 'rgba(255, 255, 255, 0.4)',
+          strokeWidth: isFocused ? 3 : 2,
+        })}
+        
+        {isFocused && (
+          <Animated.View style={{ opacity: textOpacity }}>
+            <SizableText 
+              color={COLORS.deepNavy} 
+              fow="900" 
+              size="$2" 
+              ls={-0.3}
+            >
+              {config.label}
+            </SizableText>
+          </Animated.View>
+        )}
+      </XStack>
+    </Animated.View>
   );
 };
 
-// ─── Premium Custom Tab Bar (Glassmorphic) ───────────────────────
+// ─── Premium Custom Tab Bar (Reference inspired Pill Style) ───────
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const focusedOptions = descriptors[state.routes[state.index].key].options;
   const currentRouteName = state.routes[state.index].name;
@@ -213,97 +234,58 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     <Animated.View
       style={{
         position: "absolute",
-        bottom: isIOS ? 34 : 16,
+        bottom: isIOS ? 34 : 20,
         left: 20,
         right: 20,
         zIndex: 1000,
         transform: [{ translateY }],
       }}
     >
-      {isIOS ? (
-        <BlurView
-          intensity={85}
-          tint="extraLight"
-          style={styles.tabBarContainer}
-        >
-          <XStack jc="space-around" ai="center" px="$2" h={74}>
-            {state.routes.map((route: any, index: number) => {
-              const isFocused = state.index === index;
-              const config = TAB_CONFIG.find(t => t.name === route.name)!;
-              const onPress = () => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name);
-                }
-              };
+      <YStack
+        style={styles.tabBarContainer}
+        bg={COLORS.deepNavy}
+        elevation={15}
+        shadowColor="#000"
+        shadowOffset={{ width: 0, height: 10 }}
+        shadowOpacity={0.2}
+        shadowRadius={20}
+      >
+        <XStack jc="space-between" ai="center" px="$3.5" h={68}>
+          {state.routes.map((route: any, index: number) => {
+            const isFocused = state.index === index;
+            const config = TAB_CONFIG.find(t => t.name === route.name)!;
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-              return (
-                <TabItem
-                  key={route.key}
-                  isFocused={isFocused}
-                  config={config}
-                  onPress={onPress}
-                />
-              );
-            })}
-          </XStack>
-        </BlurView>
-      ) : (
-        <YStack
-          style={[styles.tabBarContainer, { backgroundColor: 'rgba(250, 248, 244, 0.98)' }]}
-        >
-          <XStack jc="space-around" ai="center" px="$2" h={74}>
-            {state.routes.map((route: any, index: number) => {
-              const isFocused = state.index === index;
-              const config = TAB_CONFIG.find(t => t.name === route.name)!;
-              const onPress = () => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name);
-                }
-              };
-
-              return (
-                <TabItem
-                  key={route.key}
-                  isFocused={isFocused}
-                  config={config}
-                  onPress={onPress}
-                />
-              );
-            })}
-          </XStack>
-        </YStack>
-      )}
+            return (
+              <TabItem
+                key={route.key}
+                isFocused={isFocused}
+                config={config}
+                onPress={onPress}
+              />
+            );
+          })}
+        </XStack>
+      </YStack>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    borderRadius: 30,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(221, 214, 200, 0.5)',
+    borderRadius: 100, // Fully rounded capsule
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
 });
 
