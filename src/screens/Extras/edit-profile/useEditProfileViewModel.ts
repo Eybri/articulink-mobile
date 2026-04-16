@@ -46,8 +46,10 @@ export const useEditProfileViewModel = (navigation: any) => {
             const updateData: any = {
                 username: username.trim(),
                 gender,
-                birthdate: birthdate ? birthdate.toISOString().split("T")[0] : (birthdateText || null),
-                profile_pic: profilePic, // Include profile_pic in standard update for icons
+                birthdate: (birthdate && !isNaN(birthdate.getTime())) 
+                    ? birthdate.toISOString().split("T")[0] 
+                    : (birthdateText || null),
+                profile_pic: profilePic,
             };
             
             // FIX: Only delete if undefined or empty string, allow null for clearing profile_pic

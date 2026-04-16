@@ -1,36 +1,38 @@
 import React, { useMemo } from 'react';
 import { View, Linking, Platform, StatusBar, Animated } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import {
-  YStack,
-  XStack,
-  ZStack,
-  Button,
-  Circle,
-  H1,
-  SizableText,
-  Card,
-  ScrollView,
-  Spinner,
-  AnimatePresence,
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Circle,
+    H1,
+    SizableText,
+    Card,
+    ScrollView,
+    Spinner,
+    AnimatePresence,
 } from "tamagui";
-import { 
-  Navigation, 
-  Phone, 
-  RefreshCw, 
-  Search, 
-  ChevronRight, 
-  Car, 
-  Footprints, 
-  Bike, 
-  Clock, 
-  MapPin, 
-  Trash2, 
-  Smile, 
-  Mic, 
-  Activity as ActivityIcon, 
-  GraduationCap, 
-  Accessibility 
+import {
+    Navigation,
+    Phone,
+    RefreshCw,
+    Search,
+    ChevronRight,
+    Car,
+    Footprints,
+    Bike,
+    Clock,
+    MapPin,
+    Trash2,
+    Smile,
+    Mic,
+    Activity as ActivityIcon,
+    GraduationCap,
+    Accessibility,
+    Home
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { Center } from "./useMapViewModel";
@@ -39,11 +41,11 @@ const SEARCH_RADIUS = 10000;
 
 const FacilityIconComponent = ({ type, size = 20, color = COLORS.royalBlue }: { type: string, size?: number, color?: string }) => {
     switch (type) {
-      case 'cleft-clinic': return <Smile size={size} color={color} />;
-      case 'speech-therapy': return <Mic size={size} color={color} />;
-      case 'voice-clinic': return <ActivityIcon size={size} color={color} />;
-      case 'sped-school': return <GraduationCap size={size} color={color} />;
-      default: return <Accessibility size={size} color={color} />;
+        case 'cleft-clinic': return <Smile size={size} color={color} />;
+        case 'speech-therapy': return <Mic size={size} color={color} />;
+        case 'voice-clinic': return <ActivityIcon size={size} color={color} />;
+        case 'sped-school': return <GraduationCap size={size} color={color} />;
+        default: return <Accessibility size={size} color={color} />;
     }
 };
 
@@ -118,6 +120,7 @@ interface MapViewProps {
 }
 
 export const MapView: React.FC<MapViewProps> = ({ vm }) => {
+    const navigation = useNavigation<any>();
     const mapHTML = useMemo(() => {
         if (!vm.location) return '<html><body></body></html>';
         return generateMapHTML(vm.location.latitude, vm.location.longitude);
@@ -132,7 +135,7 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
             } else if (data.type === 'MAP_LOADED') {
                 vm.setMapLoading(false);
             }
-        } catch (er) {}
+        } catch (er) { }
     };
 
     if (vm.loading && !vm.location) {
@@ -152,20 +155,33 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                 <Circle pos="absolute" b={-vm.height * 0.05} l={-vm.width * 0.1} size={vm.width * 0.6} bg={COLORS.orbTeal} opacity={0.2} />
             </ZStack>
 
-            <YStack pt="$4" px="$4" pb="$2.5" bg="transparent" mt="$4">
-                <XStack ai="center" jc="space-between" mb="$2">
-                    <YStack>
-                        <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Articulink Maps</H1>
-                        <SizableText size="$2" color={COLORS.textMid} fow="600" opacity={0.8}>Nearby Clinics</SizableText>
-                    </YStack>
-                    <Circle size={40} circular bg="white" bw={1} bc={COLORS.sandMid} elevation={2} shadowColor={COLORS.deepNavy} shadowOpacity={0.1} onPress={vm.getCurrentLocation}>
-                        <RefreshCw size={18} color={COLORS.royalBlue} />
+            <YStack pt={Platform.OS === 'ios' ? 45 : 10} px="$4" pb="$0.5" bg="transparent">
+                <XStack ai="center" jc="space-between">
+                    <XStack ai="center" gap="$2.5">
+                        <Button
+                            circular
+                            size="$3"
+                            bg="white"
+                            bw={1}
+                            bc={COLORS.sandMid}
+                            elevation={1}
+                            icon={<Home size={16} color={COLORS.royalBlue} />}
+                            onPress={() => navigation.navigate("Home")}
+                            pressStyle={{ scale: 0.9, opacity: 0.8 }}
+                        />
+                        <YStack>
+                            <H1 size="$5" fow="900" color={COLORS.textDark} ls={-0.5} mt="$1">Articulink Maps</H1>
+                            <SizableText size="$1" color={COLORS.textMid} fow="700" opacity={0.6} mt={-4}>Nearby Clinics</SizableText>
+                        </YStack>
+                    </XStack>
+                    <Circle size={36} circular bg="white" bw={1} bc={COLORS.sandMid} elevation={1} onPress={vm.getCurrentLocation}>
+                        <RefreshCw size={16} color={COLORS.royalBlue} />
                     </Circle>
                 </XStack>
             </YStack>
 
             <Animated.View style={{ flex: 1, opacity: vm.animations.fadeAnim, transform: [{ translateY: vm.animations.slideAnim }] }}>
-                <ZStack f={1} mx="$4" mb="$4" br={28} ov="hidden" bw={1.5} bc={COLORS.sandMid} elevation={4} shadowColor={COLORS.deepNavy}>
+                <ZStack f={1} mx="$4" mb="$2" br={28} ov="hidden" bw={1.5} bc={COLORS.sandMid} elevation={4} shadowColor={COLORS.deepNavy}>
                     <WebView
                         ref={vm.webViewRef}
                         source={{ html: mapHTML }}
@@ -205,17 +221,17 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                                     </XStack>
                                     <XStack jc="center" gap="$2">
                                         {['driving', 'walking', 'bicycling'].map(m => (
-                                            <Button 
-                                                key={m} size="$3" circular 
-                                                bg={vm.travelMode === m ? COLORS.royalBlue : "white"} 
+                                            <Button
+                                                key={m} size="$3" circular
+                                                bg={vm.travelMode === m ? COLORS.royalBlue : "white"}
                                                 theme={vm.travelMode === m ? "alt1" : "light"}
-                                                bw={1} bc={vm.travelMode === m ? COLORS.royalBlue : COLORS.sandMid} 
+                                                bw={1} bc={vm.travelMode === m ? COLORS.royalBlue : COLORS.sandMid}
                                                 icon={
-                                                    m === 'driving' ? <Car size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} /> : 
-                                                    m === 'walking' ? <Footprints size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} /> : 
-                                                    <Bike size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} />
-                                                } 
-                                                onPress={() => { vm.setTravelMode(m as any); vm.getRouteInfo(vm.selectedCenter, m); }} 
+                                                    m === 'driving' ? <Car size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} /> :
+                                                        m === 'walking' ? <Footprints size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} /> :
+                                                            <Bike size={18} color={vm.travelMode === m ? "white" : COLORS.textMid} />
+                                                }
+                                                onPress={() => { vm.setTravelMode(m as any); vm.getRouteInfo(vm.selectedCenter, m); }}
                                                 pressStyle={{ scale: 0.9, opacity: 0.8 }}
                                                 elevation={vm.travelMode === m ? 4 : 0}
                                             />

@@ -191,9 +191,7 @@ export const AvatarPickerSheet = ({
                         >
                             <YStack 
                                 fullscreen
-                                enterStyle={{ opacity: 0 }}
-                                exitStyle={{ opacity: 0 }}
-                                animation="lazy"
+                                bg="transparent"
                             />
                         </Pressable>
                         

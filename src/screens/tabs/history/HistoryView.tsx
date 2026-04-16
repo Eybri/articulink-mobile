@@ -107,26 +107,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                 <Circle pos="absolute" b={-vm.height * 0.1} l={-vm.width * 0.2} size={vm.width * 0.7} bg={COLORS.orbTeal} opacity={0.2} />
             </ZStack>
 
-            {/* Header Area */}
-            <YStack pt="$4" px="$4" pb="$4" mt="$4">
-                <XStack ai="center" jc="space-between" mb="$4">
-                    <YStack>
-                        <H1 size="$7" fow="900" color={COLORS.textDark} ls={-1}>Speech History</H1>
-                        <SizableText size="$2" color={COLORS.textMid} fow="600" o={0.8}>Review your speech recordings</SizableText>
-                    </YStack>
-                    <Circle 
-                        size={40} 
-                        bg="white" 
-                        bw={1} 
-                        bc={COLORS.sandMid} 
-                        elevation={2} 
-                        shadowColor={COLORS.deepNavy}
-                        shadowOpacity={0.1}
-                    >
-                        <History size={18} color={COLORS.royalBlue} />
-                    </Circle>
-                </XStack>
-
+            <YStack px="$4" pb="$4">
                 <XStack 
                     bg={COLORS.white} 
                     br={18} 
@@ -145,7 +126,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                         bw={0}
                         size="$4"
                         placeholder="Search transcriptions..."
-                        placeholderTextColor={`${COLORS.textMid}80`}
+                        placeholderTextColor={COLORS.textMid}
                         value={vm.searchQuery}
                         onChangeText={vm.setSearchQuery}
                         fontWeight="600"
@@ -171,7 +152,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     data={vm.filteredHistory}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+                    contentInsetAdjustmentBehavior="automatic"
+                    contentContainerStyle={{ padding: 20, paddingBottom: 150 }}
                     refreshControl={
                         <RefreshControl
                             refreshing={vm.refreshing}

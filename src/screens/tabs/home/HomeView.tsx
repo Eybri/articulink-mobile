@@ -3,7 +3,6 @@ import {
     Platform,
     StatusBar,
     Animated,
-    Image as RNImage,
 } from "react-native";
 import {
     YStack,
@@ -17,7 +16,7 @@ import {
     Card,
     Spinner,
     AnimatePresence,
-    ScrollView, // Added ScrollView
+    ScrollView, 
 } from "tamagui";
 import {
     Mic,
@@ -51,24 +50,21 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
             <ScrollView
                 f={1}
                 showsVerticalScrollIndicator={false}
+                contentInsetAdjustmentBehavior="automatic"
                 contentContainerStyle={{
-                    paddingBottom: Platform.OS === 'ios' ? 200 : 180, // Significant spacer for floating tab bar
-                    paddingTop: Platform.OS === "android" ? 40 : 50,
+                    paddingBottom: Platform.OS === 'ios' ? 200 : 180, 
+                    paddingTop: Platform.OS === "android" ? 20 : 0,
                 }}
             >
-                <YStack px="$5" gap="$5">
-
-                    {/* Header - iOS Style (Refined) */}
+                <YStack px="$5" gap="$5" pt="$4">
+                    {/* Hero Branding Section (Restored & Refined) */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <YStack ai="center" gap="$1.5">
+                        <YStack ai="center" gap="$1.5" mb="$1">
                             <YStack bg={`${COLORS.teal}10`} px="$2.5" py="$0.5" br={100} bw={1} bc={`${COLORS.teal}20`}>
                                 <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={1.2} tt="uppercase">
                                     AI Clarity Engine
                                 </SizableText>
                             </YStack>
-                            <H1 fow="900" size="$9" color={COLORS.textDark} ls={-0.8} ta="center">
-                                Articulink
-                            </H1>
                             <SizableText size="$3" color={COLORS.textMid} fow="500" ta="center" px="$4" opacity={0.75}>
                                 Enhancing speech clarity with premium AI
                             </SizableText>
