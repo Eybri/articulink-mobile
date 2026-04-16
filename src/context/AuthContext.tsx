@@ -46,6 +46,7 @@ export interface AuthContextType {
     forgotPassword: (email: string) => Promise<any>;
     resetPassword: (data: any) => Promise<any>;
     updateProfile: (data: Partial<User>) => Promise<User>;
+    fetchSpeechAnalysis: () => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -387,6 +388,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
+    const fetchSpeechAnalysis = async () => {
+        try {
+            const res = await axios.get(`${baseURL}/analysis/speech-performance`);
+            return res.data;
+        } catch (error: any) {
+            console.error("Analysis Fetch Error:", error);
+            throw error.response?.data || { detail: "Failed to fetch speech analysis" };
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -408,7 +419,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             resendOTP,
             forgotPassword,
             resetPassword,
-            updateProfile
+            updateProfile,
+            fetchSpeechAnalysis,
         }}>
             {children}
         </AuthContext.Provider>
