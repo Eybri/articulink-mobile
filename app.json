@@ -4,10 +4,10 @@
     "slug": "articulink",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-icon.jfif",
+    "icon": "./assets/images/app-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/app-icon.jfif",
+      "image": "./assets/images/app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FAF8F4"
     },
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
-        "foregroundImage": "./assets/images/app-icon.jfif",
+        "foregroundImage": "./assets/images/app-icon.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
