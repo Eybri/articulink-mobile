@@ -5,6 +5,9 @@ import {
     FlatList,
     RefreshControl,
     TouchableOpacity,
+    Modal,
+    ActivityIndicator,
+    Image,
 } from 'react-native';
 import {
     YStack,
@@ -31,6 +34,8 @@ import {
     TrendingUp,
     BarChart2,
     Activity,
+    Sparkles,
+    X,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { HistoryItem } from "./useHistoryViewModel";
@@ -146,6 +151,55 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 150 }}
                     ListHeaderComponent={
                         <YStack gap="$4" mb="$5">
+                            <XStack ai="center" gap="$4">
+                                <Image 
+                                    source={require("../../../../assets/images/parrot.png")} 
+                                    style={{ width: 90, height: 90 }}
+                                    resizeMode="contain"
+                                />
+                                <YStack f={1} gap="$3">
+                                    <XStack ai="center" jc="space-between">
+                                        <SizableText size="$5" fow="900" color={COLORS.textDark} ls={-0.5}>My Progress</SizableText>
+                                        <Button 
+                                            size="$2" 
+                                            br={8} 
+                                            bg={COLORS.royalBlue} 
+                                            onPress={vm.generateAIAnalysis}
+                                            disabled={vm.isAnalyzing}
+                                            icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={12} color="white" />}
+                                            px="$2"
+                                        >
+                                            <SizableText color="white" fow="800" size="$1">DEEP DIVE</SizableText>
+                                        </Button>
+                                    </XStack>
+
+                                    <ScrollView 
+                                        horizontal 
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                                    >
+                                        <StatCard 
+                                            icon={<TrendingUp size={12} color={COLORS.teal} />} 
+                                            label="Accuracy" 
+                                            value={`${Math.round(vm.stats.avgConfidence)}%`} 
+                                            bg={`${COLORS.teal}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<Activity size={12} color={COLORS.royalBlue} />} 
+                                            label="Time" 
+                                            value={`${vm.stats.totalDuration.toFixed(1)}s`} 
+                                            bg={`${COLORS.royalBlue}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<BarChart2 size={12} color="#F59E0B" />} 
+                                            label="Words" 
+                                            value={vm.stats.totalWords.toString()} 
+                                            bg="#F59E0B15"
+                                        />
+                                    </ScrollView>
+                                </YStack>
+                            </XStack>
+
                             <XStack 
                                 bg={COLORS.white} 
                                 br={14} 
@@ -173,37 +227,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                     onBlur={() => vm.setIsSearchFocused(false)}
                                 />
                             </XStack>
-
-                            <ScrollView 
-                                horizontal 
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ gap: 12, paddingRight: 20 }}
-                            >
-                                <StatCard 
-                                    icon={<TrendingUp size={12} color={COLORS.teal} />} 
-                                    label="Accuracy" 
-                                    value={`${Math.round(vm.stats.avgConfidence)}%`} 
-                                    bg={`${COLORS.teal}10`}
-                                />
-                                <StatCard 
-                                    icon={<Activity size={12} color={COLORS.royalBlue} />} 
-                                    label="Time" 
-                                    value={`${vm.stats.totalDuration.toFixed(1)}s`} 
-                                    bg={`${COLORS.royalBlue}10`}
-                                />
-                                <StatCard 
-                                    icon={<BarChart2 size={12} color="#F59E0B" />} 
-                                    label="Words" 
-                                    value={vm.stats.totalWords.toString()} 
-                                    bg="#F59E0B15"
-                                />
-                                <StatCard 
-                                    icon={<History size={12} color={COLORS.deepNavy} />} 
-                                    label="Total" 
-                                    value={vm.stats.totalRecordings.toString()} 
-                                    bg={`${COLORS.deepNavy}10`}
-                                />
-                            </ScrollView>
                         </YStack>
                     }
                     refreshControl={
@@ -223,6 +246,58 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     }
                 />
             </Animated.View>
+
+            {/* Analysis Modal */}
+            <Modal
+                visible={!!vm.analysisReport}
+                transparent
+                animationType="slide"
+                onRequestClose={() => vm.setAnalysisReport(null)}
+            >
+                <YStack f={1} bc="rgba(0,0,0,0.6)" jc="center" ai="center" px="$4">
+                    <Card w="100%" maxH="80%" br={24} bg="white" ov="hidden" elevation={20}>
+                        <XStack p="$4" ai="center" jc="space-between" bbw={1} bbc={COLORS.sandMid} bg={`${COLORS.royalBlue}05`}>
+                            <XStack ai="center" gap="$2">
+                                <Circle size={32} bg={COLORS.royalBlue}>
+                                    <Sparkles size={16} color="white" />
+                                </Circle>
+                                <SizableText size="$4" fow="900" color={COLORS.textDark}>AI Speech Analysis</SizableText>
+                            </XStack>
+                            <TouchableOpacity onPress={() => vm.setAnalysisReport(null)}>
+                                <Circle size={32} bg={COLORS.sandMid} o={0.5}>
+                                    <X size={18} color={COLORS.textDark} />
+                                </Circle>
+                            </TouchableOpacity>
+                        </XStack>
+                        
+                        <ScrollView p="$5">
+                            <YStack gap="$4" pb="$8">
+                                <SizableText size="$3" color={COLORS.textMid} fow="500" lh={22} whiteSpace="pre-wrap">
+                                    {vm.analysisReport}
+                                </SizableText>
+                                
+                                <YStack bg={`${COLORS.teal}08`} p="$4" br={16} bw={1} bc={`${COLORS.teal}20`} gap="$2">
+                                    <SizableText size="$1" fow="800" color={COLORS.teal} tt="uppercase">Pro-Tip</SizableText>
+                                    <SizableText size="$2" color={COLORS.textMid} fow="500">
+                                        Consistency is key! Try recording at least 3 phrases every day to help the AI better understand your unique voice patterns.
+                                    </SizableText>
+                                </YStack>
+                            </YStack>
+                        </ScrollView>
+
+                        <YStack p="$4" btw={1} btc={COLORS.sandMid}>
+                            <Button 
+                                bg={COLORS.royalBlue} 
+                                br={14} 
+                                h={50} 
+                                onPress={() => vm.setAnalysisReport(null)}
+                            >
+                                <SizableText color="white" fow="800">Understood</SizableText>
+                            </Button>
+                        </YStack>
+                    </Card>
+                </YStack>
+            </Modal>
         </YStack>
     );
 };
