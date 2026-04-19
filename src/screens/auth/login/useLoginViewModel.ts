@@ -35,7 +35,7 @@ export const useLoginViewModel = (navigation: any) => {
         const line2 = "Back!";
         let i = 0;
         let j = 0;
-        
+
         const delay = setTimeout(() => {
             const timer1 = setInterval(() => {
                 if (i < line1.length) {
@@ -63,7 +63,7 @@ export const useLoginViewModel = (navigation: any) => {
                 }
             }, 65);
         }, 300);
-        
+
         return () => clearTimeout(delay);
     }, []);
 
@@ -127,10 +127,10 @@ export const useLoginViewModel = (navigation: any) => {
         isLoading,
         showPassword, setShowPassword,
         typedLine1, typedLine2,
-        
+
         // Handlers
         handleLogin,
-        
+
         // Animations
         animations: {
             fadeAnim,

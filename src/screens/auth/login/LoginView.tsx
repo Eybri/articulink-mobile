@@ -38,7 +38,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ vm, navigation }) => {
     return (
         <YStack f={1} bg={COLORS.royalBlue}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-            
+
             {/* Background Layer */}
             <ZStack pos="absolute" fullscreen pointerEvents="none">
                 <RNImage
@@ -47,18 +47,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ vm, navigation }) => {
                     resizeMode="cover"
                 />
                 <YStack fullscreen bg="black" opacity={0.2} />
-                
+
                 {/* Typewriter Text */}
                 <Animated.View style={{ opacity: vm.animations.textFade, position: 'absolute', top: '18%', width: '100%', paddingHorizontal: 32 }}>
                     <SizableText size="$10" fow="900" color="white" ls={-1}>{vm.typedLine1}</SizableText>
                     {vm.typedLine2.length > 0 && <SizableText size="$10" fow="900" color="white" ls={-1}>{vm.typedLine2}</SizableText>}
                 </Animated.View>
-                
+
                 {/* Logo Section */}
                 <YStack pos="absolute" t={0} l={0} r={0} h={height * 0.42} jc="center" ai="center">
                     <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
                         <RNImage
-                            source={require('../../../../assets/images/app-icon.png')}
+                            source={require('../../../../assets/images/whitelogo.png')}
                             style={{ width: 160, height: 160 }}
                             resizeMode="contain"
                         />
