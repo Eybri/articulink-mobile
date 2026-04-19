@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback } from "react";
+import { useState, useContext, useCallback, useMemo } from "react";
 import { Alert, useWindowDimensions } from "react-native";
 import { AuthContext, AuthContextType } from "./../../../context/AuthContext";
 import { useFocusEffect } from "@react-navigation/native";
@@ -20,16 +20,23 @@ export const useProfileViewModel = (navigation: any) => {
     const [micSensitivity, setMicSensitivity] = useState(0.8);
     const [notifications, setNotifications] = useState(true);
 
-    const analytics = {
-        clarityScore: 84,
-        totalSessions: 147,
-        avgResponseSec: 3.2,
-        streakDays: 14,
-        todaySessions: 12,
-        todayHours: 2.3,
-        todayClarityPct: 84,
-        todayProgressPct: 70,
-    };
+    // ── Speech Stats ──
+    const [stats, setStats] = useState<any>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    const analytics = useMemo(() => {
+        const totalDuration = stats?.total_duration_seconds ?? 0;
+        return {
+            clarityScore: 84, 
+            totalSessions: stats?.total_recordings ?? 0,
+            avgResponseSec: 3.2,
+            streakDays: stats?.streak_days ?? 0,
+            todaySessions: stats?.today_recordings ?? 0,
+            todayHours: +(totalDuration / 3600).toFixed(1),
+            todayClarityPct: 84,
+            todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 5) * 100)),
+        };
+    }, [stats]);
 
     const loadProfile = async () => {
         try {
@@ -39,6 +46,18 @@ export const useProfileViewModel = (navigation: any) => {
             handleProfileError(error);
         } finally {
             setRefreshing(false);
+        }
+    };
+
+    const loadStats = async () => {
+        try {
+            setStatsLoading(true);
+            const data = await auth.fetchSpeechStats();
+            if (data) setStats(data);
+        } catch (e) {
+            console.error("Profile stats fetch failed:", e);
+        } finally {
+            setStatsLoading(false);
         }
     };
 
@@ -53,9 +72,16 @@ export const useProfileViewModel = (navigation: any) => {
         }
     };
 
-    useFocusEffect(useCallback(() => { loadProfile(); }, []));
+    useFocusEffect(useCallback(() => {
+        loadProfile();
+        loadStats();
+    }, []));
 
-    const onRefresh = () => { setRefreshing(true); loadProfile(); };
+    const onRefresh = () => {
+        setRefreshing(true);
+        loadProfile();
+        loadStats();
+    };
 
     const handleClearHistory = () => {
         Alert.alert(
@@ -112,6 +138,8 @@ export const useProfileViewModel = (navigation: any) => {
         voiceVolume, setVoiceVolume,
         micSensitivity, setMicSensitivity,
         notifications, setNotifications,
+        // Speech stats
+        stats, statsLoading,
     };
 };
 

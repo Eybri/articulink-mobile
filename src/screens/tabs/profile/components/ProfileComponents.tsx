@@ -8,6 +8,7 @@ import {
   SizableText,
   Button,
   Separator,
+  Card,
 } from "tamagui";
 import {
   ChevronDown,
@@ -155,22 +156,32 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
 };
 
 // ─── Stat Card ────────────────────────────────────────────────────
-export const StatCard: React.FC<{ icon: React.ReactNode; value: string; label: string; delta?: string; accentColor: string; iconBg: string }> = ({ icon, value, label, delta, accentColor, iconBg }) => (
+export const StatCard: React.FC<{ icon: React.ReactNode; value: string; label: string; delta?: string; accentColor: string; iconBg: string; loading?: boolean }> = ({ icon, value, label, delta, accentColor, iconBg, loading }) => (
   <YStack bg="white" br={18} p="$3" f={1} bw={1} bc={COLORS.sandMid} ov="hidden">
     <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={18} />
-    <YStack w={30} h={30} br={9} bg={iconBg} jc="center" ai="center" mb="$2">
-      {icon}
-    </YStack>
-    <SizableText fow="900" size="$6" color={COLORS.textDark} ls={-0.5} lh={28}>
-      {value}
-    </SizableText>
-    <SizableText fow="700" size="$1" color={COLORS.textMid} tt="uppercase" ls={0.5} mt="$1">
-      {label}
-    </SizableText>
-    {delta && (
-      <SizableText fow="700" size="$1" color={COLORS.teal} mt="$1">
-        {delta}
-      </SizableText>
+    {loading ? (
+      <YStack gap="$2" py="$1">
+        <Circle size={30} bg={`${COLORS.sandMid}40`} />
+        <YStack h={24} w="60%" bg={`${COLORS.sandMid}40`} br={6} />
+        <YStack h={12} w="40%" bg={`${COLORS.sandMid}20`} br={4} />
+      </YStack>
+    ) : (
+      <>
+        <YStack w={30} h={30} br={9} bg={iconBg} jc="center" ai="center" mb="$2">
+          {icon}
+        </YStack>
+        <SizableText fow="900" size="$6" color={COLORS.textDark} ls={-0.5} lh={28}>
+          {value}
+        </SizableText>
+        <SizableText fow="700" size="$1" color={COLORS.textMid} tt="uppercase" ls={0.5} mt="$1">
+          {label}
+        </SizableText>
+        {delta && (
+          <SizableText fow="700" size="$1" color={COLORS.teal} mt="$1">
+            {delta}
+          </SizableText>
+        )}
+      </>
     )}
   </YStack>
 );
@@ -393,5 +404,91 @@ export const SettingsItem = ({
       </SizableText>
     </YStack>
   );
+
+/** Get time-based greeting */
+export function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+/** Word chip with frequency badge */
+export const WordChip: React.FC<{ word: string; count: number; index: number }> = ({ word, count, index }) => {
+  const chipColors = [
+      { bg: `${COLORS.royalBlue}08`, border: `${COLORS.royalBlue}18`, text: COLORS.royalBlue },
+      { bg: `${COLORS.teal}08`, border: `${COLORS.teal}18`, text: COLORS.teal },
+      { bg: '#F5F3FF', border: '#E9E5FF', text: '#7C3AED' },
+      { bg: '#FFF7ED', border: '#FFEDD5', text: '#EA580C' },
+      { bg: '#F0FDF4', border: '#DCFCE7', text: '#16A34A' },
+      { bg: '#FDF2F8', border: '#FCE7F3', text: '#DB2777' },
+      { bg: '#FFFBEB', border: '#FEF3C7', text: '#D97706' },
+      { bg: '#F0F9FF', border: '#E0F2FE', text: '#0284C7' },
+  ];
+  const c = chipColors[index % chipColors.length];
+
+  return (
+      <XStack
+          bg={c.bg}
+          br={100}
+          px="$3"
+          py="$1.5"
+          ai="center"
+          gap="$1.5"
+          bw={1}
+          bc={c.border}
+      >
+          <SizableText fow="700" size="$2" color={c.text}>
+              {word}
+          </SizableText>
+          <YStack bg={`${c.text}15`} br={100} px="$1.5" py="$0.5">
+              <SizableText fow="800" size={10} color={c.text}>
+                  {count}×
+              </SizableText>
+          </YStack>
+      </XStack>
+  );
+};
+
+/** Language pill with percentage bar */
+export const LanguagePill: React.FC<{ lang: string; count: number; total: number }> = ({ lang, count, total }) => {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  const langNames: Record<string, string> = {
+      en: "English",
+      fil: "Filipino",
+      tl: "Tagalog",
+      unknown: "Other",
+  };
+  const displayName = langNames[lang] || lang.toUpperCase();
+
+  return (
+      <YStack f={1} minWidth={120} gap="$1.5">
+          <XStack jc="space-between" ai="center">
+              <SizableText fow="700" size="$2" color={COLORS.textDark}>{displayName}</SizableText>
+              <SizableText fow="600" size="$1" color={COLORS.textMid}>{pct}%</SizableText>
+          </XStack>
+          <YStack h={6} bg={`${COLORS.sandMid}40`} br={3} ov="hidden">
+              <YStack h={6} w={`${pct}%`} bg="#6366F1" br={3} />
+          </YStack>
+          <SizableText fow="500" size={10} color={COLORS.textMid} opacity={0.6}>
+              {count} recording{count !== 1 ? 's' : ''}
+          </SizableText>
+      </YStack>
+  );
+};
+
+/** Skeleton Stats Card */
+export const SkeletonCard = () => (
+    <Card bg="white" br={24} p="$4" elevation={2} bw={1} bc={COLORS.sandMid} opacity={0.6}>
+        <XStack ai="center" gap="$2" mb="$3">
+            <YStack w={28} h={28} br={10} bg={`${COLORS.sandMid}20`} />
+            <YStack h={20} w={120} bg={`${COLORS.sandMid}20`} br={4} />
+        </XStack>
+        <YStack gap="$2">
+            <YStack h={12} w="90%" bg={`${COLORS.sandMid}10`} br={2} />
+            <YStack h={12} w="70%" bg={`${COLORS.sandMid}10`} br={2} />
+        </YStack>
+    </Card>
+);
 
 
