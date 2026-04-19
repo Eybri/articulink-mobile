@@ -121,34 +121,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 }
             >
                 {/* Identity Header */}
-                <XStack ai="center" jc="space-between" mb="$5" pt="$2" px="$5">
-                    <XStack ai="center" gap="$3">
-                        <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc={COLORS.sandMid} ov="hidden">
-                            {vm.user.profile_pic ? (
-                                <RNImage
-                                    key={vm.user.profile_pic}
-                                    source={getProfileSource(vm.user.profile_pic)}
-                                    style={{ width: 56, height: 56, borderRadius: 28 }}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
-                                    <SizableText size="$5" fow="900" color="white">
-                                        {vm.user.username?.[0]?.toUpperCase() ?? "U"}
-                                    </SizableText>
-                                </YStack>
-                            )}
-                        </YStack>
-                        
-                        <YStack f={1}>
-                            <SizableText size="$3" color={COLORS.textMid} fow="600">
-                                {getGreeting()},
-                            </SizableText>
-                            <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4} numberOfLines={1}>
-                                {vm.user.username || "Speaker"}!
-                            </SizableText>
-                        </YStack>
-                    </XStack>
+                <XStack ai="center" mb="$5" pt="$2" px="$5" w="100%">
+                    <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc={COLORS.sandMid} ov="hidden">
+                        {vm.user.profile_pic ? (
+                            <RNImage
+                                key={vm.user.profile_pic}
+                                source={getProfileSource(vm.user.profile_pic)}
+                                style={{ width: 56, height: 56, borderRadius: 28 }}
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
+                                <SizableText size="$5" fow="900" color="white">
+                                    {vm.user.username?.[0]?.toUpperCase() ?? "U"}
+                                </SizableText>
+                            </YStack>
+                        )}
+                    </YStack>
+                    
+                    <YStack f={1} ml="$3" mr="$3">
+                        <SizableText size="$3" color={COLORS.textMid} fow="600">
+                            {getGreeting()},
+                        </SizableText>
+                        <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4} numberOfLines={1}>
+                            {vm.user.username || "Speaker"}!
+                        </SizableText>
+                    </YStack>
 
                     <Button
                         size={48}
@@ -157,7 +155,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         bw={1}
                         bc={COLORS.sandMid}
                         pressStyle={{ scale: 0.95, bg: COLORS.cream }}
-                        icon={<Bell size={20} color={COLORS.textMid} />}
+                        icon={<Bell size={22} color={COLORS.textMid} />}
+                        elevation={3}
+                        shadowColor="#8A96A4"
                     />
                 </XStack>
 
