@@ -47,6 +47,7 @@ export interface AuthContextType {
     resetPassword: (data: any) => Promise<any>;
     updateProfile: (data: Partial<User>) => Promise<User>;
     fetchSpeechAnalysis: () => Promise<any>;
+    fetchSpeechStats: () => Promise<any>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -398,6 +399,18 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
+    const fetchSpeechStats = async () => {
+        try {
+            const res = await axios.get(`${baseURL}/stats/speech`);
+            return res.data;
+        } catch (error: any) {
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                console.error("Stats Fetch Error:", error);
+            }
+            return null;
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -421,6 +434,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             resetPassword,
             updateProfile,
             fetchSpeechAnalysis,
+            fetchSpeechStats,
         }}>
             {children}
         </AuthContext.Provider>
