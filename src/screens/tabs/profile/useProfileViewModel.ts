@@ -27,13 +27,13 @@ export const useProfileViewModel = (navigation: any) => {
     const analytics = useMemo(() => {
         const totalDuration = stats?.total_duration_seconds ?? 0;
         return {
-            clarityScore: 84, 
+            clarityScore: stats?.avg_confidence ?? 0, 
             totalSessions: stats?.total_recordings ?? 0,
-            avgResponseSec: 3.2,
+            avgResponseSec: stats?.total_recordings > 0 ? +(totalDuration / stats.total_recordings).toFixed(1) : 0,
             streakDays: stats?.streak_days ?? 0,
             todaySessions: stats?.today_recordings ?? 0,
             todayHours: +(totalDuration / 3600).toFixed(1),
-            todayClarityPct: 84,
+            todayClarityPct: stats?.today_avg_confidence ?? 0,
             todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 5) * 100)),
         };
     }, [stats]);

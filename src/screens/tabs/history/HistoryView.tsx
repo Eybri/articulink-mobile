@@ -90,6 +90,29 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                         {item.corrected_transcript}
                     </SizableText>
                 </XStack>
+                
+                {/* Word Level Confidence Mapping */}
+                {item.words && item.words.length > 0 && (
+                    <XStack fw="wrap" gap="$1.5" mt="$1.5" ml="$4">
+                        {item.words.map((w, idx) => (
+                            <YStack 
+                                key={idx} 
+                                px="$1.5" 
+                                py="$0.5" 
+                                br={4} 
+                                bg={w.confidence > 80 ? `${COLORS.teal}10` : w.confidence > 50 ? "#F59E0B15" : "#EF444410"}
+                            >
+                                <SizableText 
+                                    size="$1" 
+                                    fow="700" 
+                                    color={w.confidence > 80 ? COLORS.teal : w.confidence > 50 ? "#F59E0B" : "#EF4444"}
+                                >
+                                    {w.word}
+                                </SizableText>
+                            </YStack>
+                        ))}
+                    </XStack>
+                )}
             </YStack>
 
             <XStack jc="space-between" ai="center" pt="$2.5" borderTopWidth={1} borderTopColor={COLORS.sandLight} mt="$1">
@@ -119,7 +142,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     )}
                     <XStack ai="center" gap="$1.5">
                         <CheckCircle size={10} color={COLORS.teal} />
-                        <SizableText size="$1" fow="800" color={COLORS.teal}>{Math.round((item.confidence_score || 0.95) * 100)}% Match</SizableText>
+                        <SizableText size="$1" fow="800" color={COLORS.teal}>
+                            {Math.round(item.overall_confidence || (item.confidence_score ? item.confidence_score * 100 : 95))}% Match
+                        </SizableText>
                     </XStack>
                     <XStack ai="center" gap="$1.5">
                         <Clock size={10} color={COLORS.textMid} />

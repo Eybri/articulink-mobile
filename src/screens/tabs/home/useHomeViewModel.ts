@@ -13,6 +13,8 @@ import { COLORS } from "./../../../constants/colors";
 export const useHomeViewModel = () => {
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [transcript, setTranscript] = useState<string>("");
+    const [words, setWords] = useState<any[]>([]);
+    const [confidence, setConfidence] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const { width, height } = useWindowDimensions();
 
@@ -125,6 +127,8 @@ export const useHomeViewModel = () => {
                 return;
             }
             setTranscript(data.transcript || data.text || "");
+            setWords(data.words || []);
+            setConfidence(data.overall_confidence || 0);
         } catch (err) {
             Alert.alert("Network Error", "Could not connect to the transcription server.");
         }
@@ -142,10 +146,12 @@ export const useHomeViewModel = () => {
     const clearTranscript = () => {
         Speech.stop();
         setTranscript("");
+        setWords([]);
+        setConfidence(0);
     };
 
     return {
-        recording, transcript, setTranscript, loading, width, height,
+        recording, transcript, setTranscript, words, setWords, confidence, loading, width, height,
         fadeAnim, slideAnim, orbs, dotGrid,
         startRecording, stopRecording, speakText, clearTranscript
     };

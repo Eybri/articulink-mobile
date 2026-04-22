@@ -13,6 +13,8 @@ export interface HistoryItem {
   duration_seconds?: number;
   language?: string;
   confidence_score?: number;
+  overall_confidence?: number;
+  words?: { word: string; confidence: number }[];
   processing_status?: string;
   created_at?: string;
 }
@@ -184,7 +186,7 @@ export const useHistoryViewModel = () => {
     const stats = {
         totalRecordings: history.length,
         avgConfidence: history.length > 0 
-            ? (history.reduce((acc, curr) => acc + (curr.confidence_score || 0.95), 0) / history.length) * 100 
+            ? (history.reduce((acc, curr) => acc + (curr.overall_confidence || (curr.confidence_score ? curr.confidence_score * 100 : 95)), 0) / history.length) 
             : 0,
         totalDuration: history.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0),
         totalWords: history.reduce((acc, curr) => acc + (curr.corrected_transcript?.split(' ').length || 0), 0)
