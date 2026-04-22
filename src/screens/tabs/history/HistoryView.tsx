@@ -1,0 +1,344 @@
+import React from 'react';
+import {
+    StatusBar,
+    Animated,
+    FlatList,
+    RefreshControl,
+    TouchableOpacity,
+    Modal,
+    ActivityIndicator,
+    Image,
+} from 'react-native';
+import {
+    YStack,
+    XStack,
+    ZStack,
+    Button,
+    Circle,
+    H1,
+    SizableText,
+    Card,
+    Input,
+    ScrollView,
+} from "tamagui";
+import {
+    History,
+    Search,
+    ChevronRight,
+    Mic,
+    Clock,
+    Trash2,
+    CheckCircle,
+    Play,
+    Pause,
+    TrendingUp,
+    BarChart2,
+    Activity,
+    Sparkles,
+    X,
+} from "@tamagui/lucide-icons";
+import { COLORS } from "./../../../constants/colors";
+import { HistoryItem } from "./useHistoryViewModel";
+
+interface HistoryViewProps {
+    vm: any;
+}
+
+export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
+    const renderItem = ({ item }: { item: HistoryItem }) => (
+        <Card
+            bg={vm.playingId === item.id ? `${COLORS.royalBlue}05` : "white"}
+            br={20}
+            p="$3.5"
+            mb="$3"
+            bw={1.5}
+            bc={vm.playingId === item.id ? COLORS.royalBlue : COLORS.sandMid}
+            elevation={vm.playingId === item.id ? 5 : 2}
+            shadowColor={COLORS.deepNavy}
+            shadowOpacity={0.06}
+            pressStyle={{ scale: 0.98, bg: COLORS.warmWhite }}
+        >
+            <XStack jc="space-between" ai="flex-start" mb="$2">
+                <XStack ai="center" gap="$2" f={1}>
+                    <YStack w={28} h={28} br={8} bg={`${COLORS.teal}0C`} jc="center" ai="center">
+                        <Mic size={12} color={COLORS.teal} />
+                    </YStack>
+                    <SizableText size="$1" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1} f={1} numberOfLines={1}>
+                        {item.speech_type === 'unknown' ? 'Speech Record' : (item.speech_type || 'Saved Recording')}
+                    </SizableText>
+                </XStack>
+                <XStack ai="center" gap="$2.5">
+                    <SizableText size="$1" fow="600" color={`${COLORS.textMid}80`}>
+                        {vm.formatTimestamp(item.created_at)}
+                    </SizableText>
+                    <TouchableOpacity onPress={() => vm.handleDelete(item)}>
+                        <Trash2 size={12} color="#EF4444" opacity={0.6} />
+                    </TouchableOpacity>
+                </XStack>
+            </XStack>
+
+            <YStack gap="$1.5" mb="$2.5">
+                <XStack gap="$2" ai="flex-start">
+                    <Circle size={4} mt={8} bg={COLORS.sandMid} />
+                    <SizableText f={1} size="$2" color={COLORS.textMid} fow="500" fontStyle="italic">
+                        "{item.transcript}"
+                    </SizableText>
+                </XStack>
+                <XStack gap="$2" ai="flex-start">
+                    <Circle size={4} mt={8} bg={COLORS.royalBlue} />
+                    <SizableText f={1} size="$3" color={COLORS.textDark} fow="700">
+                        {item.corrected_transcript}
+                    </SizableText>
+                </XStack>
+                
+                {/* Word Level Confidence Mapping */}
+                {item.words && item.words.length > 0 && (
+                    <XStack fw="wrap" gap="$1.5" mt="$1.5" ml="$4">
+                        {item.words.map((w, idx) => (
+                            <YStack 
+                                key={idx} 
+                                px="$1.5" 
+                                py="$0.5" 
+                                br={4} 
+                                bg={w.confidence > 80 ? `${COLORS.teal}10` : w.confidence > 50 ? "#F59E0B15" : "#EF444410"}
+                            >
+                                <SizableText 
+                                    size="$1" 
+                                    fow="700" 
+                                    color={w.confidence > 80 ? COLORS.teal : w.confidence > 50 ? "#F59E0B" : "#EF4444"}
+                                >
+                                    {w.word}
+                                </SizableText>
+                            </YStack>
+                        ))}
+                    </XStack>
+                )}
+            </YStack>
+
+            <XStack jc="space-between" ai="center" pt="$2.5" borderTopWidth={1} borderTopColor={COLORS.sandLight} mt="$1">
+                <XStack gap="$3" ai="center" f={1} fw="wrap">
+                    {item.audio_url && (
+                        <TouchableOpacity
+                            onPress={() => vm.playAudio(item.audio_url, item.id)}
+                            style={{ 
+                                flexDirection: 'row', 
+                                alignItems: 'center', 
+                                gap: 6,
+                                backgroundColor: vm.playingId === item.id ? COLORS.royalBlue : `${COLORS.royalBlue}10`,
+                                paddingHorizontal: 10,
+                                paddingVertical: 4,
+                                borderRadius: 12,
+                            }}
+                        >
+                            {vm.playingId === item.id ? (
+                                <Pause size={12} color="white" fill="white" />
+                            ) : (
+                                <Play size={12} color={COLORS.royalBlue} fill={COLORS.royalBlue} />
+                            )}
+                            <SizableText size="$1" fow="800" color={vm.playingId === item.id ? "white" : COLORS.royalBlue} textTransform="uppercase" ls={0.5}>
+                                {vm.playingId === item.id ? 'Playing' : 'Play Clip'}
+                            </SizableText>
+                        </TouchableOpacity>
+                    )}
+                    <XStack ai="center" gap="$1.5">
+                        <CheckCircle size={10} color={COLORS.teal} />
+                        <SizableText size="$1" fow="800" color={COLORS.teal}>
+                            {Math.round(item.overall_confidence || (item.confidence_score ? item.confidence_score * 100 : 95))}% Match
+                        </SizableText>
+                    </XStack>
+                    <XStack ai="center" gap="$1.5">
+                        <Clock size={10} color={COLORS.textMid} />
+                        <SizableText size="$1" fow="700" color={COLORS.textMid}>{item.duration_seconds?.toFixed(1) || '0.0'}s</SizableText>
+                    </XStack>
+                </XStack>
+                <ChevronRight size={16} color={COLORS.sandMid} />
+            </XStack>
+        </Card>
+    );
+
+    return (
+        <YStack f={1} bg={COLORS.cream}>
+            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+
+            {/* Background blobs */}
+            <ZStack pos="absolute" fullscreen pointerEvents="none">
+                <Circle pos="absolute" t={-vm.height * 0.15} r={-vm.width * 0.2} size={vm.width * 0.8} bg={COLORS.orbBlue} opacity={0.3} />
+                <Circle pos="absolute" b={-vm.height * 0.1} l={-vm.width * 0.2} size={vm.width * 0.7} bg={COLORS.orbTeal} opacity={0.2} />
+            </ZStack>
+
+            {/* Content Area */}
+            <Animated.View style={{ flex: 1, opacity: vm.animations.fadeAnim, transform: [{ translateY: vm.animations.slideAnim }] }}>
+                <FlatList
+                    data={vm.filteredHistory}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderItem}
+                    contentInsetAdjustmentBehavior="automatic"
+                    contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 150 }}
+                    ListHeaderComponent={
+                        <YStack gap="$4" mb="$5">
+                            <XStack ai="center" gap="$4">
+                                <Image 
+                                    source={require("../../../../assets/images/parrot.png")} 
+                                    style={{ width: 90, height: 90 }}
+                                    resizeMode="contain"
+                                />
+                                <YStack f={1} gap="$3">
+                                    <XStack ai="center" jc="space-between">
+                                        <SizableText size="$5" fow="900" color={COLORS.textDark} ls={-0.5}>My Progress</SizableText>
+                                        <Button 
+                                            size="$2" 
+                                            br={8} 
+                                            bg={COLORS.royalBlue} 
+                                            onPress={vm.generateAIAnalysis}
+                                            disabled={vm.isAnalyzing}
+                                            icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={12} color="white" />}
+                                            px="$2"
+                                        >
+                                            <SizableText color="white" fow="800" size="$1">DEEP DIVE</SizableText>
+                                        </Button>
+                                    </XStack>
+
+                                    <ScrollView 
+                                        horizontal 
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                                    >
+                                        <StatCard 
+                                            icon={<TrendingUp size={12} color={COLORS.teal} />} 
+                                            label="Accuracy" 
+                                            value={`${Math.round(vm.stats.avgConfidence)}%`} 
+                                            bg={`${COLORS.teal}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<Activity size={12} color={COLORS.royalBlue} />} 
+                                            label="Time" 
+                                            value={`${vm.stats.totalDuration.toFixed(1)}s`} 
+                                            bg={`${COLORS.royalBlue}10`}
+                                        />
+                                        <StatCard 
+                                            icon={<BarChart2 size={12} color="#F59E0B" />} 
+                                            label="Words" 
+                                            value={vm.stats.totalWords.toString()} 
+                                            bg="#F59E0B15"
+                                        />
+                                    </ScrollView>
+                                </YStack>
+                            </XStack>
+
+                            <XStack 
+                                bg={COLORS.white} 
+                                br={14} 
+                                bw={1} 
+                                bc={vm.isSearchFocused ? COLORS.royalBlue : COLORS.sandMid} 
+                                px="$3.5" 
+                                ai="center" 
+                                h={42} 
+                                elevation={2}
+                                shadowColor={COLORS.deepNavy}
+                            >
+                                <Search size={16} color={vm.isSearchFocused ? COLORS.royalBlue : COLORS.textMid} o={vm.isSearchFocused ? 1 : 0.6} />
+                                <Input
+                                    flex={1}
+                                    bg="transparent"
+                                    bw={0}
+                                    size="$3"
+                                    placeholder="Search recordings..."
+                                    placeholderTextColor={COLORS.textMid}
+                                    value={vm.searchQuery}
+                                    onChangeText={vm.setSearchQuery}
+                                    fontWeight="600"
+                                    color={COLORS.textDark}
+                                    onFocus={() => vm.setIsSearchFocused(true)}
+                                    onBlur={() => vm.setIsSearchFocused(false)}
+                                />
+                            </XStack>
+                        </YStack>
+                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={vm.refreshing}
+                            onRefresh={() => vm.loadHistory(true)}
+                            tintColor={COLORS.royalBlue}
+                        />
+                    }
+                    ListEmptyComponent={
+                        <YStack ai="center" jc="center" mt="$10" opacity={0.5}>
+                            <History size={48} color={COLORS.sandMid} mb="$4" />
+                            <SizableText size="$5" fow="700" color={COLORS.textMid}>
+                                {vm.loading ? 'Fetching history...' : (vm.searchQuery ? 'No recordings found' : 'No history yet')}
+                            </SizableText>
+                        </YStack>
+                    }
+                />
+            </Animated.View>
+
+            {/* Analysis Modal */}
+            <Modal
+                visible={!!vm.analysisReport}
+                transparent
+                animationType="slide"
+                onRequestClose={() => vm.setAnalysisReport(null)}
+            >
+                <YStack f={1} bc="rgba(0,0,0,0.6)" jc="center" ai="center" px="$4">
+                    <Card w="100%" maxH="80%" br={24} bg="white" ov="hidden" elevation={20}>
+                        <XStack p="$4" ai="center" jc="space-between" bbw={1} bbc={COLORS.sandMid} bg={`${COLORS.royalBlue}05`}>
+                            <XStack ai="center" gap="$2">
+                                <Circle size={32} bg={COLORS.royalBlue}>
+                                    <Sparkles size={16} color="white" />
+                                </Circle>
+                                <SizableText size="$4" fow="900" color={COLORS.textDark}>AI Speech Analysis</SizableText>
+                            </XStack>
+                            <TouchableOpacity onPress={() => vm.setAnalysisReport(null)}>
+                                <Circle size={32} bg={COLORS.sandMid} o={0.5}>
+                                    <X size={18} color={COLORS.textDark} />
+                                </Circle>
+                            </TouchableOpacity>
+                        </XStack>
+                        
+                        <ScrollView p="$5">
+                            <YStack gap="$4" pb="$8">
+                                <SizableText size="$3" color={COLORS.textMid} fow="500" lh={22} whiteSpace="pre-wrap">
+                                    {vm.analysisReport}
+                                </SizableText>
+                                
+                                <YStack bg={`${COLORS.teal}08`} p="$4" br={16} bw={1} bc={`${COLORS.teal}20`} gap="$2">
+                                    <SizableText size="$1" fow="800" color={COLORS.teal} tt="uppercase">Pro-Tip</SizableText>
+                                    <SizableText size="$2" color={COLORS.textMid} fow="500">
+                                        Consistency is key! Try recording at least 3 phrases every day to help the AI better understand your unique voice patterns.
+                                    </SizableText>
+                                </YStack>
+                            </YStack>
+                        </ScrollView>
+
+                        <YStack p="$4" btw={1} btc={COLORS.sandMid}>
+                            <Button 
+                                bg={COLORS.royalBlue} 
+                                br={14} 
+                                h={50} 
+                                onPress={() => vm.setAnalysisReport(null)}
+                            >
+                                <SizableText color="white" fow="800">Understood</SizableText>
+                            </Button>
+                        </YStack>
+                    </Card>
+                </YStack>
+            </Modal>
+        </YStack>
+    );
+};
+
+const StatCard = ({ icon, label, value, bg }: { icon: any, label: string, value: string, bg: string }) => (
+    <XStack p="$2" px="$3" br={12} bg="white" bw={1} bc={COLORS.sandMid} ai="center" gap="$2.5" elevation={1}>
+        <Circle size={24} bg={bg}>
+            {icon}
+        </Circle>
+        <YStack>
+            <SizableText size="$1" fow="700" color={COLORS.textMid} opacity={0.6} ls={0.3}>
+                {label}
+            </SizableText>
+            <SizableText size="$2" fow="900" color={COLORS.textDark}>
+                {value}
+            </SizableText>
+        </YStack>
+    </XStack>
+);
