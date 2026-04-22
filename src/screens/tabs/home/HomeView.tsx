@@ -135,29 +135,72 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     Transcript
                                 </SizableText>
                                 <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+                                {vm.confidence > 0 && (
+                                    <XStack bg={vm.confidence > 80 ? `${COLORS.teal}10` : `${COLORS.royalBlue}10`} px="$2" py="$0.5" br={8} ai="center" gap="$1.5">
+                                        <SizableText size="$1" fow="800" color={vm.confidence > 80 ? COLORS.teal : COLORS.royalBlue}>
+                                            {Math.round(vm.confidence)}% CLARITY
+                                        </SizableText>
+                                    </XStack>
+                                )}
                             </XStack>
 
-                            <TextArea
-                                h={180}
-                                bg="transparent"
-                                borderColor="transparent"
-                                p="$0"
-                                size="$4"
-                                fontWeight="500"
-                                color={COLORS.textDark}
-                                value={vm.transcript}
-                                onChangeText={vm.setTranscript}
-                                placeholder="Start speaking..."
-                                placeholderTextColor={COLORS.textMid as any}
-                            />
+                            <ScrollView h={180} showsVerticalScrollIndicator={false}>
+                                {vm.words && vm.words.length > 0 ? (
+                                    <XStack fw="wrap" gap="$1.5">
+                                        {vm.words.map((w: any, i: number) => (
+                                            <YStack 
+                                                key={i}
+                                                px="$2" 
+                                                py="$1" 
+                                                br={6} 
+                                                bg={w.confidence > 80 ? `${COLORS.teal}08` : w.confidence > 50 ? "#F59E0B08" : "#EF444408"}
+                                                bw={1}
+                                                bc={w.confidence > 80 ? `${COLORS.teal}20` : w.confidence > 50 ? "#F59E0B20" : "#EF444420"}
+                                            >
+                                                <SizableText 
+                                                    size="$4" 
+                                                    fow="600" 
+                                                    color={w.confidence > 80 ? COLORS.textDark : w.confidence > 50 ? "#B45309" : "#B91C1C"}
+                                                >
+                                                    {w.word}
+                                                </SizableText>
+                                            </YStack>
+                                        ))}
+                                    </XStack>
+                                ) : (
+                                    <TextArea
+                                        h={180}
+                                        bg="transparent"
+                                        borderColor="transparent"
+                                        p="$0"
+                                        size="$4"
+                                        fontWeight="500"
+                                        color={COLORS.textDark}
+                                        value={vm.transcript}
+                                        onChangeText={vm.setTranscript}
+                                        placeholder="Start speaking..."
+                                        placeholderTextColor={COLORS.textMid as any}
+                                    />
+                                )}
+                            </ScrollView>
 
-                            {vm.transcript.length > 0 && (
-                                <XStack jc="flex-end" mt="$1">
+                            <XStack jc="flex-end" mt="$2" gap="$3">
+                                {vm.words && vm.words.length > 0 && (
+                                    <Button 
+                                        size="$1" 
+                                        bg="transparent" 
+                                        onPress={() => vm.setWords([])}
+                                        p="$0"
+                                    >
+                                        <SizableText size="$1" color={COLORS.royalBlue} fow="700">Edit Text</SizableText>
+                                    </Button>
+                                )}
+                                {vm.transcript.length > 0 && (
                                     <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.4}>
                                         {vm.transcript.split(' ').length} words
                                     </SizableText>
-                                </XStack>
-                            )}
+                                )}
+                            </XStack>
                         </Card>
                     </Animated.View>
 

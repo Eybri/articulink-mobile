@@ -15,7 +15,7 @@ const AppNavigator = () => {
         if (user) {
             wasLoggedIn.current = true;
             // Show privacy modal if not yet accepted
-            if (user.privacy_accepted === false) {
+            if (!user.privacy_accepted) {
                 setPrivacyModalVisible(true);
             }
         }
