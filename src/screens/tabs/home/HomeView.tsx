@@ -34,7 +34,7 @@ interface HomeViewProps {
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
-    const isRecording = !!vm.recording;
+    const isRecording = !!vm.recording || vm.isStreaming;
     const statusText = vm.loading ? "Processing speech..." : isRecording ? "Listening..." : "Tap the mic to start";
 
     return (
@@ -69,6 +69,36 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 Enhancing speech clarity with premium AI
                             </SizableText>
                         </YStack>
+                    </Animated.View>
+
+                    {/* Mode Toggle */}
+                    <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
+                        <XStack jc="center" ai="center" gap="$4" mb="$2">
+                            <Button
+                                size="$3"
+                                br={12}
+                                bg={!vm.isRealtime ? COLORS.royalBlue : "white"}
+                                bw={!vm.isRealtime ? 0 : 1}
+                                bc={COLORS.sandMid}
+                                onPress={() => vm.setIsRealtime(false)}
+                                disabled={isRecording}
+                                opacity={isRecording ? 0.5 : 1}
+                            >
+                                <SizableText fow="700" color={!vm.isRealtime ? "white" : COLORS.textDark}>Standard</SizableText>
+                            </Button>
+                            <Button
+                                size="$3"
+                                br={12}
+                                bg={vm.isRealtime ? COLORS.royalBlue : "white"}
+                                bw={vm.isRealtime ? 0 : 1}
+                                bc={COLORS.sandMid}
+                                onPress={() => vm.setIsRealtime(true)}
+                                disabled={isRecording}
+                                opacity={isRecording ? 0.5 : 1}
+                            >
+                                <SizableText fow="700" color={vm.isRealtime ? "white" : COLORS.textDark}>Simultaneous</SizableText>
+                            </Button>
+                        </XStack>
                     </Animated.View>
 
                     {/* Mic Section (Compact) */}
