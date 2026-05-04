@@ -16,7 +16,7 @@ import {
     Card,
     Spinner,
     AnimatePresence,
-    ScrollView, 
+    ScrollView,
 } from "tamagui";
 import {
     Mic,
@@ -35,10 +35,10 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
     const isRecording = !!vm.recording || vm.isStreaming;
-    const statusText = vm.loading 
-        ? "Processing speech..." 
-        : isRecording 
-            ? "Listening..." 
+    const statusText = vm.loading
+        ? "Processing speech..."
+        : isRecording
+            ? "Listening..."
             : (vm.isRealtime ? "Tap to start live listening" : "Tap to record a phrase");
 
     const [toggleWidth, setToggleWidth] = useState(0);
@@ -68,7 +68,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                 showsVerticalScrollIndicator={false}
                 contentInsetAdjustmentBehavior="automatic"
                 contentContainerStyle={{
-                    paddingBottom: Platform.OS === 'ios' ? 200 : 180, 
+                    paddingBottom: Platform.OS === 'ios' ? 200 : 180,
                     paddingTop: Platform.OS === "android" ? 20 : 0,
                 }}
             >
@@ -89,7 +89,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                     {/* Mode Toggle */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <XStack 
+                        <XStack
                             bg="white"
                             p="$1"
                             br={100}
@@ -226,22 +226,22 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 )}
                             </XStack>
 
-                            <ScrollView h={180} showsVerticalScrollIndicator={false}>
+                            <ScrollView minHeight={180} maxHeight={vm.isRealtime ? 380 : 180} showsVerticalScrollIndicator={false}>
                                 {vm.words && vm.words.length > 0 ? (
                                     <XStack fw="wrap" gap="$1.5">
                                         {vm.words.map((w: any, i: number) => (
-                                            <YStack 
+                                            <YStack
                                                 key={i}
-                                                px="$2" 
-                                                py="$1" 
-                                                br={6} 
+                                                px="$2"
+                                                py="$1"
+                                                br={6}
                                                 bg={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`) : w.confidence > 50 ? "#F59E0B08" : "#EF444408"}
                                                 bw={1}
                                                 bc={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}20` : `${COLORS.royalBlue}20`) : w.confidence > 50 ? "#F59E0B20" : "#EF444420"}
                                             >
-                                                <SizableText 
-                                                    size="$4" 
-                                                    fow="600" 
+                                                <SizableText
+                                                    size={vm.isRealtime ? "$5" : "$4"}
+                                                    fow="600"
                                                     color={w.confidence > 80 ? COLORS.textDark : w.confidence > 50 ? "#B45309" : "#B91C1C"}
                                                 >
                                                     {w.word}
@@ -251,11 +251,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     </XStack>
                                 ) : (
                                     <TextArea
-                                        h={180}
+                                        minHeight={180}
                                         bg="transparent"
                                         borderColor="transparent"
                                         p="$0"
-                                        size="$4"
+                                        size={vm.isRealtime ? "$4" : "$4"}
                                         fontWeight="500"
                                         color={COLORS.textDark}
                                         value={vm.transcript}
@@ -268,9 +268,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                             <XStack jc="flex-end" mt="$2" gap="$3">
                                 {vm.words && vm.words.length > 0 && (
-                                    <Button 
-                                        size="$1" 
-                                        bg="transparent" 
+                                    <Button
+                                        size="$1"
+                                        bg="transparent"
                                         onPress={() => vm.setWords([])}
                                         p="$0"
                                     >
