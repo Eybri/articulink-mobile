@@ -107,7 +107,7 @@ const HomeStack = () => (
       name="Chatbot" 
       component={ChatbotScreen} 
       options={{ 
-        title: "AI Assistant",
+        title: "Ariya",
         headerLargeTitle: false, // Cleaner for sub-screens
       }} 
     />

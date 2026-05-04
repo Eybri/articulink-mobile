@@ -116,7 +116,7 @@ export const MessageBubble = memo(({
                         overflow="hidden"
                     >
                         <RNImage
-                            source={require("../../../../../assets/images/logo2-nobg.png")}
+                            source={require("../../../../../assets/images/ariya.png")}
                             style={{ width: 26, height: 26 }}
                             resizeMode="contain"
                         />

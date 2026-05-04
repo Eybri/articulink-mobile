@@ -66,7 +66,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                 {vm.messages.length > 1 && (
                     <YStack fullscreen o={0.03} jc="center" ai="center" pointerEvents="none">
                         <RNImage
-                            source={require("../../../../assets/images/logo2-nobg.png")}
+                            source={require("../../../../assets/images/ariya.png")}
                             style={{ width: vm.width * 0.7, height: vm.width * 0.7 }}
                             resizeMode="contain"
                         />
@@ -90,7 +90,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                                 <Circle size={80} bg={`${COLORS.teal}0F`} />
                                 <YStack fullscreen jc="center" ai="center">
                                     <RNImage
-                                        source={require("../../../../assets/images/logo2-nobg.png")}
+                                        source={require("../../../../assets/images/ariya.png")}
                                         style={{ width: 100, height: 100 }}
                                         resizeMode="contain"
                                     />
@@ -98,10 +98,10 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                             </ZStack>
                             <YStack ai="center" gap="$1">
                                 <SizableText size="$6" fow="800" color={COLORS.textDark} ta="center">
-                                    Start a Conversation
+                                    Meet Ariya
                                 </SizableText>
-                                <SizableText size="$3" color={COLORS.textMid} ta="center" px="$6" o={0.8}>
-                                    I'm here to support your speech journey and answer any questions.
+                                <SizableText size="$3" color={COLORS.textMid} ta="center" px="$6" o={0.8} fontStyle="italic">
+                                    "Speak your way. I'll help you be heard."
                                 </SizableText>
                             </YStack>
                         </YStack>
@@ -122,7 +122,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                         <XStack ai="flex-end" gap="$2.5" mb="$4">
                             <Circle size={32} bg={COLORS.white} elevation={1} bc={COLORS.sandMid} bw={1} jc="center" ai="center" overflow="hidden">
                                 <RNImage
-                                    source={require("../../../../assets/images/logo2-nobg.png")}
+                                    source={require("../../../../assets/images/ariya.png")}
                                     style={{ width: 26, height: 26 }}
                                     resizeMode="contain"
                                 />
