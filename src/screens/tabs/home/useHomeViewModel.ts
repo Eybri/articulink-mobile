@@ -143,11 +143,21 @@ export const useHomeViewModel = () => {
         if (!isStreaming && wsRef.current?.readyState !== WebSocket.OPEN) return;
 
         try {
-            // Start a short recording segment
-            const { recording } = await Audio.Recording.createAsync({
-                android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
-                ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
-            } as any);
+            let maxMetering = -160;
+            // Start a short recording segment with metering enabled
+            const { recording } = await Audio.Recording.createAsync(
+                {
+                    isMeteringEnabled: true,
+                    android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
+                    ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
+                } as any,
+                (status: any) => {
+                    if (status.metering !== undefined && status.metering > maxMetering) {
+                        maxMetering = status.metering;
+                    }
+                },
+                100
+            );
             
             recordingRef.current = recording;
 
@@ -157,7 +167,8 @@ export const useHomeViewModel = () => {
                     await recording.stopAndUnloadAsync();
                     const uri = recording.getURI();
                     
-                    if (uri) {
+                    // Only send if volume threshold is met (not complete silence)
+                    if (uri && maxMetering > -45) {
                         const response = await fetch(uri);
                         const blob = await response.blob();
                         const reader = new FileReader();
@@ -168,6 +179,8 @@ export const useHomeViewModel = () => {
                             }
                         };
                         reader.readAsArrayBuffer(blob);
+                    } else {
+                        console.log("Silence detected (max db: " + maxMetering + "), skipping chunk.");
                     }
                     
                     // Trigger next cycle if still streaming
