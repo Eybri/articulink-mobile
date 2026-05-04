@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Animated } from "react-native";
-import { XStack, Circle } from "tamagui";
+import { XStack, Circle, ZStack } from "tamagui";
 import { COLORS } from "./../../../../constants/colors";
 
 // ─── Soft Orb ─────────────────────────────────────────────────────

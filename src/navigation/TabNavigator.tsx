@@ -17,6 +17,7 @@ import {
   MapPin,
   User,
   MessageCircle,
+  Mic,
 } from "@tamagui/lucide-icons";
 
 const Tab = createBottomTabNavigator();
@@ -142,7 +143,7 @@ const ProfileStack = () => (
 
 // ─── Tab Config ──────────────────────────────────────────────────
 const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
-  { name: "Home", label: "Home", icon: Home },
+  { name: "Home", label: "Hub", icon: Mic },
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },
