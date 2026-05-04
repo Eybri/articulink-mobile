@@ -73,30 +73,44 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                     {/* Mode Toggle */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <XStack jc="center" ai="center" gap="$4" mb="$2">
+                        <XStack 
+                            bg="white"
+                            p="$1"
+                            br={100}
+                            bw={1}
+                            bc="rgba(221, 214, 200, 0.4)"
+                            mb="$2"
+                            mx="$2"
+                            elevation={4}
+                            shadowColor={COLORS.deepNavy}
+                            shadowOpacity={0.04}
+                            shadowRadius={12}
+                        >
                             <Button
-                                size="$3"
-                                br={12}
-                                bg={!vm.isRealtime ? COLORS.royalBlue : "white"}
-                                bw={!vm.isRealtime ? 0 : 1}
-                                bc={COLORS.sandMid}
+                                f={1}
+                                h={44}
+                                br={100}
+                                bg={!vm.isRealtime ? COLORS.royalBlue : "transparent"}
+                                bw={0}
                                 onPress={() => vm.setIsRealtime(false)}
                                 disabled={isRecording}
                                 opacity={isRecording ? 0.5 : 1}
+                                pressStyle={{ bg: !vm.isRealtime ? COLORS.royalBlue : "rgba(0,0,0,0.02)" }}
                             >
-                                <SizableText fow="700" color={!vm.isRealtime ? "white" : COLORS.textDark}>Standard</SizableText>
+                                <SizableText fow={!vm.isRealtime ? "800" : "600"} size="$3" color={!vm.isRealtime ? "white" : COLORS.textMid}>Phrase Mode</SizableText>
                             </Button>
                             <Button
-                                size="$3"
-                                br={12}
-                                bg={vm.isRealtime ? COLORS.royalBlue : "white"}
-                                bw={vm.isRealtime ? 0 : 1}
-                                bc={COLORS.sandMid}
+                                f={1}
+                                h={44}
+                                br={100}
+                                bg={vm.isRealtime ? COLORS.teal : "transparent"}
+                                bw={0}
                                 onPress={() => vm.setIsRealtime(true)}
                                 disabled={isRecording}
                                 opacity={isRecording ? 0.5 : 1}
+                                pressStyle={{ bg: vm.isRealtime ? COLORS.teal : "rgba(0,0,0,0.02)" }}
                             >
-                                <SizableText fow="700" color={vm.isRealtime ? "white" : COLORS.textDark}>Simultaneous</SizableText>
+                                <SizableText fow={vm.isRealtime ? "800" : "600"} size="$3" color={vm.isRealtime ? "white" : COLORS.textMid}>Live Mode</SizableText>
                             </Button>
                         </XStack>
                     </Animated.View>
