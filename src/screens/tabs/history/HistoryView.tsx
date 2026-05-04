@@ -182,48 +182,50 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                     style={{ width: 90, height: 90 }}
                                     resizeMode="contain"
                                 />
-                                <YStack f={1} gap="$3">
-                                    <XStack ai="center" jc="space-between">
-                                        <SizableText size="$5" fow="900" color={COLORS.textDark} ls={-0.5}>My Progress</SizableText>
-                                        <Button 
-                                            size="$2" 
-                                            br={8} 
-                                            bg={COLORS.royalBlue} 
-                                            onPress={vm.generateAIAnalysis}
-                                            disabled={vm.isAnalyzing}
-                                            icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={12} color="white" />}
-                                            px="$2"
-                                        >
-                                            <SizableText color="white" fow="800" size="$1">DEEP DIVE</SizableText>
-                                        </Button>
-                                    </XStack>
-
-                                    <ScrollView 
-                                        horizontal 
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                                <YStack f={1} gap="$2.5" ai="flex-start">
+                                    <Card bg="white" p="$3" px="$3.5" br={16} borderBottomLeftRadius={4} bw={1} bc={COLORS.sandMid} elevation={1}>
+                                        <SizableText size="$3" color={COLORS.textDark} fow="600" fontStyle="italic" lh={18}>
+                                            "Keep practicing! Every word brings you closer to your goal."
+                                        </SizableText>
+                                    </Card>
+                                    <Button 
+                                        size="$2.5" 
+                                        br={12} 
+                                        bg={COLORS.royalBlue} 
+                                        onPress={vm.generateAIAnalysis}
+                                        disabled={vm.isAnalyzing}
+                                        icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={14} color="white" />}
+                                        pressStyle={{ scale: 0.95 }}
                                     >
-                                        <StatCard 
-                                            icon={<TrendingUp size={12} color={COLORS.teal} />} 
-                                            label="Accuracy" 
-                                            value={`${Math.round(vm.stats.avgConfidence)}%`} 
-                                            bg={`${COLORS.teal}10`}
-                                        />
-                                        <StatCard 
-                                            icon={<Activity size={12} color={COLORS.royalBlue} />} 
-                                            label="Time" 
-                                            value={`${vm.stats.totalDuration.toFixed(1)}s`} 
-                                            bg={`${COLORS.royalBlue}10`}
-                                        />
-                                        <StatCard 
-                                            icon={<BarChart2 size={12} color="#F59E0B" />} 
-                                            label="Words" 
-                                            value={vm.stats.totalWords.toString()} 
-                                            bg="#F59E0B15"
-                                        />
-                                    </ScrollView>
+                                        <SizableText color="white" fow="800" size="$2">Analyze Progress</SizableText>
+                                    </Button>
                                 </YStack>
                             </XStack>
+
+                            <ScrollView 
+                                horizontal 
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                            >
+                                <StatCard 
+                                    icon={<TrendingUp size={12} color={COLORS.teal} />} 
+                                    label="Accuracy" 
+                                    value={`${Math.round(vm.stats.avgConfidence)}%`} 
+                                    bg={`${COLORS.teal}10`}
+                                />
+                                <StatCard 
+                                    icon={<Activity size={12} color={COLORS.royalBlue} />} 
+                                    label="Time" 
+                                    value={`${vm.stats.totalDuration.toFixed(1)}s`} 
+                                    bg={`${COLORS.royalBlue}10`}
+                                />
+                                <StatCard 
+                                    icon={<BarChart2 size={12} color="#F59E0B" />} 
+                                    label="Words" 
+                                    value={vm.stats.totalWords.toString()} 
+                                    bg="#F59E0B15"
+                                />
+                            </ScrollView>
 
                             <XStack 
                                 bg={COLORS.white} 
