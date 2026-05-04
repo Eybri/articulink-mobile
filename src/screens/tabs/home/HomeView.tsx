@@ -153,14 +153,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ scale: vm.fadeAnim }] }}>
                         <YStack ai="center" gap="$4">
                             <YStack w={110} h={110} jc="center" ai="center">
-                                <PulseRing active={isRecording} />
+                                <PulseRing active={isRecording} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 <AnimatePresence>
                                     {isRecording && (
                                         <Circle
                                             key="active-bg"
                                             pos="absolute"
                                             size={110}
-                                            bg={COLORS.teal}
+                                            bg={vm.isRealtime ? COLORS.teal : COLORS.royalBlue}
                                             opacity={0.08}
                                         />
                                     )}
@@ -169,12 +169,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 <Button
                                     size={80}
                                     br={40}
-                                    bg={isRecording ? '#DC2626' : COLORS.royalBlue}
+                                    bg={isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
                                     onPress={isRecording ? vm.stopRecording : vm.startRecording}
                                     disabled={vm.loading}
                                     pressStyle={{ scale: 0.95, opacity: 0.9 }}
                                     elevation={12}
-                                    shadowColor={isRecording ? '#DC2626' : COLORS.royalBlue}
+                                    shadowColor={isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
                                     shadowOffset={{ width: 0, height: 8 }}
                                     shadowOpacity={0.15}
                                     shadowRadius={15}
@@ -186,7 +186,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 <SizableText size="$3" fow="700" color={isRecording ? '#DC2626' : COLORS.textDark}>
                                     {statusText}
                                 </SizableText>
-                                {isRecording && <YStack mt="$1"><AnimatedWaveform color={COLORS.teal} /></YStack>}
+                                {isRecording && <YStack mt="$1"><AnimatedWaveform color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} /></YStack>}
                             </YStack>
                         </YStack>
                     </Animated.View>
@@ -206,16 +206,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                             p="$4"
                         >
                             <XStack ai="center" gap="$2" mb="$3">
-                                <YStack w={28} h={28} br={10} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
-                                    <FileText size={14} color={COLORS.royalBlue} />
+                                <YStack w={28} h={28} br={10} bg={vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`} jc="center" ai="center">
+                                    <FileText size={14} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 </YStack>
                                 <SizableText fow="800" size="$3" color={COLORS.textDark}>
                                     Transcript
                                 </SizableText>
                                 <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
                                 {vm.confidence > 0 && (
-                                    <XStack bg={vm.confidence > 80 ? `${COLORS.teal}10` : `${COLORS.royalBlue}10`} px="$2" py="$0.5" br={8} ai="center" gap="$1.5">
-                                        <SizableText size="$1" fow="800" color={vm.confidence > 80 ? COLORS.teal : COLORS.royalBlue}>
+                                    <XStack bg={vm.confidence > 80 ? `${COLORS.teal}10` : (vm.isRealtime ? `${COLORS.teal}10` : `${COLORS.royalBlue}10`)} px="$2" py="$0.5" br={8} ai="center" gap="$1.5">
+                                        <SizableText size="$1" fow="800" color={vm.confidence > 80 ? COLORS.teal : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}>
                                             {Math.round(vm.confidence)}% CLARITY
                                         </SizableText>
                                     </XStack>
@@ -231,9 +231,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                                 px="$2" 
                                                 py="$1" 
                                                 br={6} 
-                                                bg={w.confidence > 80 ? `${COLORS.teal}08` : w.confidence > 50 ? "#F59E0B08" : "#EF444408"}
+                                                bg={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`) : w.confidence > 50 ? "#F59E0B08" : "#EF444408"}
                                                 bw={1}
-                                                bc={w.confidence > 80 ? `${COLORS.teal}20` : w.confidence > 50 ? "#F59E0B20" : "#EF444420"}
+                                                bc={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}20` : `${COLORS.royalBlue}20`) : w.confidence > 50 ? "#F59E0B20" : "#EF444420"}
                                             >
                                                 <SizableText 
                                                     size="$4" 
@@ -270,7 +270,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                         onPress={() => vm.setWords([])}
                                         p="$0"
                                     >
-                                        <SizableText size="$1" color={COLORS.royalBlue} fow="700">Edit Text</SizableText>
+                                        <SizableText size="$1" color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} fow="700">Edit Text</SizableText>
                                     </Button>
                                 )}
                                 {vm.transcript.length > 0 && (
@@ -287,7 +287,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                         <YStack gap="$2.5">
                             <Button
                                 h={54}
-                                bg={COLORS.royalBlue}
+                                bg={vm.isRealtime ? COLORS.teal : COLORS.royalBlue}
                                 br={16}
                                 onPress={vm.speakText}
                                 disabled={!vm.transcript}
@@ -296,7 +296,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 icon={<Volume2 size={18} color="white" />}
                                 iconAfter={<ChevronRight size={16} color="rgba(255,255,255,0.4)" />}
                                 elevation={6}
-                                shadowColor={COLORS.royalBlue}
+                                shadowColor={vm.isRealtime ? COLORS.teal : COLORS.royalBlue}
                                 shadowOpacity={0.15}
                             >
                                 <SizableText fow="800" size="$4" color="white" ml="$1.5">
