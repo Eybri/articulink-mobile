@@ -21,6 +21,8 @@ export const useHomeViewModel = () => {
     const wsRef = useRef<WebSocket | null>(null);
     const realtimeTimerRef = useRef<NodeJS.Timeout | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
+    const isStreamingRef = useRef<boolean>(false);
+    const lastSpeakTimeRef = useRef<number>(0);
     const { width, height } = useWindowDimensions();
 
     // Entry Animations
@@ -107,6 +109,7 @@ export const useHomeViewModel = () => {
             wsRef.current.onopen = () => {
                 console.log("WebSocket Connected");
                 setIsStreaming(true);
+                isStreamingRef.current = true;
                 startStreamingCycle();
             };
 
@@ -116,8 +119,14 @@ export const useHomeViewModel = () => {
                     const newText = data.text.trim();
                     setTranscript((prev) => prev + (prev ? " " : "") + newText);
                     
+                    // Estimate TTS duration (approx 150 words per min + 2s buffer)
+                    const wordCount = newText.split(' ').length;
+                    const estimatedDurationMs = (wordCount / 150) * 60 * 1000 + 2000;
+                    
                     // Automatic Speech for Simultaneous Mode
                     Speech.stop();
+                    lastSpeakTimeRef.current = Date.now() + estimatedDurationMs;
+                    
                     Speech.speak(newText, { 
                         language: "fil-PH", 
                         rate: 0.95, 
@@ -127,7 +136,10 @@ export const useHomeViewModel = () => {
             };
 
             wsRef.current.onerror = (e) => console.error("WS Error", e);
-            wsRef.current.onclose = () => setIsStreaming(false);
+            wsRef.current.onclose = () => {
+                setIsStreaming(false);
+                isStreamingRef.current = false;
+            };
 
             await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
@@ -140,14 +152,24 @@ export const useHomeViewModel = () => {
     };
 
     const startStreamingCycle = async () => {
-        if (!isStreaming && wsRef.current?.readyState !== WebSocket.OPEN) return;
+        if (!isStreamingRef.current) return;
 
         try {
-            // Start a short recording segment
-            const { recording } = await Audio.Recording.createAsync({
-                android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
-                ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
-            } as any);
+            let maxMetering = -160;
+            // Start a short recording segment with metering enabled
+            const { recording } = await Audio.Recording.createAsync(
+                {
+                    isMeteringEnabled: true,
+                    android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
+                    ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
+                } as any,
+                (status: any) => {
+                    if (status.metering !== undefined && status.metering > maxMetering) {
+                        maxMetering = status.metering;
+                    }
+                },
+                100
+            );
             
             recordingRef.current = recording;
 
@@ -157,7 +179,11 @@ export const useHomeViewModel = () => {
                     await recording.stopAndUnloadAsync();
                     const uri = recording.getURI();
                     
-                    if (uri) {
+                    // Drop chunks if the current time is before the estimated end time of the TTS
+                    const overlapWithTTS = Date.now() < lastSpeakTimeRef.current;
+                    
+                    // Only send if volume threshold is met AND not overlapping with TTS
+                    if (uri && maxMetering > -45 && !overlapWithTTS) {
                         const response = await fetch(uri);
                         const blob = await response.blob();
                         const reader = new FileReader();
@@ -168,6 +194,12 @@ export const useHomeViewModel = () => {
                             }
                         };
                         reader.readAsArrayBuffer(blob);
+                    } else {
+                        if (overlapWithTTS) {
+                            console.log("Chunk overlaps with TTS, skipping to prevent echo.");
+                        } else {
+                            console.log("Silence detected (max db: " + maxMetering + "), skipping chunk.");
+                        }
                     }
                     
                     // Trigger next cycle if still streaming

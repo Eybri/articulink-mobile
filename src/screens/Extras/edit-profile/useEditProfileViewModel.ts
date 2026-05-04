@@ -169,18 +169,38 @@ export const useEditProfileViewModel = (navigation: any) => {
         ]);
     }, [user, setUser]);
     
-    const handleSelectIcon = useCallback((icon: string) => {
+    const handleSelectIcon = useCallback(async (icon: string) => {
         console.log("Selected Icon:", icon);
-        // Toggle logic: if already selected, remove it.
-        if (profilePic === icon) {
-            console.log("Deselecting icon");
-            setProfilePic(null);
-        } else {
-            console.log("Setting profile pic to:", icon);
-            setProfilePic(icon);
-        }
+        const newIcon = profilePic === icon ? null : icon;
+        
+        // Close modal immediately to avoid native view tree crashes during heavy context updates
         setShowIconModal(false);
-    }, [profilePic]);
+        
+        try {
+            setUploading(true);
+            const token = await getToken();
+            const updateData = { profile_pic: newIcon };
+            
+            const response = await axios.put(`${baseURL}/auth/profile`, updateData, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+
+            setProfilePic(newIcon);
+            if (user) {
+                const updatedUser: UserType = { 
+                    ...user, 
+                    profile_pic: response.data.profile_pic !== undefined ? response.data.profile_pic : newIcon 
+                } as UserType;
+                await storeUser(updatedUser);
+                if (setUser) setUser(updatedUser);
+            }
+        } catch (error: any) {
+            console.error("Icon Select Error:", error.response?.data || error.message);
+            Alert.alert("Error", "Failed to update profile picture.");
+        } finally {
+            setUploading(false);
+        }
+    }, [profilePic, user, setUser]);
 
     const clearProfilePic = useCallback(() => {
         setProfilePic(null);

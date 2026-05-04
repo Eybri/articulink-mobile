@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { Animated } from "react-native";
-import { XStack, Circle } from "tamagui";
+import { XStack, Circle, ZStack } from "tamagui";
 import { COLORS } from "./../../../../constants/colors";
 
 // ─── Soft Orb ─────────────────────────────────────────────────────
@@ -88,54 +88,62 @@ export const AnimatedWaveform: React.FC<{ color: string }> = ({ color }) => {
 };
 
 // ─── Pulse Ring ──────────────────────────────────────────────────
-export const PulseRing: React.FC<{ active: boolean }> = ({ active }) => {
-  const pulse1 = useRef(new Animated.Value(0)).current;
-  const pulse2 = useRef(new Animated.Value(0)).current;
-  const pulse3 = useRef(new Animated.Value(0)).current;
+export const PulseRing = ({ active, color = COLORS.teal }: { active: boolean; color?: string }) => {
+    const ring1 = useRef(new Animated.Value(0)).current;
+    const ring2 = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (active) {
-      const createPulse = (anim: Animated.Value, delay: number) =>
-        Animated.loop(
-          Animated.sequence([
-            Animated.delay(delay),
-            Animated.timing(anim, { toValue: 1, duration: 2500, useNativeDriver: true }),
-          ])
+    useEffect(() => {
+        if (!active) {
+            ring1.setValue(0);
+            ring2.setValue(0);
+            return;
+        }
+
+        const createPulse = (anim: Animated.Value) => {
+            return Animated.loop(
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 2000,
+                    useNativeDriver: true,
+                })
+            );
+        };
+
+        const pulse1 = createPulse(ring1);
+        const pulse2 = createPulse(ring2);
+
+        pulse1.start();
+        setTimeout(() => pulse2.start(), 1000);
+
+        return () => {
+            pulse1.stop();
+            pulse2.stop();
+        };
+    }, [active]);
+
+    if (!active) return null;
+
+    const renderRing = (anim: Animated.Value) => {
+        return (
+            <Animated.View
+                style={{
+                    position: 'absolute',
+                    width: 140,
+                    height: 140,
+                    borderRadius: 70,
+                    borderWidth: 2,
+                    borderColor: color,
+                    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0] }),
+                    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.5] }) }],
+                }}
+            />
         );
-      const a1 = createPulse(pulse1, 0);
-      const a2 = createPulse(pulse2, 800);
-      const a3 = createPulse(pulse3, 1600);
-      a1.start(); a2.start(); a3.start();
-      return () => { 
-        a1.stop(); a2.stop(); a3.stop();
-        pulse1.setValue(0); pulse2.setValue(0); pulse3.setValue(0);
-      };
-    } else {
-      pulse1.setValue(0); pulse2.setValue(0); pulse3.setValue(0);
-    }
-  }, [active]);
+    };
 
-  if (!active) return null;
-
-  const renderRing = (anim: Animated.Value) => {
-    const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 2.5] });
-    const opacity = anim.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.3, 0] });
     return (
-      <Animated.View style={{
-        position: 'absolute',
-        width: 100, height: 100, borderRadius: 50,
-        borderWidth: 1.5, borderColor: COLORS.teal,
-        transform: [{ scale }],
-        opacity,
-      }} />
+        <ZStack pos="absolute" w={140} h={140} jc="center" ai="center">
+            {renderRing(ring1)}
+            {renderRing(ring2)}
+        </ZStack>
     );
-  };
-
-  return (
-    <XStack pos="absolute" jc="center" ai="center">
-      {renderRing(pulse1)}
-      {renderRing(pulse2)}
-      {renderRing(pulse3)}
-    </XStack>
-  );
 };
