@@ -35,7 +35,11 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
     const isRecording = !!vm.recording || vm.isStreaming;
-    const statusText = vm.loading ? "Processing speech..." : isRecording ? "Listening..." : "Tap the mic to start";
+    const statusText = vm.loading 
+        ? "Processing speech..." 
+        : isRecording 
+            ? "Listening..." 
+            : (vm.isRealtime ? "Tap to start live listening" : "Tap to record a phrase");
 
     const [toggleWidth, setToggleWidth] = useState(0);
     const slideAnimToggle = useRef(new Animated.Value(vm.isRealtime ? 1 : 0)).current;
@@ -72,13 +76,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                     {/* Hero Branding Section (Restored & Refined) */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
                         <YStack ai="center" gap="$1.5" mb="$1">
-                            <YStack bg={`${COLORS.teal}10`} px="$2.5" py="$0.5" br={100} bw={1} bc={`${COLORS.teal}20`}>
-                                <SizableText size="$1" fontWeight="800" color={COLORS.teal} ls={1.2} tt="uppercase">
-                                    AI Clarity Engine
+                            <YStack bg={vm.isRealtime ? `${COLORS.teal}10` : `${COLORS.royalBlue}10`} px="$3" py="$1" br={100} bw={1} bc={vm.isRealtime ? `${COLORS.teal}20` : `${COLORS.royalBlue}20`}>
+                                <SizableText size="$2" fontWeight="900" color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} ls={1.2} tt="uppercase">
+                                    {vm.isRealtime ? "Live Mode Active" : "Phrase Mode Active"}
                                 </SizableText>
                             </YStack>
                             <SizableText size="$3" color={COLORS.textMid} fow="500" ta="center" px="$4" opacity={0.75}>
-                                Enhancing speech clarity with premium AI
+                                {vm.isRealtime ? "Continuous real-time speech enhancement" : "Record and playback clarified phrases"}
                             </SizableText>
                         </YStack>
                     </Animated.View>
@@ -210,7 +214,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     <FileText size={14} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 </YStack>
                                 <SizableText fow="800" size="$3" color={COLORS.textDark}>
-                                    Transcript
+                                    {vm.isRealtime ? "Live Transcript" : "Phrase Transcript"}
                                 </SizableText>
                                 <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
                                 {vm.confidence > 0 && (
