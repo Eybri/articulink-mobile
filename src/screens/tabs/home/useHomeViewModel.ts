@@ -112,8 +112,17 @@ export const useHomeViewModel = () => {
 
             wsRef.current.onmessage = (e) => {
                 const data = JSON.parse(e.data);
-                if (data.type === "transcript") {
-                    setTranscript((prev) => prev + " " + data.text);
+                if (data.type === "transcript" && data.text) {
+                    const newText = data.text.trim();
+                    setTranscript((prev) => prev + (prev ? " " : "") + newText);
+                    
+                    // Automatic Speech for Simultaneous Mode
+                    Speech.stop();
+                    Speech.speak(newText, { 
+                        language: "fil-PH", 
+                        rate: 0.95, 
+                        pitch: 1.0 
+                    });
                 }
             };
 
