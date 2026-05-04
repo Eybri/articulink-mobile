@@ -178,7 +178,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                         <YStack gap="$4" mb="$5">
                             <XStack ai="center" gap="$4">
                                 <Image 
-                                    source={require("../../../../assets/images/parrot.png")} 
+                                    source={require("../../../../assets/images/ariya.png")} 
                                     style={{ width: 90, height: 90 }}
                                     resizeMode="contain"
                                 />
