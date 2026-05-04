@@ -16,6 +16,13 @@ export const useHomeViewModel = () => {
     const [words, setWords] = useState<any[]>([]);
     const [confidence, setConfidence] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
+    const [isRealtime, setIsRealtime] = useState<boolean>(false);
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
+    const wsRef = useRef<WebSocket | null>(null);
+    const realtimeTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const recordingRef = useRef<Audio.Recording | null>(null);
+    const isStreamingRef = useRef<boolean>(false);
+    const lastSpeakTimeRef = useRef<number>(0);
     const { width, height } = useWindowDimensions();
 
     // Entry Animations
@@ -47,6 +54,10 @@ export const useHomeViewModel = () => {
     }, [width, height]);
 
     const startRecording = async () => {
+        if (isRealtime) {
+            await startStreaming();
+            return;
+        }
         try {
             await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({
@@ -54,7 +65,6 @@ export const useHomeViewModel = () => {
                 playsInSilentModeIOS: true,
             });
 
-            // Standardize on WAV (Linear PCM) to ensure backend compatibility without FFmpeg
             const { recording } = await Audio.Recording.createAsync({
                 android: {
                     extension: ".wav",
@@ -78,17 +88,146 @@ export const useHomeViewModel = () => {
             } as any);
 
             setRecording(recording);
+            recordingRef.current = recording;
         } catch (err) {
             Alert.alert("Error", "Could not start recording");
         }
     };
 
+    const startStreaming = async () => {
+        try {
+            const token = await getToken();
+            if (!token) {
+                Alert.alert("Error", "Authentication required");
+                return;
+            }
+
+            // 1. Setup WebSocket - Ensure prefix /api/v1 is included
+            const wsUrl = baseURL.replace("http", "ws") + "/api/v1/stream-transcribe?token=" + token;
+            wsRef.current = new WebSocket(wsUrl);
+
+            wsRef.current.onopen = () => {
+                console.log("WebSocket Connected");
+                setIsStreaming(true);
+                isStreamingRef.current = true;
+                startStreamingCycle();
+            };
+
+            wsRef.current.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.type === "transcript" && data.text) {
+                    const newText = data.text.trim();
+                    setTranscript((prev) => prev + (prev ? " " : "") + newText);
+                    
+                    // Estimate TTS duration (approx 150 words per min + 2s buffer)
+                    const wordCount = newText.split(' ').length;
+                    const estimatedDurationMs = (wordCount / 150) * 60 * 1000 + 2000;
+                    
+                    // Automatic Speech for Simultaneous Mode
+                    Speech.stop();
+                    lastSpeakTimeRef.current = Date.now() + estimatedDurationMs;
+                    
+                    Speech.speak(newText, { 
+                        language: "fil-PH", 
+                        rate: 0.95, 
+                        pitch: 1.0 
+                    });
+                }
+            };
+
+            wsRef.current.onerror = (e) => console.error("WS Error", e);
+            wsRef.current.onclose = () => {
+                setIsStreaming(false);
+                isStreamingRef.current = false;
+            };
+
+            await Audio.requestPermissionsAsync();
+            await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+            
+            setTranscript("");
+            setWords([]);
+        } catch (err) {
+            Alert.alert("Error", "Could not start streaming");
+        }
+    };
+
+    const startStreamingCycle = async () => {
+        if (!isStreamingRef.current) return;
+
+        try {
+            let maxMetering = -160;
+            // Start a short recording segment with metering enabled
+            const { recording } = await Audio.Recording.createAsync(
+                {
+                    isMeteringEnabled: true,
+                    android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
+                    ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
+                } as any,
+                (status: any) => {
+                    if (status.metering !== undefined && status.metering > maxMetering) {
+                        maxMetering = status.metering;
+                    }
+                },
+                100
+            );
+            
+            recordingRef.current = recording;
+
+            // Process segment every 3 seconds
+            realtimeTimerRef.current = setTimeout(async () => {
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                    await recording.stopAndUnloadAsync();
+                    const uri = recording.getURI();
+                    
+                    // Drop chunks if the current time is before the estimated end time of the TTS
+                    const overlapWithTTS = Date.now() < lastSpeakTimeRef.current;
+                    
+                    // Only send if volume threshold is met AND not overlapping with TTS
+                    if (uri && maxMetering > -45 && !overlapWithTTS) {
+                        const response = await fetch(uri);
+                        const blob = await response.blob();
+                        const reader = new FileReader();
+                        
+                        reader.onloadend = () => {
+                            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                wsRef.current.send(reader.result as ArrayBuffer);
+                            }
+                        };
+                        reader.readAsArrayBuffer(blob);
+                    } else {
+                        if (overlapWithTTS) {
+                            console.log("Chunk overlaps with TTS, skipping to prevent echo.");
+                        } else {
+                            console.log("Silence detected (max db: " + maxMetering + "), skipping chunk.");
+                        }
+                    }
+                    
+                    // Trigger next cycle if still streaming
+                    if (wsRef.current?.readyState === WebSocket.OPEN) {
+                        startStreamingCycle();
+                    }
+                }
+            }, 3000);
+        } catch (err) {
+            console.error("Streaming cycle failed:", err);
+            setIsStreaming(false);
+        }
+    };
+
     const stopRecording = async () => {
+        if (isStreaming) {
+            if (realtimeTimerRef.current) clearTimeout(realtimeTimerRef.current);
+            if (recordingRef.current) await recordingRef.current.stopAndUnloadAsync();
+            wsRef.current?.close();
+            setIsStreaming(false);
+            return;
+        }
         if (!recording) return;
         setLoading(true);
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
         setRecording(null);
+        recordingRef.current = null;
         if (uri) await uploadAudio(uri);
         setLoading(false);
     };
@@ -152,7 +291,7 @@ export const useHomeViewModel = () => {
 
     return {
         recording, transcript, setTranscript, words, setWords, confidence, loading, width, height,
-        fadeAnim, slideAnim, orbs, dotGrid,
+        fadeAnim, slideAnim, orbs, dotGrid, isRealtime, setIsRealtime, isStreaming,
         startRecording, stopRecording, speakText, clearTranscript
     };
 };

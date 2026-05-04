@@ -17,6 +17,7 @@ import {
   MapPin,
   User,
   MessageCircle,
+  Mic,
 } from "@tamagui/lucide-icons";
 
 const Tab = createBottomTabNavigator();
@@ -107,7 +108,18 @@ const HomeStack = () => (
       name="Chatbot" 
       component={ChatbotScreen} 
       options={{ 
-        title: "AI Assistant",
+        headerTitle: () => (
+          <XStack ai="center" gap="$2">
+            <RNImage
+              source={require("../../assets/images/ariya.png")}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+            <SizableText color={COLORS.textDark} fontSize={18} fontWeight="800" letterSpacing={-0.5}>
+              Ariya
+            </SizableText>
+          </XStack>
+        ),
         headerLargeTitle: false, // Cleaner for sub-screens
       }} 
     />
@@ -131,7 +143,7 @@ const ProfileStack = () => (
 
 // ─── Tab Config ──────────────────────────────────────────────────
 const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
-  { name: "Home", label: "Home", icon: Home },
+  { name: "Home", label: "Hub", icon: Mic },
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },

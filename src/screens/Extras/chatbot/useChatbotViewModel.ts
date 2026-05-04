@@ -17,7 +17,7 @@ export const useChatbotViewModel = () => {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "initial-greeting",
-            text: "Hello! I'm your Articulink AI assistant. I can help with speech exercises, answer questions, or just chat. How can I help you today?",
+            text: "Hello! I'm Ariya, your Articulink AI assistant. Speak your way. I'll help you be heard. How can I help you today?",
             sender: "bot",
             timestamp: new Date().toISOString(),
             isExpanded: true,
