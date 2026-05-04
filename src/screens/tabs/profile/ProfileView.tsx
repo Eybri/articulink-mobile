@@ -125,7 +125,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc={COLORS.sandMid} ov="hidden">
                         {vm.user.profile_pic ? (
                             <RNImage
-                                key={vm.user.profile_pic}
                                 source={getProfileSource(vm.user.profile_pic)}
                                 style={{ width: 56, height: 56, borderRadius: 28 }}
                                 resizeMode="cover"
