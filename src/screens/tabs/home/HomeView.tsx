@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
     Platform,
     StatusBar,
@@ -36,6 +36,18 @@ interface HomeViewProps {
 export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
     const isRecording = !!vm.recording || vm.isStreaming;
     const statusText = vm.loading ? "Processing speech..." : isRecording ? "Listening..." : "Tap the mic to start";
+
+    const [toggleWidth, setToggleWidth] = useState(0);
+    const slideAnimToggle = useRef(new Animated.Value(vm.isRealtime ? 1 : 0)).current;
+
+    useEffect(() => {
+        Animated.spring(slideAnimToggle, {
+            toValue: vm.isRealtime ? 1 : 0,
+            useNativeDriver: false, // color interpolation cannot use native driver
+            tension: 50,
+            friction: 7,
+        }).start();
+    }, [vm.isRealtime]);
 
     return (
         <YStack f={1} bg={COLORS.cream}>
@@ -85,17 +97,39 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                             shadowColor={COLORS.deepNavy}
                             shadowOpacity={0.04}
                             shadowRadius={12}
+                            position="relative"
+                            onLayout={(e) => setToggleWidth(e.nativeEvent.layout.width)}
                         >
+                            {toggleWidth > 0 && (
+                                <Animated.View style={{
+                                    position: 'absolute',
+                                    left: 4, // $1 padding
+                                    top: 4,
+                                    bottom: 4,
+                                    width: (toggleWidth - 8) / 2, // subtract horizontal paddings
+                                    transform: [{
+                                        translateX: slideAnimToggle.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [0, (toggleWidth - 8) / 2]
+                                        })
+                                    }],
+                                    backgroundColor: slideAnimToggle.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [COLORS.royalBlue, COLORS.teal]
+                                    }),
+                                    borderRadius: 100,
+                                }} />
+                            )}
                             <Button
                                 f={1}
                                 h={44}
                                 br={100}
-                                bg={!vm.isRealtime ? COLORS.royalBlue : "transparent"}
+                                bg="transparent"
                                 bw={0}
                                 onPress={() => vm.setIsRealtime(false)}
                                 disabled={isRecording}
                                 opacity={isRecording ? 0.5 : 1}
-                                pressStyle={{ bg: !vm.isRealtime ? COLORS.royalBlue : "rgba(0,0,0,0.02)" }}
+                                pressStyle={{ bg: "transparent" }}
                             >
                                 <SizableText fow={!vm.isRealtime ? "800" : "600"} size="$3" color={!vm.isRealtime ? "white" : COLORS.textMid}>Phrase Mode</SizableText>
                             </Button>
@@ -103,12 +137,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 f={1}
                                 h={44}
                                 br={100}
-                                bg={vm.isRealtime ? COLORS.teal : "transparent"}
+                                bg="transparent"
                                 bw={0}
                                 onPress={() => vm.setIsRealtime(true)}
                                 disabled={isRecording}
                                 opacity={isRecording ? 0.5 : 1}
-                                pressStyle={{ bg: vm.isRealtime ? COLORS.teal : "rgba(0,0,0,0.02)" }}
+                                pressStyle={{ bg: "transparent" }}
                             >
                                 <SizableText fow={vm.isRealtime ? "800" : "600"} size="$3" color={vm.isRealtime ? "white" : COLORS.textMid}>Live Mode</SizableText>
                             </Button>
