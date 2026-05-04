@@ -104,23 +104,11 @@ export const MessageBubble = memo(({
                 jc={isUser ? "flex-end" : "flex-start"}
             >
                 {!isUser && (
-                    <Circle
-                        size={32}
-                        bg={COLORS.white}
-                        elevation={2}
-                        jc="center"
-                        ai="center"
-                        mb={2}
-                        bc={COLORS.sandMid}
-                        bw={1}
-                        overflow="hidden"
-                    >
-                        <RNImage
-                            source={require("../../../../../assets/images/ariya.png")}
-                            style={{ width: 26, height: 26 }}
-                            resizeMode="contain"
-                        />
-                    </Circle>
+                    <RNImage
+                        source={require("../../../../../assets/images/ariya.png")}
+                        style={{ width: 44, height: 44, marginBottom: 2 }}
+                        resizeMode="contain"
+                    />
                 )}
                 <Card
                     p="$3.5"

@@ -107,7 +107,18 @@ const HomeStack = () => (
       name="Chatbot" 
       component={ChatbotScreen} 
       options={{ 
-        title: "Ariya",
+        headerTitle: () => (
+          <XStack ai="center" gap="$2">
+            <RNImage
+              source={require("../../assets/images/ariya.png")}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+            <SizableText color={COLORS.textDark} fontSize={18} fontWeight="800" letterSpacing={-0.5}>
+              Ariya
+            </SizableText>
+          </XStack>
+        ),
         headerLargeTitle: false, // Cleaner for sub-screens
       }} 
     />

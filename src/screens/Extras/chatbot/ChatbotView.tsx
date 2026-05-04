@@ -120,13 +120,11 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
 
                     {vm.loading && (
                         <XStack ai="flex-end" gap="$2.5" mb="$4">
-                            <Circle size={32} bg={COLORS.white} elevation={1} bc={COLORS.sandMid} bw={1} jc="center" ai="center" overflow="hidden">
-                                <RNImage
-                                    source={require("../../../../assets/images/ariya.png")}
-                                    style={{ width: 26, height: 26 }}
-                                    resizeMode="contain"
-                                />
-                            </Circle>
+                            <RNImage
+                                source={require("../../../../assets/images/ariya.png")}
+                                style={{ width: 44, height: 44 }}
+                                resizeMode="contain"
+                            />
                             <Card bg={COLORS.white} p="$2.5" px="$3.5" br={20} borderBottomLeftRadius={4} elevation={2}>
                                 <TypingDots />
                             </Card>
