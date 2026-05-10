@@ -58,7 +58,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ vm, navigation }) => {
                 <YStack pos="absolute" t={0} l={0} r={0} h={height * 0.42} jc="center" ai="center">
                     <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
                         <RNImage
-                            source={require('../../../../assets/images/whitelogo.png')}
+                            source={require('../../../../assets/images/icon-white.png')}
                             style={{ width: 160, height: 160 }}
                             resizeMode="contain"
                         />

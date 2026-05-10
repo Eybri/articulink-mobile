@@ -71,7 +71,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                 <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.22} jc="center" ai="center" gap="$1">
                     <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
                         <RNImage
-                            source={require('../../../../assets/images/whitelogo.png')}
+                            source={require('../../../../assets/images/icon-white.png')}
                             style={{ width: 80, height: 80 }}
                             resizeMode="contain"
                         />
