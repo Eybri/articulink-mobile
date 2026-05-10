@@ -59,7 +59,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ vm, navigation }) => {
                     <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
                         <RNImage
                             source={require('../../../../assets/images/icon-white.png')}
-                            style={{ width: 160, height: 160 }}
+                            style={{ width: 110, height: 110 }}
                             resizeMode="contain"
                         />
                     </Animated.View>
