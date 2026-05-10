@@ -34,7 +34,7 @@ export const BrandIntroView: React.FC<BrandIntroViewProps> = ({ vm }) => {
                         alignItems: 'center',
                     }}>
                         <RNImage
-                            source={require('../../../../assets/images/logo2-nobg.png')}
+                            source={require('../../../../assets/images/icon-blue.png')}
                             style={{ width: width * 0.38, height: width * 0.38 }}
                             resizeMode="contain"
                         />
