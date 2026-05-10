@@ -63,7 +63,7 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({ vm, naviga
                 <YStack fullscreen bg="black" opacity={0.25} />
                 <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.22} jc="center" ai="center" gap="$1">
                     <RNImage
-                        source={require('../../../../assets/images/whitelogo.png')}
+                        source={require('../../../../assets/images/icon-white.png')}
                         style={{ width: 80, height: 80 }}
                         resizeMode="contain"
                     />

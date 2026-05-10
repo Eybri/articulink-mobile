@@ -73,12 +73,12 @@ const HomeStack = () => (
       options={({ navigation }) => ({
         headerLeft: () => (
           <RNImage
-            source={require("../../assets/images/logo2-nobg.png")}
+            source={require("../../assets/images/icon-blue.png")}
             style={{ 
-              width: 38, // Slightly smaller/cleaner
-              height: 38, 
-              marginLeft: 8,
-              marginTop: Platform.OS === "android" ? 12 : 0 
+              width: 32,
+              height: 32, 
+              marginLeft: Platform.OS === "ios" ? 16 : 8,
+              marginTop: Platform.OS === "android" ? 2 : 0,
             }}
             resizeMode="contain"
           />
@@ -98,7 +98,7 @@ const HomeStack = () => (
             icon={<MessageCircle size={22} color={COLORS.royalBlue} />}
             onPress={() => navigation.navigate("Chatbot")}
             mr="$2"
-            mt={Platform.OS === "android" ? 12 : 0}
+            mt={Platform.OS === "android" ? 2 : 0}
             pressStyle={{ scale: 0.9, opacity: 0.7 }}
           />
         ),

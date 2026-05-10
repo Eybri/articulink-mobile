@@ -22,6 +22,7 @@ export const useHomeViewModel = () => {
     const realtimeTimerRef = useRef<NodeJS.Timeout | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const isStreamingRef = useRef<boolean>(false);
+    const isConnectingRef = useRef<boolean>(false);
     const lastSpeakTimeRef = useRef<number>(0);
     const { width, height } = useWindowDimensions();
 
@@ -54,10 +55,14 @@ export const useHomeViewModel = () => {
     }, [width, height]);
 
     const startRecording = async () => {
+        if (isConnectingRef.current) return;
+        
         if (isRealtime) {
             await startStreaming();
             return;
         }
+        
+        isConnectingRef.current = true;
         try {
             await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({
@@ -91,10 +96,15 @@ export const useHomeViewModel = () => {
             recordingRef.current = recording;
         } catch (err) {
             Alert.alert("Error", "Could not start recording");
+        } finally {
+            isConnectingRef.current = false;
         }
     };
 
     const startStreaming = async () => {
+        if (isConnectingRef.current || isStreamingRef.current) return;
+        isConnectingRef.current = true;
+        
         try {
             const token = await getToken();
             if (!token) {
@@ -108,6 +118,7 @@ export const useHomeViewModel = () => {
 
             wsRef.current.onopen = () => {
                 console.log("WebSocket Connected");
+                isConnectingRef.current = false;
                 setIsStreaming(true);
                 isStreamingRef.current = true;
                 startStreamingCycle();
@@ -135,8 +146,12 @@ export const useHomeViewModel = () => {
                 }
             };
 
-            wsRef.current.onerror = (e) => console.error("WS Error", e);
+            wsRef.current.onerror = (e) => {
+                console.error("WS Error", e);
+                isConnectingRef.current = false;
+            };
             wsRef.current.onclose = () => {
+                isConnectingRef.current = false;
                 setIsStreaming(false);
                 isStreamingRef.current = false;
             };
@@ -147,6 +162,7 @@ export const useHomeViewModel = () => {
             setTranscript("");
             setWords([]);
         } catch (err) {
+            isConnectingRef.current = false;
             Alert.alert("Error", "Could not start streaming");
         }
     };
@@ -155,59 +171,84 @@ export const useHomeViewModel = () => {
         if (!isStreamingRef.current) return;
 
         try {
+            let isSpeaking = false;
+            let silenceTicks = 0;
+            let totalTicks = 0;
             let maxMetering = -160;
-            // Start a short recording segment with metering enabled
+            
+            const TICK_MS = 100; // Update interval in ms
+            const SILENCE_TICKS_THRESHOLD = 8; // 800ms of silence
+            const MAX_TICKS = 80; // 8 seconds maximum cutoff
+            
+            let chunkSent = false;
+
+            // Start a recording segment with metering enabled
             const { recording } = await Audio.Recording.createAsync(
                 {
                     isMeteringEnabled: true,
                     android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000 },
                     ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, bitRate: 128000, linearPCMBitDepth: 16 },
                 } as any,
-                (status: any) => {
-                    if (status.metering !== undefined && status.metering > maxMetering) {
-                        maxMetering = status.metering;
+                async (status: any) => {
+                    // Stop processing if we already sent this chunk or stopped streaming
+                    if (chunkSent || !isStreamingRef.current) return;
+                    
+                    totalTicks++;
+                    const metering = status.metering !== undefined ? status.metering : -160;
+                    
+                    if (metering > maxMetering) {
+                        maxMetering = metering;
+                    }
+
+                    // Voice Activity Detection Logic
+                    if (metering > -45) { // Speaking threshold
+                        isSpeaking = true;
+                        silenceTicks = 0;
+                    } else if (isSpeaking) {
+                        silenceTicks++;
+                    }
+
+                    const shouldCutForSilence = isSpeaking && silenceTicks >= SILENCE_TICKS_THRESHOLD;
+                    const shouldCutForMaxTime = totalTicks >= MAX_TICKS;
+
+                    if (shouldCutForSilence || shouldCutForMaxTime) {
+                        chunkSent = true;
+                        
+                        try {
+                            await recording.stopAndUnloadAsync();
+                            const uri = recording.getURI();
+                            const overlapWithTTS = Date.now() < lastSpeakTimeRef.current;
+                            
+                            // Only send if they actually spoke and it's not echoing the AI voice
+                            if (uri && maxMetering > -45 && !overlapWithTTS) {
+                                const response = await fetch(uri);
+                                const blob = await response.blob();
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                    if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                        wsRef.current.send(reader.result as ArrayBuffer);
+                                    }
+                                };
+                                reader.readAsArrayBuffer(blob);
+                            } else {
+                                if (overlapWithTTS) console.log("Chunk overlaps with TTS, skipping echo.");
+                                else console.log("Silence detected, skipping chunk.");
+                            }
+                        } catch (err) {
+                            console.error("Chunk processing failed:", err);
+                        }
+                        
+                        // Immediately trigger the next recording cycle
+                        if (wsRef.current?.readyState === WebSocket.OPEN) {
+                            startStreamingCycle();
+                        }
                     }
                 },
-                100
+                TICK_MS
             );
             
             recordingRef.current = recording;
 
-            // Process segment every 3 seconds
-            realtimeTimerRef.current = setTimeout(async () => {
-                if (wsRef.current?.readyState === WebSocket.OPEN) {
-                    await recording.stopAndUnloadAsync();
-                    const uri = recording.getURI();
-                    
-                    // Drop chunks if the current time is before the estimated end time of the TTS
-                    const overlapWithTTS = Date.now() < lastSpeakTimeRef.current;
-                    
-                    // Only send if volume threshold is met AND not overlapping with TTS
-                    if (uri && maxMetering > -45 && !overlapWithTTS) {
-                        const response = await fetch(uri);
-                        const blob = await response.blob();
-                        const reader = new FileReader();
-                        
-                        reader.onloadend = () => {
-                            if (wsRef.current?.readyState === WebSocket.OPEN) {
-                                wsRef.current.send(reader.result as ArrayBuffer);
-                            }
-                        };
-                        reader.readAsArrayBuffer(blob);
-                    } else {
-                        if (overlapWithTTS) {
-                            console.log("Chunk overlaps with TTS, skipping to prevent echo.");
-                        } else {
-                            console.log("Silence detected (max db: " + maxMetering + "), skipping chunk.");
-                        }
-                    }
-                    
-                    // Trigger next cycle if still streaming
-                    if (wsRef.current?.readyState === WebSocket.OPEN) {
-                        startStreamingCycle();
-                    }
-                }
-            }, 3000);
         } catch (err) {
             console.error("Streaming cycle failed:", err);
             setIsStreaming(false);

@@ -4,10 +4,10 @@
     "slug": "articulink",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/app-icon.png",
+    "icon": "./assets/images/icon-new.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/app-icon.png",
+      "image": "./assets/images/icon-new.png",
       "resizeMode": "contain",
       "backgroundColor": "#FAF8F4"
     },
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
-        "foregroundImage": "./assets/images/app-icon.png",
+        "foregroundImage": "./assets/images/icon-new.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
@@ -31,7 +31,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images/icon-new.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker"
