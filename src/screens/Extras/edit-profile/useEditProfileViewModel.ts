@@ -22,8 +22,9 @@ export const useEditProfileViewModel = (navigation: any) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showIconModal, setShowIconModal] = useState(false);
     const [showOptionModal, setShowOptionModal] = useState(false);
+    const [showGenderModal, setShowGenderModal] = useState(false);
 
-    const availableIcons = useMemo(() => ["ampalaya.jpg", "banana.jpg", "pineapple.jpg", "strawberry.jpg"], []);
+    const availableIcons = useMemo(() => ["ariya.png", "ampalaya.jpg", "banana.jpg", "pineapple.jpg", "strawberry.jpg"], []);
 
     const { width, height } = useWindowDimensions();
 
@@ -222,6 +223,7 @@ export const useEditProfileViewModel = (navigation: any) => {
         handleSelectIcon,
         showIconModal, setShowIconModal,
         showOptionModal, setShowOptionModal,
+        showGenderModal, setShowGenderModal,
         availableIcons,
         clearProfilePic,
         user
