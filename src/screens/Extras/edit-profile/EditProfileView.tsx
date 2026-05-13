@@ -107,6 +107,9 @@ export const EditProfileView: React.FC<EditProfileViewProps> = ({ vm, navigation
                                 Active Profile
                             </SizableText>
                             <SizableText size="$5" fow="900" color={COLORS.textDark} ls={-0.5} mt={-2}>
+                                {vm.firstName && vm.lastName ? `${vm.firstName} ${vm.lastName}` : (vm.username || "User")}
+                            </SizableText>
+                            <SizableText size="$1" fow="600" color={COLORS.royalBlue} opacity={0.7} mt={-3}>
                                 @{vm.username || "username"}
                             </SizableText>
                             
@@ -149,6 +152,30 @@ export const EditProfileView: React.FC<EditProfileViewProps> = ({ vm, navigation
                                 fontWeight="600" color={COLORS.textDark}
                                 value={vm.username} onChangeText={vm.setUsername}
                                 placeholder="Username" autoCapitalize="none"
+                                p={0} h={40} textAlign="left"
+                                w="100%"
+                                focusStyle={{ bw: 0 }}
+                            />
+                        </EditProfileRow>
+
+                        <EditProfileRow icon={<User size={18} color={COLORS.royalBlue} />} title="First Name">
+                            <Input
+                                f={1} bg="transparent" bw={0} size="$4"
+                                fontWeight="600" color={COLORS.textDark}
+                                value={vm.firstName} onChangeText={vm.setFirstName}
+                                placeholder="Avery" autoCapitalize="words"
+                                p={0} h={40} textAlign="left"
+                                w="100%"
+                                focusStyle={{ bw: 0 }}
+                            />
+                        </EditProfileRow>
+
+                        <EditProfileRow icon={<User size={18} color={COLORS.royalBlue} />} title="Last Name">
+                            <Input
+                                f={1} bg="transparent" bw={0} size="$4"
+                                fontWeight="600" color={COLORS.textDark}
+                                value={vm.lastName} onChangeText={vm.setLastName}
+                                placeholder="MacasaS" autoCapitalize="words"
                                 p={0} h={40} textAlign="left"
                                 w="100%"
                                 focusStyle={{ bw: 0 }}

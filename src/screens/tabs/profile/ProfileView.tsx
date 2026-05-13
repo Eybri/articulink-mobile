@@ -143,7 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             {getGreeting()},
                         </SizableText>
                         <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4} numberOfLines={1}>
-                            {vm.user.username || "Speaker"}!
+                            {vm.user.first_name && vm.user.last_name ? `${vm.user.first_name} ${vm.user.last_name}` : (vm.user.username || "Speaker")}!
                         </SizableText>
                     </YStack>
 
