@@ -88,7 +88,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ vm }) => {
                             <Animated.View style={{ opacity: Animated.multiply(vm.animations.fadeAnim, vm.animations.headerOpacity), transform: [{ translateY: vm.animations.slideAnim }], alignItems: 'center' }}>
                                 <RNImage
                                     source={require('../../../../assets/images/whitelogo.png')}
-                                    style={{ width: vm.width * 0.18, height: vm.width * 0.18 }}
+                                    style={{ width: vm.width * 0.13, height: vm.width * 0.13 }}
                                     resizeMode="contain"
                                 />
                                 <SizableText size="$6" fow="900" color="white" ls={-0.5} mt="$1.5">

@@ -6,7 +6,7 @@ import { COLORS } from './../../../constants/colors';
 const slides = [
   {
     id: 'welcome',
-    image: require('../../../../assets/images/logo2-nobg.png'),
+    image: require('../../../../assets/images/icon-blue.png'),
     tag: 'SPEECH & COMMUNICATION',
     title: 'Your voice,',
     highlightedTitle: 'perfectly understood',

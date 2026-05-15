@@ -367,42 +367,48 @@ export const SettingsItem = ({
     value, 
     onPress, 
     isLast = false,
-    children
+    children,
+    danger = false
   }: { 
     icon: any, 
     title: string, 
     value?: string, 
     onPress?: () => void, 
     isLast?: boolean,
-    children?: React.ReactNode
+    children?: React.ReactNode,
+    danger?: boolean
   }) => (
-    <TouchableOpacity onPress={onPress} disabled={!onPress && !children} activeOpacity={0.7}>
-      <YStack bg="white">
-        <XStack ai="center" jc="space-between" px="$5" h={60}>
-          <XStack ai="center" gap="$3" f={1}>
-            <YStack w={32} ai="center">
-              {icon}
-            </YStack>
-            <SizableText size="$4" fow="600" color={COLORS.textDark}>{title}</SizableText>
-          </XStack>
-          
-          <XStack ai="center" gap="$2">
-            {value && <SizableText size="$3" color={COLORS.textMid} opacity={0.6}>{value}</SizableText>}
-            {children}
-            {!children && <ChevronRight size={16} color={COLORS.sandMid} />}
-          </XStack>
+    <YStack 
+      bg="white" 
+      onPress={onPress}
+      disabled={!onPress && !children}
+      pressStyle={onPress ? { bg: COLORS.sandLight } : undefined}
+    >
+      <XStack ai="center" jc="space-between" px="$5" h={64}>
+        <XStack ai="center" gap="$3" f={1}>
+          <YStack w={38} h={38} br={12} bg={danger ? "#FEF2F2" : `${COLORS.royalBlue}08`} ai="center" jc="center">
+            {icon}
+          </YStack>
+          <SizableText size="$4" fow="600" color={danger ? "#DC2626" : COLORS.textDark}>{title}</SizableText>
         </XStack>
-        {!isLast && <Separator ml={60} bc="rgba(221, 214, 200, 0.3)" />}
-      </YStack>
-    </TouchableOpacity>
+        
+        <XStack ai="center" gap="$2">
+          {value && <SizableText size="$3" color={COLORS.textMid} fow="600" opacity={0.6}>{value}</SizableText>}
+          {children}
+          {!children && <ChevronRight size={18} color={COLORS.sandMid} opacity={0.7} />}
+        </XStack>
+      </XStack>
+      {!isLast && <Separator ml={65} bc="rgba(221, 214, 200, 0.3)" />}
+    </YStack>
   );
   
-  export const SettingsSectionHeader = ({ title }: { title: string }) => (
-    <YStack bg="#F9FAFB" py="$3" px="$5" bw={1} bc="rgba(221, 214, 200, 0.15)">
-      <SizableText size="$1" fow="800" color={COLORS.textMid} tt="uppercase" ls={1} opacity={0.6}>
+  export const SettingsSectionHeader = ({ title, icon }: { title: string, icon?: React.ReactNode }) => (
+    <XStack ai="center" gap="$2" pt="$6" pb="$3" px="$5">
+      {icon && <YStack opacity={0.6}>{icon}</YStack>}
+      <SizableText size="$1" fow="800" color={COLORS.textMid} tt="uppercase" ls={1.5} opacity={0.5}>
         {title}
       </SizableText>
-    </YStack>
+    </XStack>
   );
 
 /** Get time-based greeting */

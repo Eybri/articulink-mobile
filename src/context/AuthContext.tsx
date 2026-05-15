@@ -15,6 +15,8 @@ export interface User {
     id?: string;
     email: string;
     username?: string;
+    first_name?: string;
+    last_name?: string;
     role: string;
     profile_pic?: string;
     birthdate?: string;
@@ -145,6 +147,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 id: res.data.user?._id || res.data.user?.id,
                 email: res.data.user?.email || data.email,
                 username: res.data.user?.username,
+                first_name: res.data.user?.first_name,
+                last_name: res.data.user?.last_name,
                 role: res.data.user?.role || "user",
                 profile_pic: res.data.user?.profile_pic,
                 birthdate: res.data.user?.birthdate,
@@ -233,6 +237,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 id: response.data.id,
                 email: response.data.email,
                 username: response.data.username,
+                first_name: response.data.first_name,
+                last_name: response.data.last_name,
                 role: response.data.role,
                 profile_pic: response.data.profile_pic,
                 birthdate: response.data.birthdate,
@@ -270,6 +276,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 id: res.data.id || user?.id,
                 email: res.data.email || user?.email || "",
                 username: res.data.username || user?.username,
+                first_name: res.data.first_name || user?.first_name,
+                last_name: res.data.last_name || user?.last_name,
                 role: res.data.role || user?.role || "user",
                 profile_pic: res.data.profile_pic || user?.profile_pic,
                 birthdate: res.data.birthdate || user?.birthdate,

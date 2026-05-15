@@ -10,7 +10,7 @@ import {
   AnimatePresence,
   Portal,
 } from "tamagui";
-import { Camera, Check, X } from "@tamagui/lucide-icons";
+import { Camera, Check, X, ChevronRight, User, UserPlus, HelpCircle } from "@tamagui/lucide-icons";
 import { Image as RNImage, Pressable } from "react-native";
 import { getProfileSource } from "./../../../../utils/imageHelper";
 import { COLORS } from "./../../../../constants/colors";
@@ -34,25 +34,25 @@ export const EditProfileRow = React.memo(({
 }) => (
     <Pressable onPress={onPress} disabled={!onPress}>
         <YStack>
-            <XStack ai="center" jc="space-between" py="$4.5" gap="$3">
-                <XStack ai="center" gap="$4" f={1}>
-                    <YStack w={44} h={44} br={15} bg={`${COLORS.royalBlue}0A`} jc="center" ai="center">
+            <XStack ai="center" jc="space-between" py="$4" gap="$3">
+                <XStack ai="center" gap="$3" f={1}>
+                    <YStack w={40} h={40} br={12} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
                         {icon}
                     </YStack>
                     <YStack f={1} gap="$0.5">
-                        <SizableText size="$1" fow="600" color={COLORS.textMid} opacity={0.4} ls={0.8} tt="uppercase">{title}</SizableText>
+                        <SizableText size="$1" fow="700" color={COLORS.textMid} opacity={0.5} ls={0.5} tt="uppercase">{title}</SizableText>
                         {description ? (
-                            <SizableText size="$4" fow="500" color={COLORS.textDark} ls={-0.2}>{description}</SizableText>
+                            <SizableText size="$4" fow="600" color={COLORS.textDark} ls={-0.4}>{description}</SizableText>
                         ) : (
-                            <YStack f={1} ai="flex-start" mt="$1">
+                            <YStack f={1} ai="flex-start">
                                 {children}
                             </YStack>
                         )}
                     </YStack>
                 </XStack>
-                {description && children}
+                {description && <ChevronRight size={18} color={COLORS.sandMid} opacity={0.7} />}
             </XStack>
-            {!isLast && <Separator bc="rgba(221, 214, 200, 0.4)" opacity={0.5} />}
+            {!isLast && <Separator ml={52} bc="rgba(221, 214, 200, 0.3)" />}
         </YStack>
     </Pressable>
 ));
@@ -60,11 +60,13 @@ export const EditProfileRow = React.memo(({
 // ─── Edit Profile Card ────────────────────────────────────────────
 export const EditProfileCard = React.memo(({ children }: { children: React.ReactNode }) => (
     <TamaCard 
-        bg="white" br={32} p="$2" px="$5.5" 
-        elevation={8} shadowColor="#8A96A4" shadowOpacity={0.1} 
-        bw={1} bc="rgba(221, 214, 200, 0.5)"
+        bg="white" br={24} ov="hidden" 
+        elevation={2} shadowColor="#8A96A4" shadowOpacity={0.1} 
+        bw={1} bc={COLORS.sandMid}
     >
-        {children}
+        <YStack px="$5">
+            {children}
+        </YStack>
     </TamaCard>
 ));
 
@@ -275,5 +277,85 @@ export const AvatarPickerSheet = ({
             )}
         </AnimatePresence>
     </Portal>
+    );
+};
+
+// ─── Gender Picker Sheet ──────────────────────────────────────────
+export const GenderPickerSheet = ({ 
+    visible, 
+    onClose, 
+    onSelect, 
+    selectedGender 
+}: {
+    visible: boolean;
+    onClose: () => void;
+    onSelect: (gender: string) => void;
+    selectedGender: string;
+}) => {
+    const options = [
+        { label: "Male", value: "male", icon: <User size={18} color="#3B82F6" /> },
+        { label: "Female", value: "female", icon: <UserPlus size={18} color="#EC4899" /> },
+        { label: "Other", value: "other", icon: <HelpCircle size={18} color="#8B5CF6" /> },
+        { label: "Prefer not to say", value: "prefer_not_to_say", icon: <X size={18} color={COLORS.textMid} /> },
+    ];
+
+    return (
+        <Portal>
+            <AnimatePresence>
+                {visible && (
+                    <ZStack fullscreen pos="absolute" t={0} l={0} r={0} b={0} zi={10000}>
+                        <Pressable 
+                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
+                            onPress={onClose}
+                        >
+                            <YStack fullscreen bg="transparent" />
+                        </Pressable>
+                        
+                        <YStack 
+                            pos="absolute" b={0} l={0} r={0} bg="white" borderTopLeftRadius={32} borderTopRightRadius={32} p="$6" pb="$10" gap="$4" elevation={20}
+                            {...({
+                                enterStyle: { y: 500, opacity: 0 },
+                                exitStyle: { y: 500, opacity: 0 },
+                                animation: "quick"
+                            } as any)}
+                        >
+                            <YStack ai="center">
+                                <YStack w={40} h={5} bg={COLORS.sandMid} br={2.5} opacity={0.4} />
+                            </YStack>
+
+                            <SizableText size="$5" fow="800" color={COLORS.textDark} ls={-0.4} mb="$2">Select Gender</SizableText>
+
+                            <YStack gap="$2">
+                                {options.map((opt) => (
+                                    <Button
+                                        key={opt.value}
+                                        h={60}
+                                        bg={selectedGender === opt.value ? `${COLORS.royalBlue}08` : "white"}
+                                        bw={1}
+                                        bc={selectedGender === opt.value ? COLORS.royalBlue : COLORS.sandMid}
+                                        jc="space-between"
+                                        px="$4"
+                                        br={16}
+                                        onPress={() => {
+                                            onSelect(opt.value);
+                                            onClose();
+                                        }}
+                                        pressStyle={{ bg: `${COLORS.royalBlue}05` }}
+                                    >
+                                        <XStack ai="center" gap="$3">
+                                            <YStack w={36} h={36} br={10} bg={selectedGender === opt.value ? COLORS.royalBlue : `${COLORS.sandMid}20`} jc="center" ai="center">
+                                                {React.cloneElement(opt.icon as React.ReactElement, { color: selectedGender === opt.value ? "white" : COLORS.textMid })}
+                                            </YStack>
+                                            <SizableText fow="700" color={selectedGender === opt.value ? COLORS.royalBlue : COLORS.textDark}>{opt.label}</SizableText>
+                                        </XStack>
+                                        {selectedGender === opt.value && <Check size={18} color={COLORS.royalBlue} />}
+                                    </Button>
+                                ))}
+                            </YStack>
+                        </YStack>
+                    </ZStack>
+                )}
+            </AnimatePresence>
+        </Portal>
     );
 };
