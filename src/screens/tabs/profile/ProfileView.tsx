@@ -143,7 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             {getGreeting()},
                         </SizableText>
                         <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4} numberOfLines={1}>
-                            {vm.user.username || "Speaker"}!
+                            {vm.user.first_name && vm.user.last_name ? `${vm.user.first_name} ${vm.user.last_name}` : (vm.user.username || "Speaker")}!
                         </SizableText>
                     </YStack>
 
@@ -286,60 +286,59 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         </>
                     ) : null}
                 </YStack>
-
-                {/* Settings Style Implementation */}
-                <YStack mt="$2">
-                    <SettingsSectionHeader title="Account" />
-                    <SettingsItem 
-                        icon={<User size={18} color={COLORS.textMid} />} 
-                        title="Manage Profile" 
-                        onPress={vm.handleEditProfile} 
-                    />
-                    <SettingsItem 
-                        icon={<Lock size={18} color={COLORS.textMid} />} 
-                        title="Password & Security" 
-                        onPress={() => {}} 
-                    />
-                    <SettingsItem 
-                        icon={<Bell size={18} color={COLORS.textMid} />} 
-                        title="Notifications" 
-                    >
-                        <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
-                            <Switch.Thumb bg="white" />
-                        </Switch>
-                    </SettingsItem>
-                    <SettingsItem 
-                        icon={<Volume2 size={18} color={COLORS.textMid} />} 
-                        title="Language" 
-                        value="English"
-                        onPress={() => {}} 
-                        isLast
-                    />
-
-                    <SettingsSectionHeader title="Audio Engine" />
-                    <YStack bg="white" px="$5" py="$2">
-                        <SliderSetting icon={<Volume2 size={18} color={COLORS.teal} />} title="Output Volume" value={vm.voiceVolume} onValueChange={vm.setVoiceVolume} />
-                        <Separator bc="rgba(221, 214, 200, 0.4)" />
-                        <SliderSetting icon={<Mic size={18} color={COLORS.teal} />} title="Mic Recording" value={vm.micSensitivity} onValueChange={vm.setMicSensitivity} />
+ 
+                {/* Settings Section */}
+                <YStack mt="$4" px="$5">
+                    <SettingsSectionHeader title="Account" icon={<User size={12} color={COLORS.textMid} />} />
+                    <YStack bg="white" br={24} ov="hidden" elevation={2} bw={1} bc={COLORS.sandMid}>
+                        <SettingsItem 
+                            icon={<User size={18} color={COLORS.royalBlue} />} 
+                            title="Manage Profile" 
+                            onPress={vm.handleEditProfile} 
+                        />
+                        <SettingsItem 
+                            icon={<Lock size={18} color={COLORS.royalBlue} />} 
+                            title="Password & Security" 
+                            onPress={() => {}} 
+                        />
+                        <SettingsItem 
+                            icon={<Bell size={18} color={COLORS.royalBlue} />} 
+                            title="Notifications" 
+                        >
+                            <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
+                                <Switch.Thumb bg="white" />
+                            </Switch>
+                        </SettingsItem>
+                        <SettingsItem 
+                            icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
+                            title="Language" 
+                            value="English"
+                            onPress={() => {}} 
+                            isLast
+                        />
                     </YStack>
-
-                    <SettingsSectionHeader title="Preferences" />
-                    <SettingsItem 
-                        icon={<Shield size={18} color={COLORS.textMid} />} 
-                        title="About Us" 
-                        onPress={() => {}} 
-                    />
-                    <SettingsItem 
-                        icon={<Trash2 size={18} color="#DC2626" />} 
-                        title="Clear Local Cache" 
-                        onPress={vm.handleClearHistory} 
-                    />
-                    <SettingsItem 
-                        icon={<LogOut size={18} color="#DC2626" />} 
-                        title="Logout Session" 
-                        onPress={vm.handleLogout} 
-                        isLast
-                    />
+                    
+                    <SettingsSectionHeader title="Preferences" icon={<Shield size={12} color={COLORS.textMid} />} />
+                    <YStack bg="white" br={24} ov="hidden" elevation={2} bw={1} bc={COLORS.sandMid}>
+                        <SettingsItem 
+                            icon={<Shield size={18} color={COLORS.textMid} />} 
+                            title="About Us" 
+                            onPress={() => {}} 
+                        />
+                        <SettingsItem 
+                            icon={<Trash2 size={18} color="#DC2626" />} 
+                            title="Clear Local Cache" 
+                            onPress={vm.handleClearHistory} 
+                            danger
+                        />
+                        <SettingsItem 
+                            icon={<LogOut size={18} color="#DC2626" />} 
+                            title="Logout Session" 
+                            onPress={vm.handleLogout} 
+                            isLast
+                            danger
+                        />
+                    </YStack>
                 </YStack>
 
                 {/* Info Footer */}

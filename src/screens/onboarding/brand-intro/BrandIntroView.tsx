@@ -35,7 +35,7 @@ export const BrandIntroView: React.FC<BrandIntroViewProps> = ({ vm }) => {
                     }}>
                         <RNImage
                             source={require('../../../../assets/images/icon-blue.png')}
-                            style={{ width: width * 0.38, height: width * 0.38 }}
+                            style={{ width: width * 0.24, height: width * 0.24 }}
                             resizeMode="contain"
                         />
                         <YStack ai="center" mt="$3" gap="$1">

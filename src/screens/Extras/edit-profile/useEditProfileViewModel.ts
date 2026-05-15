@@ -15,6 +15,8 @@ export const useEditProfileViewModel = (navigation: any) => {
     const [uploading, setUploading] = useState(false);
 
     const [username, setUsername] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [birthdate, setBirthdate] = useState<Date | null>(null);
     const [birthdateText, setBirthdateText] = useState("");
     const [gender, setGender] = useState("");
@@ -22,14 +24,17 @@ export const useEditProfileViewModel = (navigation: any) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showIconModal, setShowIconModal] = useState(false);
     const [showOptionModal, setShowOptionModal] = useState(false);
+    const [showGenderModal, setShowGenderModal] = useState(false);
 
-    const availableIcons = useMemo(() => ["ampalaya.jpg", "banana.jpg", "pineapple.jpg", "strawberry.jpg"], []);
+    const availableIcons = useMemo(() => ["ariya.png", "ampalaya.jpg", "banana.jpg", "pineapple.jpg", "strawberry.jpg"], []);
 
     const { width, height } = useWindowDimensions();
 
     useEffect(() => {
         if (user) {
             setUsername(user.username || "");
+            setFirstName(user.first_name || "");
+            setLastName(user.last_name || "");
             setGender(user.gender || "");
             setProfilePic(user.profile_pic || null);
             if (user.birthdate) {
@@ -45,6 +50,8 @@ export const useEditProfileViewModel = (navigation: any) => {
             setLoading(true);
             const updateData: any = {
                 username: username.trim(),
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
                 gender,
                 birthdate: (birthdate && !isNaN(birthdate.getTime())) 
                     ? birthdate.toISOString().split("T")[0] 
@@ -77,6 +84,8 @@ export const useEditProfileViewModel = (navigation: any) => {
             const updatedUser: UserType = {
                 ...user,
                 username: response.data.username || username,
+                first_name: response.data.first_name || firstName,
+                last_name: response.data.last_name || lastName,
                 gender: response.data.gender || gender,
                 birthdate: response.data.birthdate || (birthdate ? birthdate.toISOString() : birthdateText),
                 profile_pic: response.data.profile_pic !== undefined ? response.data.profile_pic : profilePic,
@@ -208,6 +217,8 @@ export const useEditProfileViewModel = (navigation: any) => {
 
     return {
         username, setUsername,
+        firstName, setFirstName,
+        lastName, setLastName,
         birthdate, setBirthdate,
         birthdateText, setBirthdateText,
         gender, setGender,
@@ -222,6 +233,7 @@ export const useEditProfileViewModel = (navigation: any) => {
         handleSelectIcon,
         showIconModal, setShowIconModal,
         showOptionModal, setShowOptionModal,
+        showGenderModal, setShowGenderModal,
         availableIcons,
         clearProfilePic,
         user

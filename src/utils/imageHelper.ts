@@ -10,6 +10,7 @@ export const getProfileSource = (profilePic: string | null | undefined) => {
   if (profilePic === "banana.jpg") return require("../../assets/icons/banana.jpg");
   if (profilePic === "pineapple.jpg") return require("../../assets/icons/pineapple.jpg");
   if (profilePic === "strawberry.jpg") return require("../../assets/icons/strawberry.jpg");
+  if (profilePic === "ariya.png") return require("../../assets/images/ariya.png");
 
   // Remote URLs (Cloudinary or local file paths from picker)
   if (profilePic.startsWith("http") || profilePic.startsWith("file") || profilePic.startsWith("content")) {
