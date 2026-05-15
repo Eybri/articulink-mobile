@@ -45,7 +45,7 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({ vm, navi
                 <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.4} jc="center" ai="center" gap="$1">
                     <RNImage
                         source={require('../../../../assets/images/icon-white.png')}
-                        style={{ width: 100, height: 100 }}
+                        style={{ width: 75, height: 75 }}
                         resizeMode="contain"
                     />
                     <SizableText size="$5" fow="700" color="white" ls={0.3}>Articulink</SizableText>

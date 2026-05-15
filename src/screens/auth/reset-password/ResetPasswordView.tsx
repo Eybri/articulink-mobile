@@ -64,7 +64,7 @@ export const ResetPasswordView: React.FC<ResetPasswordViewProps> = ({ vm, naviga
                 <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.22} jc="center" ai="center" gap="$1">
                     <RNImage
                         source={require('../../../../assets/images/icon-white.png')}
-                        style={{ width: 80, height: 80 }}
+                        style={{ width: 65, height: 65 }}
                         resizeMode="contain"
                     />
                     <SizableText size="$3" fow="700" color="white" ls={0.3}>Articulink</SizableText>
