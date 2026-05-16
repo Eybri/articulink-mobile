@@ -1,16 +1,18 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useContext } from "react";
 import { Alert, Animated, useWindowDimensions } from "react-native";
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import baseURL from "./../../../utils/baseurl";
 import { getToken } from "./../../../utils/authToken";
 import { COLORS } from "./../../../constants/colors";
+import { AuthContext } from "./../../../context/AuthContext";
 
 /**
  * ViewModel for the Home Screen.
  * Handles recording, transcription upload, and speech synthesis.
  */
 export const useHomeViewModel = () => {
+    const { user } = useContext(AuthContext)!;
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [transcript, setTranscript] = useState<string>("");
     const [words, setWords] = useState<any[]>([]);
@@ -138,11 +140,8 @@ export const useHomeViewModel = () => {
                     Speech.stop();
                     lastSpeakTimeRef.current = Date.now() + estimatedDurationMs;
                     
-                    Speech.speak(newText, { 
-                        language: "fil-PH", 
-                        rate: 0.95, 
-                        pitch: 1.0 
-                    });
+                    const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
+                    Speech.speak(newText, settings);
                 }
             };
 
@@ -320,7 +319,8 @@ export const useHomeViewModel = () => {
             return;
         }
         Speech.stop();
-        Speech.speak(transcript, { language: "fil-PH", rate: 0.9, pitch: 1.0 });
+        const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
+        Speech.speak(transcript, settings);
     };
 
     const clearTranscript = () => {

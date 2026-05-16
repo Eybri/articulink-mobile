@@ -25,6 +25,12 @@ export interface User {
     privacy_accepted: boolean;
     created_at?: string;
     updated_at?: string;
+    tts_settings?: {
+        rate: number;
+        pitch: number;
+        language: string;
+        voice?: string;
+    };
 }
 
 export interface AuthContextType {
@@ -156,7 +162,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: res.data.user?.status || "active",
                 privacy_accepted: res.data.user?.privacy_accepted || false,
                 created_at: res.data.user?.created_at,
-                updated_at: res.data.user?.updated_at
+                updated_at: res.data.user?.updated_at,
+                tts_settings: res.data.user?.tts_settings
             };
 
             await storeUser(userData);
@@ -246,7 +253,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: response.data.status || "active",
                 privacy_accepted: response.data.privacy_accepted || false,
                 created_at: response.data.created_at,
-                updated_at: response.data.updated_at
+                updated_at: response.data.updated_at,
+                tts_settings: response.data.tts_settings
             };
 
             await storeUser(userData);
