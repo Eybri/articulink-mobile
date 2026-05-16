@@ -378,7 +378,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             if (!token) return [];
             
             const response = await axios.get(`${baseURL}/history`);
-            return response.data;
+            return response.data.items || response.data;
         } catch (error: any) {
             if (error.response?.status !== 401 && error.response?.status !== 403) {
                 console.error("Error fetching speech history:", error.message || error);
