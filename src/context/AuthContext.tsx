@@ -293,7 +293,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: res.data.status || user?.status || "active",
                 privacy_accepted: res.data.privacy_accepted !== undefined ? res.data.privacy_accepted : (user?.privacy_accepted || false),
                 created_at: res.data.created_at || user?.created_at,
-                updated_at: res.data.updated_at || user?.updated_at
+                updated_at: res.data.updated_at || user?.updated_at,
+                tts_settings: res.data.tts_settings || user?.tts_settings
             };
 
             await storeUser(userData);

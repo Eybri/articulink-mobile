@@ -47,11 +47,11 @@ export const useTtsSettingsViewModel = () => {
             return (base === 'fil' || base === 'tl') ? 'fil-tl' : base;
         };
 
+        const targetBase = getBaseLang(language);
         let filtered: Speech.Voice[] = [];
         if (language === 'en-combined') {
             filtered = availableVoices.filter(v => v.language.startsWith('en'));
         } else {
-            const targetBase = getBaseLang(language);
             filtered = availableVoices.filter(v => getBaseLang(v.language) === targetBase);
         }
         
@@ -62,28 +62,40 @@ export const useTtsSettingsViewModel = () => {
         const filipinoMaleIndices = [3, 4, 6, 7];
         const englishMaleIndices = [2, 4, 6, 7, 9, 13, 14, 17, 19, 20, 22, 26, 27, 32, 33, 37, 40];
 
+        // Generic descriptions
+        const maleDescs = ["Deep & Bold", "Clear & Professional", "Resonant", "Natural Male", "Crisp Tone", "Classic Male"];
+        const femaleDescs = ["Soft & Gentle", "Clear & Bright", "Natural Female", "Smooth Tone", "Professional", "Melodic"];
+
         filtered.forEach((v, i) => {
             const index = i + 1;
             let isMale = false;
 
             if (language === 'en-combined') {
                 isMale = englishMaleIndices.includes(index);
-            } else if (getBaseLang(language) === 'fil-tl') {
+            } else if (targetBase === 'fil-tl') {
                 isMale = filipinoMaleIndices.includes(index);
             }
+
+            // FILTER REDUNDANTS: User identified 5th Filipino voice as redundant
+            if (targetBase === 'fil-tl' && index === 5) return;
 
             const namePart = v.name.includes('-') 
                 ? v.name.split('-').slice(-2, -1)[0] || v.name.split('-').pop() 
                 : v.name;
             
             const friendlyName = namePart!.charAt(0).toUpperCase() + namePart!.slice(1);
-            const item = { ...v, friendlyName, gender: isMale ? 'male' : 'female' as const };
+            
+            const item = { 
+                ...v, 
+                friendlyName, 
+                gender: isMale ? 'male' : 'female' as const,
+                description: isMale ? maleDescs[male.length % maleDescs.length] : femaleDescs[female.length % femaleDescs.length]
+            };
 
             if (isMale) male.push(item);
             else female.push(item);
         });
 
-        // Limit to 6 best voices as requested
         return { 
             male: male.slice(0, 6), 
             female: female.slice(0, 6) 

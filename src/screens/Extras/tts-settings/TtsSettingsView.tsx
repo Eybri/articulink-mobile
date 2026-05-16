@@ -13,7 +13,7 @@ export const TtsSettingsView = () => {
     const VoiceCard = ({ voice }: { voice: any }) => (
         <Button
             key={voice.identifier}
-            h={52}
+            h={64}
             br={16}
             bg={vm.selectedVoice === voice.identifier ? COLORS.teal : "white"}
             bw={1}
@@ -38,6 +38,14 @@ export const TtsSettingsView = () => {
                         numberOfLines={1}
                     >
                         {voice.friendlyName}
+                    </SizableText>
+                    <SizableText 
+                        color={vm.selectedVoice === voice.identifier ? "rgba(255,255,255,0.7)" : COLORS.textMid} 
+                        size="$1"
+                        fow="500"
+                        numberOfLines={1}
+                    >
+                        {voice.description}
                     </SizableText>
                 </YStack>
                 {vm.selectedVoice === voice.identifier && <Play size={14} color="white" />}
@@ -73,7 +81,7 @@ export const TtsSettingsView = () => {
                 </XStack>
 
                 <YStack px="$5" gap="$5">
-                    {/* Voice Selection Section */}
+                    {/* Voice Selection Card */}
                     <YStack gap="$4">
                         <XStack ai="center" gap="$2">
                             <Mic size={18} color={COLORS.royalBlue} />
@@ -81,7 +89,6 @@ export const TtsSettingsView = () => {
                         </XStack>
 
                         <Card bg="white" br={24} p="$2.5" bw={1} bc={COLORS.sandMid} elevation={6}>
-                            {/* Gender Tabs */}
                             <XStack bg={COLORS.cream} br={20} p="$1.5" mb="$3">
                                 <Button
                                     f={1} h={44} br={16}
@@ -101,7 +108,6 @@ export const TtsSettingsView = () => {
                                 </Button>
                             </XStack>
 
-                            {/* Top 6 Voices List */}
                             <YStack p="$1">
                                 {currentVoices.length > 0 ? (
                                     currentVoices.map((v) => <VoiceCard key={v.identifier} voice={v} />)
