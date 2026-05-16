@@ -155,7 +155,7 @@ const PasswordField = ({ label, value, onChangeText, show, setShow, placeholder 
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={`${COLORS.textMid}50`}
+                placeholderTextColor={(`${COLORS.textMid}50`) as any}
                 p={0}
                 focusStyle={{ bw: 0 }}
             />
