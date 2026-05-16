@@ -79,12 +79,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
 
             <YStack gap="$1.5" mb="$2.5">
                 <XStack gap="$2" ai="flex-start">
-                    <Circle size={4} mt={8} bg={COLORS.sandMid} />
-                    <SizableText f={1} size="$2" color={COLORS.textMid} fow="500" fontStyle="italic">
-                        "{item.transcript}"
-                    </SizableText>
-                </XStack>
-                <XStack gap="$2" ai="flex-start">
                     <Circle size={4} mt={8} bg={COLORS.royalBlue} />
                     <SizableText f={1} size="$3" color={COLORS.textDark} fow="700">
                         {item.corrected_transcript}
