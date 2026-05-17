@@ -19,6 +19,7 @@
       }
     },
     "android": {
+      "package": "com.articulink.app",
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
         "foregroundImage": "./assets/images/icon-new.png",
