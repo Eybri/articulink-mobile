@@ -60,7 +60,7 @@ export const useTtsSettingsViewModel = () => {
 
         // Manual identification indices from user (1-based)
         const filipinoMaleIndices = [3, 4, 6, 7];
-        const englishMaleIndices = [2, 4, 6, 7, 9, 13, 14, 17, 19, 20, 22, 26, 27, 32, 33, 37, 40];
+        const englishMaleIndices = [2, 4, 7, 8, 19, 20, 22, 26, 27, 32, 33, 37, 40];
 
         // Generic descriptions
         const maleDescs = ["Deep & Bold", "Clear & Professional", "Resonant", "Natural Male", "Crisp Tone", "Classic Male"];
@@ -71,7 +71,7 @@ export const useTtsSettingsViewModel = () => {
             let isMale = false;
 
             if (language === 'en-combined') {
-                isMale = englishMaleIndices.includes(index);
+                isMale = englishMaleIndices.includes(index) || v.name.toLowerCase().includes('-rjs');
             } else if (targetBase === 'fil-tl') {
                 isMale = filipinoMaleIndices.includes(index);
             }
