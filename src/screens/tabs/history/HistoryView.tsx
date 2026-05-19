@@ -239,7 +239,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                     bw={0}
                                     size="$3"
                                     placeholder="Search recordings..."
-                                    placeholderTextColor={COLORS.textMid}
+                                    placeholderTextColor={COLORS.textMid as any}
                                     value={vm.searchQuery}
                                     onChangeText={vm.setSearchQuery}
                                     fontWeight="600"
@@ -276,7 +276,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                 onRequestClose={() => vm.setAnalysisReport(null)}
             >
                 <YStack f={1} bc="rgba(0,0,0,0.6)" jc="center" ai="center" px="$4">
-                    <Card w="100%" maxH="80%" br={24} bg="white" ov="hidden" elevation={20}>
+                    <Card w="100%" mah="80%" br={24} bg="white" ov="hidden" elevation={20}>
                         <XStack p="$4" ai="center" jc="space-between" bbw={1} bbc={COLORS.sandMid} bg={`${COLORS.royalBlue}05`}>
                             <XStack ai="center" gap="$2">
                                 <Circle size={32} bg={COLORS.royalBlue}>

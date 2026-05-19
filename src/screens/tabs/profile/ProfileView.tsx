@@ -311,9 +311,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         </SettingsItem>
                         <SettingsItem 
                             icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
-                            title="Language" 
-                            value="English"
-                            onPress={() => {}} 
+                            title="Voice & TTS" 
+                            onPress={() => navigation.navigate("TtsSettings")} 
                             isLast
                         />
                     </YStack>
