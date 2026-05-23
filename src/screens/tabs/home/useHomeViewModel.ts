@@ -215,11 +215,19 @@ export const useHomeViewModel = () => {
                     const metering = status.metering ?? -160;
                     if (metering > maxMetering) maxMetering = metering;
                     if (metering > -45) { isSpeaking = true; silenceTicks = 0; } else if (isSpeaking) { silenceTicks++; }
-                    if ((isSpeaking && silenceTicks >= 8) || totalTicks >= 80) {
+                    // Trigger if:
+                    // 1. User is speaking and has paused for 1.2 seconds (silenceTicks >= 12)
+                    // 2. Or the chunk reaches 12 seconds maximum (totalTicks >= 120) to prevent overflow
+                    if ((isSpeaking && silenceTicks >= 12) || totalTicks >= 120) {
                         chunkSent = true;
                         try {
                             await recording.stopAndUnloadAsync();
-                            // ONLY send if we actually detected speech (isSpeaking is true)
+                            // Restart recording IMMEDIATELY to minimize the gap
+                            if (wsRef.current?.readyState === WebSocket.OPEN && !isTtsSpeakingRef.current) {
+                                startStreamingCycle();
+                            }
+
+                            // Send completed chunk asynchronously in the background
                             if (isSpeaking) {
                                 const uri = recording.getURI();
                                 if (uri) {
@@ -231,7 +239,6 @@ export const useHomeViewModel = () => {
                                 }
                             }
                         } catch (err) {}
-                        if (wsRef.current?.readyState === WebSocket.OPEN && !isTtsSpeakingRef.current) startStreamingCycle();
                     }
                 },
                 100
