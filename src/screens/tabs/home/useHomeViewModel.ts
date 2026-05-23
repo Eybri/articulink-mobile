@@ -28,6 +28,7 @@ export const useHomeViewModel = () => {
     const isStreamingRef = useRef<boolean>(false);
     const isConnectingRef = useRef<boolean>(false);
     const lastSpeakTimeRef = useRef<number>(0);
+    const isTtsSpeakingRef = useRef<boolean>(false);
     const { width, height } = useWindowDimensions();
 
     // Entry Animations
@@ -144,17 +145,52 @@ export const useHomeViewModel = () => {
                 isStreamingRef.current = true;
                 startStreamingCycle();
             };
-            wsRef.current.onmessage = (e) => {
+            wsRef.current.onmessage = async (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === "transcript" && data.text) {
                     const newText = data.text.trim();
                     setTranscript((prev) => prev + (prev ? " " : "") + newText);
+                    
+                    // Stop current recording cycle so we don't listen to our own TTS
+                    isTtsSpeakingRef.current = true;
+                    if (recordingRef.current) {
+                        try {
+                            await recordingRef.current.stopAndUnloadAsync();
+                        } catch (err) {}
+                        recordingRef.current = null;
+                    }
+
                     Speech.stop();
                     const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
-                    Speech.speak(newText, settings);
+                    Speech.speak(newText, {
+                        ...settings,
+                        onDone: () => {
+                            isTtsSpeakingRef.current = false;
+                            if (isStreamingRef.current) {
+                                startStreamingCycle();
+                            }
+                        },
+                        onStopped: () => {
+                            isTtsSpeakingRef.current = false;
+                            if (isStreamingRef.current) {
+                                startStreamingCycle();
+                            }
+                        },
+                        onError: (error) => {
+                            console.error("Speech error:", error);
+                            isTtsSpeakingRef.current = false;
+                            if (isStreamingRef.current) {
+                                startStreamingCycle();
+                            }
+                        }
+                    });
                 }
             };
-            wsRef.current.onclose = () => { setIsStreaming(false); isStreamingRef.current = false; };
+            wsRef.current.onclose = () => { 
+                setIsStreaming(false); 
+                isStreamingRef.current = false;
+                isTtsSpeakingRef.current = false;
+            };
             await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
         } catch (err) {
@@ -163,7 +199,7 @@ export const useHomeViewModel = () => {
     };
 
     const startStreamingCycle = async () => {
-        if (!isStreamingRef.current) return;
+        if (!isStreamingRef.current || isTtsSpeakingRef.current) return;
         try {
             let isSpeaking = false;
             let silenceTicks = 0;
@@ -174,7 +210,7 @@ export const useHomeViewModel = () => {
             const { recording } = await Audio.Recording.createAsync(
                 { isMeteringEnabled: true, android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1 }, ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, linearPCMBitDepth: 16 } } as any,
                 async (status: any) => {
-                    if (chunkSent || !isStreamingRef.current) return;
+                    if (chunkSent || !isStreamingRef.current || isTtsSpeakingRef.current) return;
                     totalTicks++;
                     const metering = status.metering ?? -160;
                     if (metering > maxMetering) maxMetering = metering;
@@ -183,16 +219,19 @@ export const useHomeViewModel = () => {
                         chunkSent = true;
                         try {
                             await recording.stopAndUnloadAsync();
-                            const uri = recording.getURI();
-                            if (uri && maxMetering > -45) {
-                                const response = await fetch(uri);
-                                const blob = await response.blob();
-                                const reader = new FileReader();
-                                reader.onloadend = () => { if (wsRef.current?.readyState === WebSocket.OPEN) wsRef.current.send(reader.result as ArrayBuffer); };
-                                reader.readAsArrayBuffer(blob);
+                            // ONLY send if we actually detected speech (isSpeaking is true)
+                            if (isSpeaking) {
+                                const uri = recording.getURI();
+                                if (uri) {
+                                    const response = await fetch(uri);
+                                    const blob = await response.blob();
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => { if (wsRef.current?.readyState === WebSocket.OPEN) wsRef.current.send(reader.result as ArrayBuffer); };
+                                    reader.readAsArrayBuffer(blob);
+                                }
                             }
                         } catch (err) {}
-                        if (wsRef.current?.readyState === WebSocket.OPEN) startStreamingCycle();
+                        if (wsRef.current?.readyState === WebSocket.OPEN && !isTtsSpeakingRef.current) startStreamingCycle();
                     }
                 },
                 100
@@ -245,7 +284,7 @@ export const useHomeViewModel = () => {
         }
     };
 
-    const speakText = useCallback((textToSpeak?: any) => {
+    const speakText = useCallback(async (textToSpeak?: any) => {
         // Fix: Ensure we only use the string if it's actually a string (not an event object)
         const content = (typeof textToSpeak === 'string' ? textToSpeak : transcript) || "";
         
@@ -253,13 +292,43 @@ export const useHomeViewModel = () => {
             return;
         }
         
+        isTtsSpeakingRef.current = true;
+        if (recordingRef.current) {
+            try {
+                await recordingRef.current.stopAndUnloadAsync();
+            } catch (err) {}
+            recordingRef.current = null;
+        }
+
         Speech.stop();
         const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
-        Speech.speak(content.trim(), settings);
+        Speech.speak(content.trim(), {
+            ...settings,
+            onDone: () => {
+                isTtsSpeakingRef.current = false;
+                if (isStreamingRef.current) {
+                    startStreamingCycle();
+                }
+            },
+            onStopped: () => {
+                isTtsSpeakingRef.current = false;
+                if (isStreamingRef.current) {
+                    startStreamingCycle();
+                }
+            },
+            onError: (error) => {
+                console.error("Speech error:", error);
+                isTtsSpeakingRef.current = false;
+                if (isStreamingRef.current) {
+                    startStreamingCycle();
+                }
+            }
+        });
     }, [transcript, user?.tts_settings]);
 
     const clearTranscript = () => {
         Speech.stop();
+        isTtsSpeakingRef.current = false;
         setTranscript("");
         setWords([]);
         setConfidence(0);
