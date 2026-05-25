@@ -67,15 +67,8 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                 />
                 <YStack fullscreen bg="black" opacity={0.25} />
 
-                {/* Bottom text + logo */}
-                <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.22} jc="center" ai="center" gap="$1">
-                    <Animated.View style={{ opacity: vm.animations.logoFade, transform: [{ scale: vm.animations.logoScale }] }}>
-                        <RNImage
-                            source={require('../../../../assets/images/icon-white.png')}
-                            style={{ width: 65, height: 65 }}
-                            resizeMode="contain"
-                        />
-                    </Animated.View>
+                {/* Bottom text */}
+                <YStack pos="absolute" b={0} l={0} r={0} h={height * 0.15} jc="center" ai="center" gap="$1">
                     <Animated.View style={{ opacity: vm.animations.textFade }}>
                         <YStack ai="center" gap="$1">
                             <SizableText size="$3" fow="700" color="white" ls={0.3}>Join Articulink</SizableText>
@@ -83,6 +76,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                         </YStack>
                     </Animated.View>
                 </YStack>
+
             </ZStack>
 
             {/* Scrollable Form */}
@@ -174,6 +168,31 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ vm, navigation }) =>
                                         </XStack>
                                     </YStack>
                                 </XStack>
+
+                                {/* First Name & Last Name Row */}
+                                <XStack gap="$2">
+                                    <YStack f={1} gap="$1.5">
+                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>First Name</SizableText>
+                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3">
+                                            <Input
+                                                f={1} placeholder="First Name" value={vm.firstName}
+                                                onChangeText={vm.setFirstName}
+                                                bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
+                                            />
+                                        </XStack>
+                                    </YStack>
+                                    <YStack f={1} gap="$1.5">
+                                        <SizableText size="$1" fow="700" color={COLORS.textMid} ls={0.5} tt="uppercase" opacity={0.8}>Last Name</SizableText>
+                                        <XStack ai="center" bg={COLORS.cream} br={12} bw={1} bc={COLORS.sandMid} h={48} px="$3">
+                                            <Input
+                                                f={1} placeholder="Last Name" value={vm.lastName}
+                                                onChangeText={vm.setLastName}
+                                                bg="transparent" bw={0} size="$3" disabled={vm.isLoading}
+                                            />
+                                        </XStack>
+                                    </YStack>
+                                </XStack>
+
 
                                 {/* Gender & Birthdate Row */}
                                 <XStack gap="$2">

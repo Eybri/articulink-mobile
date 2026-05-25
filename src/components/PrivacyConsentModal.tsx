@@ -21,7 +21,7 @@ export const PrivacyConsentModal: React.FC<PrivacyConsentModalProps> = ({ visibl
                 <YStack
                     bg="white"
                     w="90%"
-                    maxH="70%"
+                    mah="70%"
                     br={24}
                     elevation={20}
                     ov="hidden"

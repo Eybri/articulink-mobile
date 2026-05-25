@@ -299,7 +299,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         <SettingsItem 
                             icon={<Lock size={18} color={COLORS.royalBlue} />} 
                             title="Password & Security" 
-                            onPress={() => {}} 
+                            onPress={() => navigation.navigate("ChangePassword")} 
                         />
                         <SettingsItem 
                             icon={<Bell size={18} color={COLORS.royalBlue} />} 
@@ -311,9 +311,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         </SettingsItem>
                         <SettingsItem 
                             icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
-                            title="Language" 
-                            value="English"
-                            onPress={() => {}} 
+                            title="Voice & TTS" 
+                            onPress={() => navigation.navigate("TtsSettings")} 
                             isLast
                         />
                     </YStack>
@@ -322,8 +321,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     <YStack bg="white" br={24} ov="hidden" elevation={2} bw={1} bc={COLORS.sandMid}>
                         <SettingsItem 
                             icon={<Shield size={18} color={COLORS.textMid} />} 
-                            title="About Us" 
-                            onPress={() => {}} 
+                            title="Security & Privacy" 
+                            onPress={() => navigation.navigate("SecurityPrivacy")} 
                         />
                         <SettingsItem 
                             icon={<Trash2 size={18} color="#DC2626" />} 

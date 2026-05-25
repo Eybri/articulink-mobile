@@ -19,9 +19,11 @@
       }
     },
     "android": {
+      "package": "com.articulink.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
-        "foregroundImage": "./assets/images/icon-new.png",
+        "foregroundImage": "./assets/images/icon-adaptive-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
@@ -35,6 +37,12 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f987c923-ce10-4c24-9e2b-74162b552a9c"
+      }
+    },
+    "owner": "eybri"
   }
 }

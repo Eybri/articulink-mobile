@@ -11,6 +11,9 @@ import ProfileScreen from "../screens/tabs/profile";
 import MapScreen from "../screens/tabs/map";
 import EditProfileScreen from '../screens/Extras/edit-profile';
 import ChatbotScreen from '../screens/Extras/chatbot';
+import ChangePasswordScreen from '../screens/Extras/change-password';
+import SecurityPrivacyScreen from '../screens/Extras/security';
+import TtsSettingsScreen from '../screens/Extras/tts-settings';
 import {
   Home,
   History,
@@ -137,6 +140,21 @@ const ProfileStack = () => (
         title: "Edit Profile",
         headerLargeTitle: false,
       }} 
+    />
+    <Stack.Screen 
+      name="ChangePassword" 
+      component={ChangePasswordScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="SecurityPrivacy" 
+      component={SecurityPrivacyScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="TtsSettings" 
+      component={TtsSettingsScreen} 
+      options={{ headerShown: false }} 
     />
   </Stack.Navigator>
 );
@@ -338,7 +356,7 @@ const TabNavigator = () => (
       component={ProfileStack} 
       options={({ route }) => {
         const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "EditProfile") {
+        if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings") {
           return { headerShown: false, tabBarStyle: { display: "none" } };
         }
         return { headerShown: false };

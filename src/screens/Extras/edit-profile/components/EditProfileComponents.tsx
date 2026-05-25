@@ -28,7 +28,7 @@ export const EditProfileRow = React.memo(({
     icon: any, 
     title: string, 
     description?: string, 
-    children: React.ReactNode, 
+    children?: React.ReactNode, 
     isLast?: boolean, 
     onPress?: () => void 
 }) => (
@@ -344,7 +344,7 @@ export const GenderPickerSheet = ({
                                     >
                                         <XStack ai="center" gap="$3">
                                             <YStack w={36} h={36} br={10} bg={selectedGender === opt.value ? COLORS.royalBlue : `${COLORS.sandMid}20`} jc="center" ai="center">
-                                                {React.cloneElement(opt.icon as React.ReactElement, { color: selectedGender === opt.value ? "white" : COLORS.textMid })}
+                                                {React.cloneElement(opt.icon as React.ReactElement<any>, { color: selectedGender === opt.value ? "white" : COLORS.textMid })}
                                             </YStack>
                                             <SizableText fow="700" color={selectedGender === opt.value ? COLORS.royalBlue : COLORS.textDark}>{opt.label}</SizableText>
                                         </XStack>
