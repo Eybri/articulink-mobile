@@ -44,7 +44,8 @@ import {
   getGreeting,
   WordChip,
   LanguagePill,
-  SkeletonCard
+  SkeletonCard,
+  LanguageAccuracyChart
 } from "./components/ProfileComponents";
 import { getProfileSource } from "./../../../utils/imageHelper";
 
@@ -264,20 +265,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
 
                             {/* Languages Used */}
                             {vm.stats.language_breakdown && Object.keys(vm.stats.language_breakdown).length > 0 && (
-                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
-                                    <XStack ai="center" gap="$2" mb="$3">
-                                        <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
-                                            <Globe size={14} color="#6366F1" />
-                                        </YStack>
-                                        <SizableText fow="800" size="$3" color={COLORS.textDark}>Languages Used</SizableText>
-                                        <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
-                                    </XStack>
-                                    <XStack gap="$3" flexWrap="wrap">
-                                        {Object.entries(vm.stats.language_breakdown).map(([lang, count]: [string, any]) => (
-                                            <LanguagePill key={lang} lang={lang} count={count} total={vm.stats.total_recordings} />
-                                        ))}
-                                    </XStack>
-                                </Card>
+                                <>
+                                    <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
+                                        <XStack ai="center" gap="$2" mb="$3">
+                                            <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
+                                                <Globe size={14} color="#6366F1" />
+                                            </YStack>
+                                            <SizableText fow="800" size="$3" color={COLORS.textDark}>Languages Used</SizableText>
+                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+                                        </XStack>
+                                        <XStack gap="$3" flexWrap="wrap">
+                                            {Object.entries(vm.stats.language_breakdown).map(([lang, count]: [string, any]) => (
+                                                <LanguagePill key={lang} lang={lang} count={count} total={vm.stats.total_recordings} />
+                                            ))}
+                                        </XStack>
+                                    </Card>
+
+                                    <LanguageAccuracyChart breakdown={vm.stats.language_breakdown} />
+                                </>
                             )}
                         </>
                     ) : null}
