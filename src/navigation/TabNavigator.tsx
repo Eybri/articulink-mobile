@@ -187,19 +187,19 @@ const TabItem: React.FC<{
         ai="center"
       >
         <Button
-          w={60}
-          h={60}
-          br={30}
+          w={56}
+          h={56}
+          br={28}
           bg={COLORS.white}
           onPress={onPress}
           elevation={10}
           shadowColor="#000"
-          shadowOffset={{ width: 0, height: 5 }}
-          shadowOpacity={0.2}
-          shadowRadius={8}
+          shadowOffset={{ width: 0, height: 6 }}
+          shadowOpacity={0.25}
+          shadowRadius={10}
           pressStyle={{ scale: 0.9, bg: COLORS.sandLight }}
           icon={React.createElement(config.icon, {
-            size: 28,
+            size: 26,
             color: COLORS.royalBlue,
             strokeWidth: 2.5,
           })}
@@ -213,15 +213,19 @@ const TabItem: React.FC<{
       onPress={onPress} 
       jc="center" 
       ai="center"
-      w={48}
-      h={48}
-      br={24}
-      bg={isFocused ? 'rgba(255,255,255,0.1)' : 'transparent'}
+      w={44}
+      h={44}
+      br={22}
+      bg={isFocused ? 'rgba(255,255,255,0.06)' : 'transparent'}
       pressStyle={{ opacity: 0.7 }}
+      shadowColor={isFocused ? COLORS.white : 'transparent'}
+      shadowRadius={isFocused ? 10 : 0}
+      shadowOpacity={isFocused ? 0.25 : 0}
+      shadowOffset={{ width: 0, height: 0 }}
     >
       {React.createElement(config.icon, {
         size: 22,
-        color: isFocused ? COLORS.white : 'rgba(255, 255, 255, 0.5)',
+        color: isFocused ? COLORS.white : 'rgba(255, 255, 255, 0.45)',
         strokeWidth: isFocused ? 2.5 : 2,
       })}
     </YStack>
@@ -268,16 +272,16 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
       }}
     >
       {/* Custom Curved Background */}
-      <View style={{ position: 'absolute', top: -28, left: 0, right: 0, bottom: 0, flexDirection: 'row' }}>
-         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 28, borderTopLeftRadius: 34, borderBottomLeftRadius: 34 }} />
-         <Svg width="110" height="96" viewBox="0 0 110 96">
-            <Path d="M 0 28 C 30 28, 35 0, 55 0 C 75 0, 80 28, 110 28 L 110 96 L 0 96 Z" fill={COLORS.deepNavy} />
+      <View style={{ position: 'absolute', top: -26, left: 0, right: 0, bottom: 0, flexDirection: 'row' }}>
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopLeftRadius: 30, borderBottomLeftRadius: 30 }} />
+         <Svg width="110" height="86" viewBox="0 0 110 86">
+            <Path d="M 0 26 L 15.76 26 A 12 12 0 0 0 25.99 20.26 A 34 34 0 0 1 84.01 20.26 A 12 12 0 0 0 94.24 26 L 110 26 L 110 86 L 0 86 Z" fill={COLORS.deepNavy} />
          </Svg>
-         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 28, borderTopRightRadius: 34, borderBottomRightRadius: 34 }} />
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopRightRadius: 30, borderBottomRightRadius: 30 }} />
       </View>
 
       <YStack>
-        <XStack jc="space-between" ai="center" px="$4" h={68}>
+        <XStack jc="space-between" ai="center" px="$4" h={60}>
           {state.routes.map((route: any, index: number) => {
             const isFocused = state.index === index;
             const config = TAB_CONFIG.find(t => t.name === route.name)!;
