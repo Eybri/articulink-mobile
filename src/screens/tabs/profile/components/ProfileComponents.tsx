@@ -485,7 +485,7 @@ export const LanguagePill: React.FC<{ lang: string; count: any; total: number }>
   );
 };
 
-export const LanguageAccuracyChart: React.FC<{ breakdown: Record<string, any> }> = ({ breakdown }) => {
+export const LanguageStatsCard: React.FC<{ breakdown: Record<string, any>, totalRecordings: number }> = ({ breakdown, totalRecordings }) => {
     const entries = Object.entries(breakdown || {}).filter(([_, data]: [string, any]) => data?.count > 0);
     if (entries.length === 0) return null;
   
@@ -504,10 +504,20 @@ export const LanguageAccuracyChart: React.FC<{ breakdown: Record<string, any> }>
               <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
                   <Globe size={14} color="#6366F1" />
               </YStack>
-              <SizableText fow="800" size="$3" color={COLORS.textDark}>Accuracy Comparison</SizableText>
+              <SizableText fow="800" size="$3" color={COLORS.textDark}>Language Insights</SizableText>
               <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
           </XStack>
   
+          {/* Languages Used Pills */}
+          <XStack gap="$3" flexWrap="wrap" mb="$4">
+              {Object.entries(breakdown).map(([lang, count]: [string, any]) => (
+                  <LanguagePill key={lang} lang={lang} count={count} total={totalRecordings} />
+              ))}
+          </XStack>
+
+          <Separator bc={COLORS.sandMid} opacity={0.3} mb="$4" />
+  
+          {/* Accuracy Comparison Chart */}
           <XStack jc="center" ai="center" gap="$4">
              <YStack w={140} h={140} jc="center" ai="center">
                  <Svg width={140} height={140} viewBox="0 0 140 140">
