@@ -18,6 +18,7 @@ import {
   Paragraph,
 } from "tamagui";
 import {
+  User,
   Bell,
   History,
   Volume2,
@@ -59,6 +60,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                     showsVerticalScrollIndicator={false} 
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 140, paddingTop: 10, marginTop: 40 }}
                 >
+                    {/* Section: Account */}
+                    <YStack mb="$7">
+                        <XStack ai="center" gap="$2" mb="$3" ml="$2">
+                            <User size={14} color={COLORS.royalBlue} />
+                            <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Account</SizableText>
+                        </XStack>
+                        
+                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <SettingRow 
+                                icon={<User size={18} color={COLORS.royalBlue} />} 
+                                title="Manage Profile" 
+                                description="Update your personal info"
+                                onPress={() => navigation.navigate("EditProfile")}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                            
+                            <SettingRow 
+                                icon={<Lock size={18} color={COLORS.royalBlue} />} 
+                                title="Password & Security" 
+                                description="Update password and security"
+                                onPress={() => navigation.navigate("ChangePassword")}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+
+                            <SettingRow 
+                                icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
+                                title="Voice & TTS" 
+                                description="Text-to-speech preferences"
+                                onPress={() => navigation.navigate("TtsSettings")}
+                                isLast
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                        </Card>
+                    </YStack>
+
                     {/* Section: Configuration */}
                     <YStack mb="$7">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">

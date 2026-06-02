@@ -9,6 +9,7 @@ import HomeScreen from "../screens/tabs/home";
 import HistoryScreen from "../screens/tabs/history";
 import ProfileScreen from "../screens/tabs/profile";
 import MapScreen from "../screens/tabs/map";
+import SettingsScreen from "../screens/tabs/settings";
 import EditProfileScreen from '../screens/Extras/edit-profile';
 import ChatbotScreen from '../screens/Extras/chatbot';
 import ChangePasswordScreen from '../screens/Extras/change-password';
@@ -21,6 +22,7 @@ import {
   User,
   MessageCircle,
   Mic,
+  Settings,
 } from "@tamagui/lucide-icons";
 
 const Tab = createBottomTabNavigator();
@@ -129,10 +131,10 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
-// ─── Profile Stack ───────────────────────────────────────────────
-const ProfileStack = () => (
+// ─── Settings Stack ───────────────────────────────────────────────
+const SettingsStack = () => (
   <Stack.Navigator screenOptions={getHeaderOptions()}>
-    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SettingsMain" component={SettingsScreen} options={{ headerShown: false }} />
     <Stack.Screen 
       name="EditProfile" 
       component={EditProfileScreen} 
@@ -165,6 +167,7 @@ const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
   { name: "Profile", label: "Profile", icon: User },
+  { name: "Settings", label: "Settings", icon: Settings },
 ];
 
 // ─── Animated Tab Item (Pill Style) ─────────────────────────────
@@ -353,7 +356,12 @@ const TabNavigator = () => (
     />
     <Tab.Screen 
       name="Profile" 
-      component={ProfileStack} 
+      component={ProfileScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Tab.Screen 
+      name="Settings" 
+      component={SettingsStack} 
       options={({ route }) => {
         const routeName = getFocusedRouteNameFromRoute(route);
         if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings") {
