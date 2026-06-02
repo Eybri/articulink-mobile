@@ -1,10 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { Animated, Alert, useWindowDimensions } from 'react-native';
+import { AuthContext, AuthContextType } from './../../../context/AuthContext';
 
 /**
  * ViewModel for the Settings Screen.
  */
 export const useSettingsViewModel = (navigation: any) => {
+    const auth = useContext(AuthContext) as AuthContextType;
+    const { user, logout } = auth;
+    
     const [saveHistory, setSaveHistory] = useState(true);
     const [vibrationFeedback, setVibrationFeedback] = useState(true);
     const [voiceVolume, setVoiceVolume] = useState(0.7);
@@ -47,6 +51,7 @@ export const useSettingsViewModel = (navigation: any) => {
     };
 
     return {
+        user,
         saveHistory, setSaveHistory,
         vibrationFeedback, setVibrationFeedback,
         voiceVolume, setVoiceVolume,

@@ -4,6 +4,7 @@ import {
   StatusBar,
   Animated,
   Alert,
+  Image as RNImage,
 } from 'react-native';
 import {
   YStack,
@@ -33,6 +34,7 @@ import {
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SettingRow, SliderSetting } from "./components/SettingsComponents";
+import { getProfileSource } from "./../../../utils/imageHelper";
 
 interface SettingsViewProps {
     vm: any;
@@ -60,6 +62,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                     showsVerticalScrollIndicator={false} 
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 140, paddingTop: 10, marginTop: 40 }}
                 >
+                    {/* Identity Header */}
+                    {vm.user && (
+                        <Card bg="white" br={28} p="$4" mb="$7" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <XStack ai="center" gap="$4">
+                                <YStack w={64} h={64} br={32} jc="center" ai="center" bw={2} bc={COLORS.cream} ov="hidden" elevation={4} shadowColor={COLORS.royalBlue} shadowOpacity={0.15}>
+                                    {vm.user.profile_pic ? (
+                                        <RNImage
+                                            source={getProfileSource(vm.user.profile_pic)}
+                                            style={{ width: 64, height: 64, borderRadius: 32 }}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
+                                            <SizableText size="$6" fow="900" color="white">
+                                                {vm.user.username?.[0]?.toUpperCase() ?? "U"}
+                                            </SizableText>
+                                        </YStack>
+                                    )}
+                                </YStack>
+                                <YStack f={1}>
+                                    <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} numberOfLines={1}>
+                                        {vm.user.first_name && vm.user.last_name ? `${vm.user.first_name} ${vm.user.last_name}` : (vm.user.username || "User")}
+                                    </SizableText>
+                                    {vm.user.username && (
+                                        <SizableText size="$3" color={COLORS.royalBlue} fow="700" mt="$1" opacity={0.8}>
+                                            @{vm.user.username}
+                                        </SizableText>
+                                    )}
+                                </YStack>
+                            </XStack>
+                        </Card>
+                    )}
+
                     {/* Section: Account */}
                     <YStack mb="$7">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">
