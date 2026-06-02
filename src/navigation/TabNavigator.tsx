@@ -273,11 +273,11 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     >
       {/* Custom Curved Background */}
       <View style={{ position: 'absolute', top: -26, left: 0, right: 0, bottom: 0, flexDirection: 'row' }}>
-         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopLeftRadius: 30, borderBottomLeftRadius: 30 }} />
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopLeftRadius: 30, borderBottomLeftRadius: 30, marginRight: -1 }} />
          <Svg width="110" height="86" viewBox="0 0 110 86">
             <Path d="M 0 26 L 15.76 26 A 12 12 0 0 0 25.99 20.26 A 34 34 0 0 1 84.01 20.26 A 12 12 0 0 0 94.24 26 L 110 26 L 110 86 L 0 86 Z" fill={COLORS.deepNavy} />
          </Svg>
-         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopRightRadius: 30, borderBottomRightRadius: 30 }} />
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopRightRadius: 30, borderBottomRightRadius: 30, marginLeft: -1 }} />
       </View>
 
       <YStack>
