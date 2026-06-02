@@ -45,6 +45,13 @@ export const useHomeViewModel = () => {
         refreshHistory();
     }, []);
 
+    useEffect(() => {
+        // Clear transcription state when switching modes to avoid rendering stale/incorrect views
+        setTranscript("");
+        setWords([]);
+        setConfidence(0);
+    }, [isRealtime]);
+
     const refreshHistory = async () => {
         try {
             const history = await fetchSpeechHistory();
@@ -135,65 +142,105 @@ export const useHomeViewModel = () => {
         isConnectingRef.current = true;
         try {
             const token = await getToken();
-            if (!token) return;
+            if (!token) {
+                console.error("[WS Client] Failed to get auth token.");
+                isConnectingRef.current = false;
+                return;
+            }
 
             const wsUrl = baseURL.replace("http", "ws") + "/api/v1/stream-transcribe?token=" + token;
+            console.log("[WS Client] Connecting to WebSocket URL:", wsUrl);
             wsRef.current = new WebSocket(wsUrl);
+            
             wsRef.current.onopen = () => {
+                console.log("[WS Client] Connection opened successfully!");
                 isConnectingRef.current = false;
                 setIsStreaming(true);
                 isStreamingRef.current = true;
+                
+                // Clear previous transcription states
+                setTranscript("");
+                setWords([]);
+                setConfidence(0);
+                
                 startStreamingCycle();
             };
+            
             wsRef.current.onmessage = async (e) => {
-                const data = JSON.parse(e.data);
-                if (data.type === "transcript" && data.text) {
-                    const newText = data.text.trim();
-                    setTranscript((prev) => prev + (prev ? " " : "") + newText);
-                    
-                    // Stop current recording cycle so we don't listen to our own TTS
-                    isTtsSpeakingRef.current = true;
-                    if (recordingRef.current) {
-                        try {
-                            await recordingRef.current.stopAndUnloadAsync();
-                        } catch (err) {}
-                        recordingRef.current = null;
-                    }
-
-                    Speech.stop();
-                    const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
-                    Speech.speak(newText, {
-                        ...settings,
-                        onDone: () => {
-                            isTtsSpeakingRef.current = false;
-                            if (isStreamingRef.current) {
-                                startStreamingCycle();
-                            }
-                        },
-                        onStopped: () => {
-                            isTtsSpeakingRef.current = false;
-                            if (isStreamingRef.current) {
-                                startStreamingCycle();
-                            }
-                        },
-                        onError: (error) => {
-                            console.error("Speech error:", error);
-                            isTtsSpeakingRef.current = false;
-                            if (isStreamingRef.current) {
-                                startStreamingCycle();
-                            }
+                console.log("[WS Client] Message received from server:", e.data);
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.type === "transcript" && data.text) {
+                        const newText = data.text.trim();
+                        console.log("[WS Client] Appending live transcript segment:", newText);
+                        setTranscript((prev) => prev + (prev ? " " : "") + newText);
+                        
+                        if (data.words && Array.isArray(data.words)) {
+                            setWords((prev) => [...prev, ...data.words]);
                         }
-                    });
+                        if (data.overall_confidence) {
+                            setConfidence(data.overall_confidence);
+                        }
+                        
+                        // Stop current recording cycle so we don't listen to our own TTS
+                        isTtsSpeakingRef.current = true;
+                        if (recordingRef.current) {
+                            try {
+                                await recordingRef.current.stopAndUnloadAsync();
+                            } catch (err) {}
+                            recordingRef.current = null;
+                        }
+
+                        Speech.stop();
+                        const settings = user?.tts_settings || { language: "fil-PH", rate: 0.9, pitch: 1.0 };
+                        Speech.speak(newText, {
+                            ...settings,
+                            onDone: () => {
+                                console.log("[TTS] Finished speaking segment.");
+                                isTtsSpeakingRef.current = false;
+                                if (isStreamingRef.current) {
+                                    startStreamingCycle();
+                                }
+                            },
+                            onStopped: () => {
+                                console.log("[TTS] Speaking stopped.");
+                                isTtsSpeakingRef.current = false;
+                                if (isStreamingRef.current) {
+                                    startStreamingCycle();
+                                }
+                            },
+                            onError: (error) => {
+                                console.error("[TTS] Speech error:", error);
+                                isTtsSpeakingRef.current = false;
+                                if (isStreamingRef.current) {
+                                    startStreamingCycle();
+                                }
+                            }
+                        });
+                    } else if (data.type === "error") {
+                        console.error("[WS Client] Server returned error message:", data.message);
+                        Alert.alert("Transcription Error", data.message || "An error occurred during real-time transcription.");
+                    }
+                } catch (parseErr) {
+                    console.error("[WS Client] Failed to parse message JSON:", parseErr, e.data);
                 }
             };
-            wsRef.current.onclose = () => { 
+            
+            wsRef.current.onerror = (err) => {
+                console.error("[WS Client] WebSocket Error details:", err);
+            };
+
+            wsRef.current.onclose = (event) => { 
+                console.log("[WS Client] Connection closed. Code:", event.code, "Reason:", event.reason);
                 setIsStreaming(false); 
                 isStreamingRef.current = false;
                 isTtsSpeakingRef.current = false;
             };
+            
             await Audio.requestPermissionsAsync();
             await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
         } catch (err) {
+            console.error("[WS Client] Exception in startStreaming:", err);
             isConnectingRef.current = false;
         }
     };
@@ -207,6 +254,7 @@ export const useHomeViewModel = () => {
             let maxMetering = -160;
             let chunkSent = false;
 
+            console.log("[WS Client] Starting new recording cycle chunk...");
             const { recording } = await Audio.Recording.createAsync(
                 { isMeteringEnabled: true, android: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1 }, ios: { extension: ".wav", sampleRate: 16000, numberOfChannels: 1, linearPCMBitDepth: 16 } } as any,
                 async (status: any) => {
@@ -220,6 +268,7 @@ export const useHomeViewModel = () => {
                     // 2. Or the chunk reaches 12 seconds maximum (totalTicks >= 120) to prevent overflow
                     if ((isSpeaking && silenceTicks >= 12) || totalTicks >= 120) {
                         chunkSent = true;
+                        console.log(`[WS Client] Chunk triggers send: isSpeaking=${isSpeaking}, totalTicks=${totalTicks}, silenceTicks=${silenceTicks}`);
                         try {
                             await recording.stopAndUnloadAsync();
                             // Restart recording IMMEDIATELY to minimize the gap
@@ -231,20 +280,35 @@ export const useHomeViewModel = () => {
                             if (isSpeaking) {
                                 const uri = recording.getURI();
                                 if (uri) {
+                                    console.log("[WS Client] Preparing audio blob from:", uri);
                                     const response = await fetch(uri);
                                     const blob = await response.blob();
+                                    console.log(`[WS Client] Sending audio chunk (${blob.size} bytes)...`);
                                     const reader = new FileReader();
-                                    reader.onloadend = () => { if (wsRef.current?.readyState === WebSocket.OPEN) wsRef.current.send(reader.result as ArrayBuffer); };
+                                    reader.onloadend = () => { 
+                                        if (wsRef.current?.readyState === WebSocket.OPEN) {
+                                            wsRef.current.send(reader.result as ArrayBuffer); 
+                                        } else {
+                                            console.warn("[WS Client] WebSocket closed, cannot send chunk.");
+                                        }
+                                    };
                                     reader.readAsArrayBuffer(blob);
                                 }
+                            } else {
+                                console.log("[WS Client] Speech not detected in this chunk, discarding.");
                             }
-                        } catch (err) {}
+                        } catch (err) {
+                            console.error("[WS Client] Error processing audio chunk:", err);
+                        }
                     }
                 },
                 100
             );
             recordingRef.current = recording;
-        } catch (err) { setIsStreaming(false); }
+        } catch (err) { 
+            console.error("[WS Client] Failed to start recording cycle:", err);
+            setIsStreaming(false); 
+        }
     };
 
     const stopRecording = async () => {
