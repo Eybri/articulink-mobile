@@ -4,6 +4,7 @@ import {
   StatusBar,
   Animated,
   Alert,
+  Image as RNImage,
 } from 'react-native';
 import {
   YStack,
@@ -18,6 +19,7 @@ import {
   Paragraph,
 } from "tamagui";
 import {
+  User,
   Bell,
   History,
   Volume2,
@@ -32,6 +34,7 @@ import {
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SettingRow, SliderSetting } from "./components/SettingsComponents";
+import { getProfileSource } from "./../../../utils/imageHelper";
 
 interface SettingsViewProps {
     vm: any;
@@ -59,6 +62,77 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                     showsVerticalScrollIndicator={false} 
                     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 140, paddingTop: 10, marginTop: 40 }}
                 >
+                    {/* Identity Header */}
+                    {vm.user && (
+                        <Card bg="white" br={28} p="$4" mb="$7" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <XStack ai="center" gap="$4">
+                                <YStack w={64} h={64} br={32} jc="center" ai="center" bw={2} bc={COLORS.cream} ov="hidden" elevation={4} shadowColor={COLORS.royalBlue} shadowOpacity={0.15}>
+                                    {vm.user.profile_pic ? (
+                                        <RNImage
+                                            source={getProfileSource(vm.user.profile_pic)}
+                                            style={{ width: 64, height: 64, borderRadius: 32 }}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
+                                            <SizableText size="$6" fow="900" color="white">
+                                                {vm.user.username?.[0]?.toUpperCase() ?? "U"}
+                                            </SizableText>
+                                        </YStack>
+                                    )}
+                                </YStack>
+                                <YStack f={1}>
+                                    <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} numberOfLines={1}>
+                                        {vm.user.first_name && vm.user.last_name ? `${vm.user.first_name} ${vm.user.last_name}` : (vm.user.username || "User")}
+                                    </SizableText>
+                                    {vm.user.username && (
+                                        <SizableText size="$3" color={COLORS.royalBlue} fow="700" mt="$1" opacity={0.8}>
+                                            @{vm.user.username}
+                                        </SizableText>
+                                    )}
+                                </YStack>
+                            </XStack>
+                        </Card>
+                    )}
+
+                    {/* Section: Account */}
+                    <YStack mb="$7">
+                        <XStack ai="center" gap="$2" mb="$3" ml="$2">
+                            <User size={14} color={COLORS.royalBlue} />
+                            <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Account</SizableText>
+                        </XStack>
+                        
+                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <SettingRow 
+                                icon={<User size={18} color={COLORS.royalBlue} />} 
+                                title="Manage Profile" 
+                                description="Update your personal info"
+                                onPress={() => navigation.navigate("EditProfile")}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                            
+                            <SettingRow 
+                                icon={<Lock size={18} color={COLORS.royalBlue} />} 
+                                title="Password & Security" 
+                                description="Update password and security"
+                                onPress={() => navigation.navigate("ChangePassword")}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+
+                            <SettingRow 
+                                icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
+                                title="Voice & TTS" 
+                                description="Text-to-speech preferences"
+                                onPress={() => navigation.navigate("TtsSettings")}
+                                isLast
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                        </Card>
+                    </YStack>
+
                     {/* Section: Configuration */}
                     <YStack mb="$7">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">

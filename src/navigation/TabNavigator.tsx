@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
-import { Platform, Animated, Image as RNImage, StyleSheet } from "react-native";
+import { Platform, Animated, Image as RNImage, StyleSheet, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createNativeStackNavigator as createStackNavigator } from "@react-navigation/native-stack";
@@ -9,6 +10,7 @@ import HomeScreen from "../screens/tabs/home";
 import HistoryScreen from "../screens/tabs/history";
 import ProfileScreen from "../screens/tabs/profile";
 import MapScreen from "../screens/tabs/map";
+import SettingsScreen from "../screens/tabs/settings";
 import EditProfileScreen from '../screens/Extras/edit-profile';
 import ChatbotScreen from '../screens/Extras/chatbot';
 import ChangePasswordScreen from '../screens/Extras/change-password';
@@ -21,6 +23,7 @@ import {
   User,
   MessageCircle,
   Mic,
+  Settings,
 } from "@tamagui/lucide-icons";
 
 const Tab = createBottomTabNavigator();
@@ -129,10 +132,10 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
-// ─── Profile Stack ───────────────────────────────────────────────
-const ProfileStack = () => (
+// ─── Settings Stack ───────────────────────────────────────────────
+const SettingsStack = () => (
   <Stack.Navigator screenOptions={getHeaderOptions()}>
-    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SettingsMain" component={SettingsScreen} options={{ headerShown: false }} />
     <Stack.Screen 
       name="EditProfile" 
       component={EditProfileScreen} 
@@ -161,79 +164,71 @@ const ProfileStack = () => (
 
 // ─── Tab Config ──────────────────────────────────────────────────
 const TAB_CONFIG: { name: string; label: string; icon: any }[] = [
-  { name: "Home", label: "Hub", icon: Mic },
   { name: "History", label: "History", icon: History },
   { name: "Map", label: "Map", icon: MapPin },
+  { name: "Home", label: "Hub", icon: Mic },
   { name: "Profile", label: "Profile", icon: User },
+  { name: "Settings", label: "Settings", icon: Settings },
 ];
 
-// ─── Animated Tab Item (Pill Style) ─────────────────────────────
 const TabItem: React.FC<{
   isFocused: boolean;
   config: { name: string; label: string; icon: any };
   onPress: () => void;
 }> = ({ isFocused, config, onPress }) => {
-  const widthAnim = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+  const isHome = config.name === "Home";
 
-  useEffect(() => {
-    Animated.spring(widthAnim, {
-      toValue: isFocused ? 1 : 0,
-      useNativeDriver: false, // Width cannot be animated with native driver
-      tension: 100,
-      friction: 12,
-    }).start();
-  }, [isFocused]);
-
-  const pillWidth = widthAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [48, 110], // Adjusted for better fit
-  });
-
-  const textOpacity = widthAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0, 1],
-  });
+  if (isHome) {
+    return (
+      <YStack 
+        pos="relative" 
+        top={-18} 
+        jc="center" 
+        ai="center"
+      >
+        <Button
+          w={56}
+          h={56}
+          br={28}
+          bg={COLORS.white}
+          onPress={onPress}
+          elevation={10}
+          shadowColor="#000"
+          shadowOffset={{ width: 0, height: 6 }}
+          shadowOpacity={0.25}
+          shadowRadius={10}
+          pressStyle={{ scale: 0.9, bg: COLORS.sandLight }}
+          icon={React.createElement(config.icon, {
+            size: 26,
+            color: COLORS.royalBlue,
+            strokeWidth: 2.5,
+          })}
+        />
+      </YStack>
+    );
+  }
 
   return (
-    <Animated.View 
-      style={{
-        width: pillWidth,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: isFocused ? COLORS.white : 'transparent',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-      }}
+    <YStack 
+      onPress={onPress} 
+      jc="center" 
+      ai="center"
+      w={44}
+      h={44}
+      br={22}
+      bg={isFocused ? 'rgba(255,255,255,0.06)' : 'transparent'}
+      pressStyle={{ opacity: 0.7 }}
+      shadowColor={isFocused ? COLORS.white : 'transparent'}
+      shadowRadius={isFocused ? 10 : 0}
+      shadowOpacity={isFocused ? 0.25 : 0}
+      shadowOffset={{ width: 0, height: 0 }}
     >
-      <XStack 
-        onPress={onPress} 
-        ai="center" 
-        jc="center" 
-        w="100%"
-        h="100%"
-        gap="$2"
-      >
-        {React.createElement(config.icon, {
-          size: 19,
-          color: isFocused ? COLORS.deepNavy : 'rgba(255, 255, 255, 0.4)',
-          strokeWidth: isFocused ? 3 : 2,
-        })}
-        
-        {isFocused && (
-          <Animated.View style={{ opacity: textOpacity }}>
-            <SizableText 
-              color={COLORS.deepNavy} 
-              fow="900" 
-              size="$2" 
-              ls={-0.3}
-            >
-              {config.label}
-            </SizableText>
-          </Animated.View>
-        )}
-      </XStack>
-    </Animated.View>
+      {React.createElement(config.icon, {
+        size: 22,
+        color: isFocused ? COLORS.white : 'rgba(255, 255, 255, 0.45)',
+        strokeWidth: isFocused ? 2.5 : 2,
+      })}
+    </YStack>
   );
 };
 
@@ -269,18 +264,24 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         right: 20,
         zIndex: 1000,
         transform: [{ translateY }],
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.2,
+        shadowRadius: 20,
+        elevation: 15,
       }}
     >
-      <YStack
-        style={styles.tabBarContainer}
-        bg={COLORS.deepNavy}
-        elevation={15}
-        shadowColor="#000"
-        shadowOffset={{ width: 0, height: 10 }}
-        shadowOpacity={0.2}
-        shadowRadius={20}
-      >
-        <XStack jc="space-between" ai="center" px="$3.5" h={68}>
+      {/* Custom Curved Background */}
+      <View style={{ position: 'absolute', top: -26, left: 0, right: 0, bottom: 0, flexDirection: 'row' }}>
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopLeftRadius: 30, borderBottomLeftRadius: 30, marginRight: -1 }} />
+         <Svg width="110" height="86" viewBox="0 0 110 86">
+            <Path d="M 0 26 L 15.76 26 A 12 12 0 0 0 25.99 20.26 A 34 34 0 0 1 84.01 20.26 A 12 12 0 0 0 94.24 26 L 110 26 L 110 86 L 0 86 Z" fill={COLORS.deepNavy} />
+         </Svg>
+         <View style={{ flex: 1, backgroundColor: COLORS.deepNavy, marginTop: 26, borderTopRightRadius: 30, borderBottomRightRadius: 30, marginLeft: -1 }} />
+      </View>
+
+      <YStack>
+        <XStack jc="space-between" ai="center" px="$4" h={60}>
           {state.routes.map((route: any, index: number) => {
             const isFocused = state.index === index;
             const config = TAB_CONFIG.find(t => t.name === route.name)!;
@@ -310,14 +311,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  tabBarContainer: {
-    borderRadius: 100, // Fully rounded capsule
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    overflow: 'hidden',
-  },
-});
+const styles = StyleSheet.create({});
 
 
 // ─── Tab Navigator ───────────────────────────────────────────────
@@ -326,17 +320,6 @@ const TabNavigator = () => (
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{ ...getHeaderOptions() } as any}
   >
-    <Tab.Screen 
-      name="Home" 
-      component={HomeStack} 
-      options={({ route }) => {
-        const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "Chatbot") {
-          return { headerShown: false, tabBarStyle: { display: "none" } };
-        }
-        return { headerShown: false };
-      }} 
-    />
     <Tab.Screen 
       name="History" 
       component={HistoryScreen} 
@@ -352,8 +335,24 @@ const TabNavigator = () => (
       }} 
     />
     <Tab.Screen 
+      name="Home" 
+      component={HomeStack} 
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route);
+        if (routeName === "Chatbot") {
+          return { headerShown: false, tabBarStyle: { display: "none" } };
+        }
+        return { headerShown: false };
+      }} 
+    />
+    <Tab.Screen 
       name="Profile" 
-      component={ProfileStack} 
+      component={ProfileScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Tab.Screen 
+      name="Settings" 
+      component={SettingsStack} 
       options={({ route }) => {
         const routeName = getFocusedRouteNameFromRoute(route);
         if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings") {

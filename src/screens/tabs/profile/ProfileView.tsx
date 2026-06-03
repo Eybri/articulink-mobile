@@ -15,7 +15,6 @@ import {
   SizableText,
   ScrollView,
   Spinner,
-  Switch,
   Card,
   Separator,
 } from "tamagui";
@@ -42,13 +41,11 @@ import {
   SpeechProgressCard, 
   StatCard, 
   SectionLabel,
-  SettingsItem,
-  SettingsSectionHeader,
-  SliderSetting,
   getGreeting,
   WordChip,
   LanguagePill,
-  SkeletonCard
+  SkeletonCard,
+  LanguageStatsCard
 } from "./components/ProfileComponents";
 import { getProfileSource } from "./../../../utils/imageHelper";
 
@@ -266,80 +263,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                                 </Card>
                             )}
 
-                            {/* Languages Used */}
+                            {/* Languages Used & Accuracy */}
                             {vm.stats.language_breakdown && Object.keys(vm.stats.language_breakdown).length > 0 && (
-                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
-                                    <XStack ai="center" gap="$2" mb="$3">
-                                        <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
-                                            <Globe size={14} color="#6366F1" />
-                                        </YStack>
-                                        <SizableText fow="800" size="$3" color={COLORS.textDark}>Languages Used</SizableText>
-                                        <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
-                                    </XStack>
-                                    <XStack gap="$3" flexWrap="wrap">
-                                        {Object.entries(vm.stats.language_breakdown).map(([lang, count]: [string, any]) => (
-                                            <LanguagePill key={lang} lang={lang} count={count} total={vm.stats.total_recordings} />
-                                        ))}
-                                    </XStack>
-                                </Card>
+                                <LanguageStatsCard 
+                                    breakdown={vm.stats.language_breakdown} 
+                                    totalRecordings={vm.stats.total_recordings} 
+                                />
                             )}
                         </>
                     ) : null}
                 </YStack>
  
-                {/* Settings Section */}
-                <YStack mt="$4" px="$5">
-                    <SettingsSectionHeader title="Account" icon={<User size={12} color={COLORS.textMid} />} />
-                    <YStack bg="white" br={24} ov="hidden" elevation={2} bw={1} bc={COLORS.sandMid}>
-                        <SettingsItem 
-                            icon={<User size={18} color={COLORS.royalBlue} />} 
-                            title="Manage Profile" 
-                            onPress={vm.handleEditProfile} 
-                        />
-                        <SettingsItem 
-                            icon={<Lock size={18} color={COLORS.royalBlue} />} 
-                            title="Password & Security" 
-                            onPress={() => navigation.navigate("ChangePassword")} 
-                        />
-                        <SettingsItem 
-                            icon={<Bell size={18} color={COLORS.royalBlue} />} 
-                            title="Notifications" 
-                        >
-                            <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
-                                <Switch.Thumb bg="white" />
-                            </Switch>
-                        </SettingsItem>
-                        <SettingsItem 
-                            icon={<Volume2 size={18} color={COLORS.royalBlue} />} 
-                            title="Voice & TTS" 
-                            onPress={() => navigation.navigate("TtsSettings")} 
-                            isLast
-                        />
-                    </YStack>
-                    
-                    <SettingsSectionHeader title="Preferences" icon={<Shield size={12} color={COLORS.textMid} />} />
-                    <YStack bg="white" br={24} ov="hidden" elevation={2} bw={1} bc={COLORS.sandMid}>
-                        <SettingsItem 
-                            icon={<Shield size={18} color={COLORS.textMid} />} 
-                            title="Security & Privacy" 
-                            onPress={() => navigation.navigate("SecurityPrivacy")} 
-                        />
-                        <SettingsItem 
-                            icon={<Trash2 size={18} color="#DC2626" />} 
-                            title="Clear Local Cache" 
-                            onPress={vm.handleClearHistory} 
-                            danger
-                        />
-                        <SettingsItem 
-                            icon={<LogOut size={18} color="#DC2626" />} 
-                            title="Logout Session" 
-                            onPress={vm.handleLogout} 
-                            isLast
-                            danger
-                        />
-                    </YStack>
-                </YStack>
-
                 {/* Info Footer */}
                 <YStack ai="center" gap="$1" mt="$8" opacity={0.4}>
                     <SizableText size="$1" color={COLORS.textMid} fow="800" ls={1}>ARTICULINK v1.0.4 PRO</SizableText>
