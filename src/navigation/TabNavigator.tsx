@@ -322,6 +322,7 @@ const styles = StyleSheet.create({});
 // ─── Tab Navigator ───────────────────────────────────────────────
 const TabNavigator = () => (
   <Tab.Navigator
+    initialRouteName="Home"
     tabBar={(props) => <CustomTabBar {...props} />}
     screenOptions={{ ...getHeaderOptions() } as any}
   >
