@@ -38,36 +38,23 @@ export const ToastNotification = () => {
         setConfig({ type: 'info', duration: 3000, ...options });
         setVisible(true);
         
-        Animated.parallel([
-          Animated.spring(translateY, {
-            toValue: Platform.OS === 'ios' ? 60 : 45,
-            useNativeDriver: true,
-            tension: 60,
-            friction: 9
-          }),
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true
-          })
-        ]).start();
+        Animated.spring(translateY, {
+          toValue: Platform.OS === 'ios' ? 60 : 45,
+          useNativeDriver: true,
+          tension: 40,
+          friction: 8
+        }).start();
 
         timerRef.current = setTimeout(() => {
           globalToastRef.hide();
         }, options.duration || 3000);
       },
       hide: () => {
-        Animated.parallel([
-          Animated.spring(translateY, {
-            toValue: -150,
-            useNativeDriver: true
-          }),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true
-          })
-        ]).start(() => {
+        Animated.timing(translateY, {
+          toValue: -150,
+          duration: 300,
+          useNativeDriver: true
+        }).start(() => {
           setVisible(false);
         });
       }
@@ -78,7 +65,6 @@ export const ToastNotification = () => {
     };
   }, []);
 
-  if (!visible) return null;
 
   const getBgColor = () => {
     switch (config.type) {
@@ -107,7 +93,6 @@ export const ToastNotification = () => {
         right: 20,
         zIndex: 99999,
         transform: [{ translateY }],
-        opacity,
       }}
       pointerEvents="box-none"
     >
