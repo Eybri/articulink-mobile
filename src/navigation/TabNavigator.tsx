@@ -217,12 +217,8 @@ const TabItem: React.FC<{
       ai="center"
       py={6}
       br={12}
-      bg={isFocused ? 'rgba(255,255,255,0.06)' : 'transparent'}
+      bg="transparent"
       pressStyle={{ opacity: 0.7 }}
-      shadowColor={isFocused ? COLORS.white : 'transparent'}
-      shadowRadius={isFocused ? 10 : 0}
-      shadowOpacity={isFocused ? 0.25 : 0}
-      shadowOffset={{ width: 0, height: 0 }}
       gap={4}
     >
       {React.createElement(config.icon, {
