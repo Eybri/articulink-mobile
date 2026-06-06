@@ -44,7 +44,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     {vm.isRealtime ? "Live Mode Active" : "Phrase Mode Active"}
                                 </SizableText>
                             </YStack>
-                            <SizableText size="$3" color={COLORS.textMid} fow="500" ta="center" px="$4" opacity={0.75}>
+                            <SizableText size="$2" color={COLORS.textMid} fow="500" ta="center" px="$4" opacity={0.75}>
                                 {vm.isRealtime ? "Continuous real-time speech enhancement" : "Record and playback clarified phrases"}
                             </SizableText>
                         </YStack>
@@ -52,7 +52,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                     {/* Mode Toggle */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <XStack bg="white" p="$1" br={100} bw={1} bc="rgba(221, 214, 200, 0.4)" mb="$2" mx="$2" elevation={4} position="relative" onLayout={(e) => setToggleWidth(e.nativeEvent.layout.width)}>
+                        <XStack bg="white" p="$1" br={100} bw={1} bc="rgba(221, 214, 200, 0.4)" mb="$2" mx="$2" elevation={2} position="relative" onLayout={(e) => setToggleWidth(e.nativeEvent.layout.width)}>
                             {toggleWidth > 0 && (
                                 <Animated.View style={{
                                     position: 'absolute', left: 4, top: 4, bottom: 4, width: (toggleWidth - 8) / 2,
@@ -61,29 +61,29 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     borderRadius: 100,
                                 }} />
                             )}
-                            <Button f={1} h={44} br={100} bg="transparent" bw={0} onPress={() => vm.setIsRealtime(false)} disabled={isRecording} opacity={isRecording ? 0.5 : 1} pressStyle={{ bg: "transparent" }}>
-                                <SizableText fow={!vm.isRealtime ? "800" : "600"} size="$3" color={!vm.isRealtime ? "white" : COLORS.textMid}>Phrase Mode</SizableText>
+                            <Button f={1} h={40} br={100} bg="transparent" bw={0} onPress={() => vm.setIsRealtime(false)} disabled={isRecording} opacity={isRecording ? 0.5 : 1} pressStyle={{ bg: "transparent" }}>
+                                <SizableText fow={!vm.isRealtime ? "800" : "600"} size="$2" color={!vm.isRealtime ? "white" : COLORS.textMid}>Phrase Mode</SizableText>
                             </Button>
-                            <Button f={1} h={44} br={100} bg="transparent" bw={0} onPress={() => vm.setIsRealtime(true)} disabled={isRecording} opacity={isRecording ? 0.5 : 1} pressStyle={{ bg: "transparent" }}>
-                                <SizableText fow={vm.isRealtime ? "800" : "600"} size="$3" color={vm.isRealtime ? "white" : COLORS.textMid}>Live Mode</SizableText>
+                            <Button f={1} h={40} br={100} bg="transparent" bw={0} onPress={() => vm.setIsRealtime(true)} disabled={isRecording} opacity={isRecording ? 0.5 : 1} pressStyle={{ bg: "transparent" }}>
+                                <SizableText fow={vm.isRealtime ? "800" : "600"} size="$2" color={vm.isRealtime ? "white" : COLORS.textMid}>Live Mode</SizableText>
                             </Button>
                         </XStack>
                     </Animated.View>
 
                     {/* Mic Section */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ scale: vm.fadeAnim }] }}>
-                        <YStack ai="center" gap="$4">
-                            <YStack w={110} h={110} jc="center" ai="center">
+                        <YStack ai="center" gap="$3">
+                            <YStack w={90} h={90} jc="center" ai="center">
                                 <PulseRing active={isRecording} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 <Button
-                                    size={80} br={40} bg={isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
+                                    size={64} br={32} bg={isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
                                     onPress={isRecording ? vm.stopRecording : vm.startRecording} disabled={vm.loading}
-                                    pressStyle={{ scale: 0.95, opacity: 0.9 }} elevation={12}
-                                    icon={vm.loading ? <Spinner size="small" color="white" /> : (isRecording ? <Square size={24} color="white" fill="white" /> : <Mic size={30} color="white" />)}
+                                    pressStyle={{ scale: 0.95, opacity: 0.9 }} elevation={8}
+                                    icon={vm.loading ? <Spinner size="small" color="white" /> : (isRecording ? <Square size={20} color="white" fill="white" /> : <Mic size={24} color="white" />)}
                                 />
                             </YStack>
-                            <YStack ai="center" mt="$-2">
-                                <SizableText size="$3" fow="700" color={isRecording ? '#DC2626' : COLORS.textDark}>{statusText}</SizableText>
+                            <YStack ai="center" mt="$-1">
+                                <SizableText size="$2" fow="700" color={isRecording ? '#DC2626' : COLORS.textDark}>{statusText}</SizableText>
                                 {isRecording && <YStack mt="$1"><AnimatedWaveform color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} /></YStack>}
                             </YStack>
                         </YStack>
@@ -91,12 +91,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                     {/* Transcript Card */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <Card bg="white" br={24} elevation={8} bw={1} bc="rgba(221, 214, 200, 0.4)" ov="hidden" p="$4">
-                            <XStack ai="center" gap="$2" mb="$3">
-                                <YStack w={28} h={28} br={10} bg={vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`} jc="center" ai="center">
-                                    <FileText size={14} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
+                        <Card bg="white" br={20} elevation={6} bw={1} bc="rgba(221, 214, 200, 0.4)" ov="hidden" p="$3">
+                            <XStack ai="center" gap="$2" mb="$2">
+                                <YStack w={24} h={24} br={8} bg={vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`} jc="center" ai="center">
+                                    <FileText size={12} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 </YStack>
-                                <SizableText fow="800" size="$3" color={COLORS.textDark}>{vm.isRealtime ? "Live Transcript" : "Phrase Transcript"}</SizableText>
+                                <SizableText fow="800" size="$2" color={COLORS.textDark}>{vm.isRealtime ? "Live Transcript" : "Phrase Transcript"}</SizableText>
                                 <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
                                 {vm.confidence > 0 && (
                                     <XStack bg={vm.confidence > 80 ? `${COLORS.teal}10` : (vm.isRealtime ? `${COLORS.teal}10` : `${COLORS.royalBlue}10`)} px="$2" py="$0.5" br={8} ai="center" gap="$1.5">
@@ -105,23 +105,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                 )}
                             </XStack>
 
-                            <ScrollView minHeight={150} maxHeight={vm.isRealtime ? 380 : 180} showsVerticalScrollIndicator={false}>
+                            <ScrollView minHeight={120} maxHeight={vm.isRealtime ? 300 : 150} showsVerticalScrollIndicator={false}>
                                 {vm.words && vm.words.length > 0 ? (
                                     <XStack fw="wrap" gap="$1.5">
                                         {vm.words.map((w: any, i: number) => (
                                             <YStack key={i} px="$2" py="$1" br={6} bg={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}08` : `${COLORS.royalBlue}08`) : w.confidence > 50 ? "#F59E0B08" : "#EF444408"} bw={1} bc={w.confidence > 80 ? (vm.isRealtime ? `${COLORS.teal}20` : `${COLORS.royalBlue}20`) : w.confidence > 50 ? "#F59E0B20" : "#EF444420"}>
-                                                <SizableText size={vm.isRealtime ? "$5" : "$4"} fow="600" color={w.confidence > 80 ? COLORS.textDark : w.confidence > 50 ? "#B45309" : "#B91C1C"}>{w.word}</SizableText>
+                                                <SizableText size={vm.isRealtime ? "$4" : "$3"} fow="600" color={w.confidence > 80 ? COLORS.textDark : w.confidence > 50 ? "#B45309" : "#B91C1C"}>{w.word}</SizableText>
                                             </YStack>
                                         ))}
                                     </XStack>
                                 ) : (
-                                    <TextArea minHeight={150} bg="transparent" borderColor="transparent" p="$0" size="$4" fontWeight="500" color={COLORS.textDark} value={vm.transcript} onChangeText={vm.setTranscript} placeholder="Start speaking..." placeholderTextColor={COLORS.textMid as any} />
+                                    <TextArea minHeight={120} bg="transparent" borderColor="transparent" p="$0" size="$3" fontWeight="500" color={COLORS.textDark} value={vm.transcript} onChangeText={vm.setTranscript} placeholder="Start speaking..." placeholderTextColor={COLORS.textMid as any} />
                                 )}
                             </ScrollView>
 
                             {/* Integrated Quick Repeat - Optimized UI */}
                             {!vm.isRealtime && vm.phraseVault.length > 0 && (
-                                <YStack mt="$3" gap="$2" pt="$3" borderTopWidth={1} borderTopColor="rgba(221, 214, 200, 0.2)">
+                                <YStack mt="$2" gap="$2" pt="$2" borderTopWidth={1} borderTopColor="rgba(221, 214, 200, 0.2)">
                                     <XStack ai="center" gap="$2" px="$1">
                                         <Bookmark size={10} color={COLORS.royalBlue} opacity={0.6} />
                                         <SizableText fow="800" size="$1" color={COLORS.textMid} ls={0.8} tt="uppercase">Quick Repeat</SizableText>
@@ -129,7 +129,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                                     <XStack fw="wrap" gap="$1.5">
                                         {vm.phraseVault.map((phrase: string, i: number) => (
                                             <Button 
-                                                key={i} h={34} br={12} bg="rgba(221, 214, 200, 0.15)" bw={0} px="$3"
+                                                key={i} h={30} br={15} bg="rgba(221, 214, 200, 0.15)" bw={0} px="$3"
                                                 onPress={() => vm.usePhrase(phrase)}
                                                 pressStyle={{ scale: 0.95, bg: COLORS.sandMid }}
                                             >
@@ -155,14 +155,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
 
                     {/* Action Buttons */}
                     <Animated.View style={{ opacity: vm.fadeAnim, transform: [{ translateY: vm.slideAnim }] }}>
-                        <YStack gap="$2.5">
-                            <Button h={54} bg={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} br={16} onPress={vm.speakText} disabled={!vm.transcript} opacity={!vm.transcript ? 0.4 : 1} pressStyle={{ scale: 0.98, opacity: 0.9 }} icon={<Volume2 size={18} color="white" />} elevation={6}>
+                        <XStack gap="$3" w="100%">
+                            <Button f={1} h={52} bg={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} br={16} onPress={vm.speakText} disabled={!vm.transcript} opacity={!vm.transcript ? 0.4 : 1} pressStyle={{ scale: 0.98, opacity: 0.9 }} icon={<Volume2 size={20} color="white" />} elevation={4}>
                                 <SizableText fow="800" size="$4" color="white" ml="$1.5">Play Clarity Voice</SizableText>
                             </Button>
-                            <Button h={54} bg="white" br={16} onPress={vm.clearTranscript} disabled={!vm.transcript} opacity={!vm.transcript ? 0.4 : 1} pressStyle={{ scale: 0.98, opacity: 0.9 }} bw={1} bc="#FEE2E2" icon={<Trash2 size={16} color="#DC2626" />}>
-                                <SizableText fow="710" size="$3" color="#DC2626" ml="$1">Reset Transcript</SizableText>
-                            </Button>
-                        </YStack>
+                            <Button w={52} h={52} bg="#FEF2F2" br={16} onPress={vm.clearTranscript} disabled={!vm.transcript} opacity={!vm.transcript ? 0.4 : 1} pressStyle={{ scale: 0.95, bg: '#FEE2E2' }} bw={0} icon={<Trash2 size={22} color="#DC2626" />} />
+                        </XStack>
                     </Animated.View>
                 </YStack>
             </ScrollView>

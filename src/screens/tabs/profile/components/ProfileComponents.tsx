@@ -420,8 +420,8 @@ export function getGreeting(): string {
   return "Good Evening";
 }
 
-/** Word chip with frequency badge */
-export const WordChip: React.FC<{ word: string; count: number; index: number }> = ({ word, count, index }) => {
+/** Word chip with frequency or custom badge */
+export const WordChip: React.FC<{ word: string; count?: number; badgeText?: string; index: number }> = ({ word, count, badgeText, index }) => {
   const chipColors = [
       { bg: `${COLORS.royalBlue}08`, border: `${COLORS.royalBlue}18`, text: COLORS.royalBlue },
       { bg: `${COLORS.teal}08`, border: `${COLORS.teal}18`, text: COLORS.teal },
@@ -450,7 +450,7 @@ export const WordChip: React.FC<{ word: string; count: number; index: number }> 
           </SizableText>
           <YStack bg={`${c.text}15`} br={100} px="$1.5" py="$0.5">
               <SizableText fow="800" size={10} color={c.text}>
-                  {count}×
+                  {badgeText || `${count}×`}
               </SizableText>
           </YStack>
       </XStack>

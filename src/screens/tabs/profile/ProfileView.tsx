@@ -242,6 +242,42 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                                 </Card>
                             )}
 
+                            {/* Most Accurate Words */}
+                            {vm.stats.most_accurate_words?.length > 0 && (
+                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
+                                    <XStack ai="center" gap="$2" mb="$3">
+                                        <YStack w={28} h={28} br={10} bg={`${COLORS.teal}10`} jc="center" ai="center">
+                                            <TrendingUp size={14} color={COLORS.teal} />
+                                        </YStack>
+                                        <SizableText fow="800" size="$3" color={COLORS.textDark}>Most Accurate</SizableText>
+                                        <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+                                    </XStack>
+                                    <XStack flexWrap="wrap" gap="$2">
+                                        {vm.stats.most_accurate_words.map((item: any, i: number) => (
+                                            <WordChip key={i} word={item.word} badgeText={`${Math.round(item.avg_accuracy)}%`} index={i} />
+                                        ))}
+                                    </XStack>
+                                </Card>
+                            )}
+
+                            {/* Lowest Accuracy Words */}
+                            {vm.stats.lowest_accuracy_words?.length > 0 && (
+                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
+                                    <XStack ai="center" gap="$2" mb="$3">
+                                        <YStack w={28} h={28} br={10} bg="#FEF2F2" jc="center" ai="center">
+                                            <TrendingUp size={14} color="#DC2626" />
+                                        </YStack>
+                                        <SizableText fow="800" size="$3" color={COLORS.textDark}>Words to Improve</SizableText>
+                                        <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+                                    </XStack>
+                                    <XStack flexWrap="wrap" gap="$2">
+                                        {vm.stats.lowest_accuracy_words.map((item: any, i: number) => (
+                                            <WordChip key={i} word={item.word} badgeText={`${Math.round(item.avg_accuracy)}%`} index={i + 4} />
+                                        ))}
+                                    </XStack>
+                                </Card>
+                            )}
+
                             {/* Recent Phrases */}
                             {vm.stats.recent_phrases?.length > 0 && (
                                 <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">

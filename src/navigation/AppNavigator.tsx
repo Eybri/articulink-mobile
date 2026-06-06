@@ -5,6 +5,7 @@ import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
 import { PrivacyConsentModal } from "../components/PrivacyConsentModal";
+import { ToastNotification } from "../components/ToastNotification";
 
 const AppNavigator = () => {
     const { user, loading, updateProfile } = useContext(AuthContext) as AuthContextType;
@@ -56,6 +57,7 @@ const AppNavigator = () => {
             ) : (
                 <AuthNavigator initialRoute={authInitialRoute} />
             )}
+            <ToastNotification />
         </NavigationContainer>
     );
 };
