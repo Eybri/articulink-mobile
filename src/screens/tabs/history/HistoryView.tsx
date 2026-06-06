@@ -178,21 +178,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                 />
                                 <YStack f={1} gap="$2.5" ai="flex-start">
                                     <Card bg="white" p="$3" px="$3.5" br={16} borderBottomLeftRadius={4} bw={1} bc={COLORS.sandMid} elevation={1}>
-                                        <SizableText size="$3" color={COLORS.textDark} fow="600" fontStyle="italic" lh={18}>
-                                            "Keep practicing! Every word brings you closer to your goal."
-                                        </SizableText>
+                                        {vm.isAnalyzing ? (
+                                            <XStack ai="center" gap="$2">
+                                                <ActivityIndicator size="small" color={COLORS.royalBlue} />
+                                                <SizableText size="$2" color={COLORS.textMid} fow="600">
+                                                    Analyzing recent recordings...
+                                                </SizableText>
+                                            </XStack>
+                                        ) : (
+                                            <SizableText size="$2" color={COLORS.textDark} fow="500" lh={18} whiteSpace="pre-wrap">
+                                                {vm.analysisReport || '"Keep practicing! Every word brings you closer to your goal."'}
+                                            </SizableText>
+                                        )}
                                     </Card>
-                                    <Button 
-                                        size="$2.5" 
-                                        br={12} 
-                                        bg={COLORS.royalBlue} 
-                                        onPress={vm.generateAIAnalysis}
-                                        disabled={vm.isAnalyzing}
-                                        icon={vm.isAnalyzing ? <ActivityIndicator size="small" color="white" /> : <Sparkles size={14} color="white" />}
-                                        pressStyle={{ scale: 0.95 }}
-                                    >
-                                        <SizableText color="white" fow="800" size="$2">Analyze Progress</SizableText>
-                                    </Button>
                                 </YStack>
                             </XStack>
 
@@ -267,58 +265,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     }
                 />
             </Animated.View>
-
-            {/* Analysis Modal */}
-            <Modal
-                visible={!!vm.analysisReport}
-                transparent
-                animationType="slide"
-                onRequestClose={() => vm.setAnalysisReport(null)}
-            >
-                <YStack f={1} bc="rgba(0,0,0,0.6)" jc="center" ai="center" px="$4">
-                    <Card w="100%" mah="80%" br={24} bg="white" ov="hidden" elevation={20}>
-                        <XStack p="$4" ai="center" jc="space-between" bbw={1} bbc={COLORS.sandMid} bg={`${COLORS.royalBlue}05`}>
-                            <XStack ai="center" gap="$2">
-                                <Circle size={32} bg={COLORS.royalBlue}>
-                                    <Sparkles size={16} color="white" />
-                                </Circle>
-                                <SizableText size="$4" fow="900" color={COLORS.textDark}>AI Speech Analysis</SizableText>
-                            </XStack>
-                            <TouchableOpacity onPress={() => vm.setAnalysisReport(null)}>
-                                <Circle size={32} bg={COLORS.sandMid} o={0.5}>
-                                    <X size={18} color={COLORS.textDark} />
-                                </Circle>
-                            </TouchableOpacity>
-                        </XStack>
-                        
-                        <ScrollView p="$5">
-                            <YStack gap="$4" pb="$8">
-                                <SizableText size="$3" color={COLORS.textMid} fow="500" lh={22} whiteSpace="pre-wrap">
-                                    {vm.analysisReport}
-                                </SizableText>
-                                
-                                <YStack bg={`${COLORS.teal}08`} p="$4" br={16} bw={1} bc={`${COLORS.teal}20`} gap="$2">
-                                    <SizableText size="$1" fow="800" color={COLORS.teal} tt="uppercase">Pro-Tip</SizableText>
-                                    <SizableText size="$2" color={COLORS.textMid} fow="500">
-                                        Consistency is key! Try recording at least 3 phrases every day to help the AI better understand your unique voice patterns.
-                                    </SizableText>
-                                </YStack>
-                            </YStack>
-                        </ScrollView>
-
-                        <YStack p="$4" btw={1} btc={COLORS.sandMid}>
-                            <Button 
-                                bg={COLORS.royalBlue} 
-                                br={14} 
-                                h={50} 
-                                onPress={() => vm.setAnalysisReport(null)}
-                            >
-                                <SizableText color="white" fow="800">Understood</SizableText>
-                            </Button>
-                        </YStack>
-                    </Card>
-                </YStack>
-            </Modal>
         </YStack>
     );
 };

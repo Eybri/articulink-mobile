@@ -81,7 +81,11 @@ export const useHistoryViewModel = () => {
     };
 
     useEffect(() => {
-        loadHistory();
+        loadHistory().then(() => {
+            if (!analysisReport && !isAnalyzing) {
+                generateAIAnalysis();
+            }
+        });
     }, []);
 
     useEffect(() => {
