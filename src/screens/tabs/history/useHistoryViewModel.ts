@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Animated, Alert, useWindowDimensions } from 'react-native';
 import { Audio } from 'expo-av';
 import { AuthContext } from './../../../context/AuthContext';
+import { Toast } from './../../../components/ToastNotification';
 
 export interface HistoryItem {
   id: string;
@@ -184,6 +185,7 @@ export const useHistoryViewModel = () => {
                         const success = await deleteSpeechHistoryItem(item.id);
                         if (success) {
                             setHistory(prev => prev.filter(h => h.id !== item.id));
+                            Toast.show({ message: "Recording deleted", type: "success" });
                         }
                     }
                 }
