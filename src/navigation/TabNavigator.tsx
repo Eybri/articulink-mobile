@@ -181,6 +181,7 @@ const TabItem: React.FC<{
   if (isHome) {
     return (
       <YStack 
+        flex={1}
         pos="relative" 
         top={-18} 
         jc="center" 
@@ -210,24 +211,32 @@ const TabItem: React.FC<{
 
   return (
     <YStack 
+      flex={1}
       onPress={onPress} 
       jc="center" 
       ai="center"
-      w={44}
-      h={44}
-      br={22}
+      py={6}
+      br={12}
       bg={isFocused ? 'rgba(255,255,255,0.06)' : 'transparent'}
       pressStyle={{ opacity: 0.7 }}
       shadowColor={isFocused ? COLORS.white : 'transparent'}
       shadowRadius={isFocused ? 10 : 0}
       shadowOpacity={isFocused ? 0.25 : 0}
       shadowOffset={{ width: 0, height: 0 }}
+      gap={4}
     >
       {React.createElement(config.icon, {
-        size: 22,
+        size: 18,
         color: isFocused ? COLORS.white : 'rgba(255, 255, 255, 0.45)',
         strokeWidth: isFocused ? 2.5 : 2,
       })}
+      <SizableText
+        fontSize={10}
+        color={isFocused ? COLORS.white : 'rgba(255, 255, 255, 0.45)'}
+        fontWeight={isFocused ? "600" : "500"}
+      >
+        {config.label}
+      </SizableText>
     </YStack>
   );
 };
