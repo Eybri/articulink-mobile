@@ -373,7 +373,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
     const deleteMessage = async (timestamp: string) => {
         try {
-            await axios.delete(`${baseURL}/chatbot/history/${timestamp}`);
+            await axios.delete(`${baseURL}/chatbot/history/${encodeURIComponent(timestamp)}`);
             return { success: true };
         } catch (error: any) {
             console.error("Error deleting message:", error);

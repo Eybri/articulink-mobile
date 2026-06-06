@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { Alert, useWindowDimensions, ScrollView } from "react-native";
 import { AuthContext, AuthContextType } from "./../../../context/AuthContext";
+import { Toast } from './../../../components/ToastNotification';
 
 export interface Message {
   id: string | number;
@@ -44,7 +45,7 @@ export const useChatbotViewModel = () => {
                     id: msg._id || msg.id || `history-${index}-${Date.now()}`,
                     text: msg.content || msg.text || "",
                     sender: msg.role === 'assistant' ? 'bot' : 'user',
-                    timestamp: msg.created_at || new Date().toISOString(),
+                    timestamp: msg.timestamp || msg.created_at || new Date().toISOString(),
                     isExpanded: true,
                 }));
 
@@ -136,8 +137,9 @@ export const useChatbotViewModel = () => {
                         try {
                             if (clearChatHistory) await clearChatHistory();
                             setMessages([messages[0]]);
+                            Toast.show({ message: "Chat history cleared", type: "success" });
                         } catch (error) {
-                            Alert.alert("Error", "Failed to clear history");
+                            Toast.show({ message: "Failed to clear history", type: "error" });
                         } finally {
                             setLoading(false);
                         }
@@ -166,9 +168,12 @@ export const useChatbotViewModel = () => {
                             const result = await deleteMessage(message.timestamp);
                             if (result.success) {
                                 setMessages(prev => prev.filter(m => m.timestamp !== message.timestamp));
+                                Toast.show({ message: "Message deleted", type: "success" });
+                            } else {
+                                Toast.show({ message: "Could not delete message", type: "error" });
                             }
                         } catch (error) {
-                            Alert.alert("Error", "Could not delete message");
+                            Toast.show({ message: "Could not delete message", type: "error" });
                         }
                     },
                 },
