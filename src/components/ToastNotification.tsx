@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Animated, Platform } from 'react-native';
+import { Animated, Platform, StyleSheet } from 'react-native';
 import { XStack, YStack, SizableText } from 'tamagui';
+import { BlurView } from 'expo-blur';
 import { CheckCircle, AlertTriangle, Info } from '@tamagui/lucide-icons';
 import { COLORS } from '../constants/colors';
 
@@ -68,10 +69,10 @@ export const ToastNotification = () => {
 
   const getBgColor = () => {
     switch (config.type) {
-      case 'success': return '#10B981'; // Vibrant Green
-      case 'error': return '#EF4444'; // Vibrant Red
+      case 'success': return 'rgba(16, 185, 129, 0.85)'; // Vibrant Green
+      case 'error': return 'rgba(239, 68, 68, 0.85)'; // Vibrant Red
       case 'info':
-      default: return COLORS.royalBlue || '#3B82F6'; // Brand Blue
+      default: return 'rgba(26, 68, 128, 0.85)'; // Royal Blue
     }
   };
 
@@ -89,35 +90,37 @@ export const ToastNotification = () => {
       style={{
         position: 'absolute',
         top: 0,
-        left: 20,
-        right: 20,
+        left: 16,
+        right: 16,
         zIndex: 99999,
         transform: [{ translateY }],
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 10,
       }}
       pointerEvents="box-none"
     >
-      <XStack
-        bg={getBgColor()}
-        br={100}
-        py="$2.5"
-        px="$3.5"
-        ai="center"
-        gap="$3"
-        elevation={8}
-        shadowColor={getBgColor()}
-        shadowOffset={{ width: 0, height: 6 }}
-        shadowOpacity={0.35}
-        shadowRadius={12}
-      >
-        <YStack bg="rgba(255,255,255,0.2)" br={100} p="$1.5">
-            {getIcon()}
-        </YStack>
-        <YStack f={1}>
-          <SizableText fow="700" size="$3" color="white" ls={0.5}>
-            {config.message}
-          </SizableText>
-        </YStack>
-      </XStack>
+      <YStack br={24} ov="hidden" bw={1.5} bc="rgba(255,255,255,0.3)">
+        <BlurView intensity={60} tint="light" style={StyleSheet.absoluteFill} />
+        <XStack
+          bg={getBgColor()}
+          py="$3.5"
+          px="$4"
+          ai="center"
+          gap="$3"
+        >
+          <YStack bg="rgba(255,255,255,0.2)" br={16} p="$2">
+              {getIcon()}
+          </YStack>
+          <YStack f={1}>
+            <SizableText fow="800" size="$3" color="white" ls={0.5}>
+              {config.message}
+            </SizableText>
+          </YStack>
+        </XStack>
+      </YStack>
     </Animated.View>
   );
 };
