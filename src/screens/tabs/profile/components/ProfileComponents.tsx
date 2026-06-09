@@ -15,8 +15,9 @@ import {
   ChevronRight,
   CheckCircle,
   AlertTriangle,
+  Globe,
 } from "@tamagui/lucide-icons";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Circle as SvgCircle } from "react-native-svg";
 import { COLORS } from "./../../../../constants/colors";
 
 // ─── Soft Orb ─────────────────────────────────────────────────────
@@ -419,8 +420,8 @@ export function getGreeting(): string {
   return "Good Evening";
 }
 
-/** Word chip with frequency badge */
-export const WordChip: React.FC<{ word: string; count: number; index: number }> = ({ word, count, index }) => {
+/** Word chip with frequency or custom badge */
+export const WordChip: React.FC<{ word: string; count?: number; badgeText?: string; index: number }> = ({ word, count, badgeText, index }) => {
   const chipColors = [
       { bg: `${COLORS.royalBlue}08`, border: `${COLORS.royalBlue}18`, text: COLORS.royalBlue },
       { bg: `${COLORS.teal}08`, border: `${COLORS.teal}18`, text: COLORS.teal },
@@ -449,7 +450,7 @@ export const WordChip: React.FC<{ word: string; count: number; index: number }> 
           </SizableText>
           <YStack bg={`${c.text}15`} br={100} px="$1.5" py="$0.5">
               <SizableText fow="800" size={10} color={c.text}>
-                  {count}×
+                  {badgeText || `${count}×`}
               </SizableText>
           </YStack>
       </XStack>
@@ -457,8 +458,9 @@ export const WordChip: React.FC<{ word: string; count: number; index: number }> 
 };
 
 /** Language pill with percentage bar */
-export const LanguagePill: React.FC<{ lang: string; count: number; total: number }> = ({ lang, count, total }) => {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+export const LanguagePill: React.FC<{ lang: string; count: any; total: number }> = ({ lang, count, total }) => {
+  const actualCount = typeof count === 'number' ? count : count?.count || 0;
+  const pct = total > 0 ? Math.round((actualCount / total) * 100) : 0;
   const langNames: Record<string, string> = {
       en: "English",
       fil: "Filipino",
@@ -477,11 +479,98 @@ export const LanguagePill: React.FC<{ lang: string; count: number; total: number
               <YStack h={6} w={`${pct}%`} bg="#6366F1" br={3} />
           </YStack>
           <SizableText fow="500" size={10} color={COLORS.textMid} opacity={0.6}>
-              {count} recording{count !== 1 ? 's' : ''}
+              {actualCount} recording{actualCount !== 1 ? 's' : ''}
           </SizableText>
       </YStack>
   );
 };
+
+export const LanguageStatsCard: React.FC<{ breakdown: Record<string, any>, totalRecordings: number }> = ({ breakdown, totalRecordings }) => {
+    const entries = Object.entries(breakdown || {}).filter(([_, data]: [string, any]) => data?.count > 0);
+    if (entries.length === 0) return null;
+  
+    const R1 = 45;
+    const R2 = 30;
+    const center = 70;
+  
+    const topTwo = entries.sort((a, b) => b[1].count - a[1].count).slice(0, 2);
+    
+    const langNames: Record<string, string> = { en: "ENG", fil: "FIL", tl: "TAG", unknown: "OTH" };
+    const colors = [COLORS.royalBlue, COLORS.teal];
+  
+    return (
+      <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
+          <XStack ai="center" gap="$2" mb="$3">
+              <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
+                  <Globe size={14} color="#6366F1" />
+              </YStack>
+              <SizableText fow="800" size="$3" color={COLORS.textDark}>Language Insights</SizableText>
+              <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+          </XStack>
+  
+          {/* Languages Used Pills */}
+          <XStack gap="$3" flexWrap="wrap" mb="$4">
+              {Object.entries(breakdown).map(([lang, count]: [string, any]) => (
+                  <LanguagePill key={lang} lang={lang} count={count} total={totalRecordings} />
+              ))}
+          </XStack>
+
+          <Separator bc={COLORS.sandMid} opacity={0.3} mb="$4" />
+  
+          {/* Accuracy Comparison Chart */}
+          <XStack jc="center" ai="center" gap="$4">
+             <YStack w={140} h={140} jc="center" ai="center">
+                 <Svg width={140} height={140} viewBox="0 0 140 140">
+                     {topTwo.map(([lang, data], i) => {
+                         const R = i === 0 ? R1 : R2;
+                         const circumference = 2 * Math.PI * R;
+                         const strokeDashoffset = circumference - ((data.avg_accuracy || 0) / 100) * circumference;
+                         return (
+                             <React.Fragment key={lang}>
+                                 <SvgCircle
+                                     cx={center}
+                                     cy={center}
+                                     r={R}
+                                     stroke={`${colors[i]}20`}
+                                     strokeWidth={10}
+                                     fill="none"
+                                 />
+                                 <SvgCircle
+                                     cx={center}
+                                     cy={center}
+                                     r={R}
+                                     stroke={colors[i]}
+                                     strokeWidth={10}
+                                     strokeLinecap="round"
+                                     strokeDasharray={circumference}
+                                     strokeDashoffset={strokeDashoffset}
+                                     fill="none"
+                                     transform={`rotate(-90 ${center} ${center})`}
+                                 />
+                             </React.Fragment>
+                         );
+                     })}
+                 </Svg>
+                 <YStack pos="absolute" ai="center" jc="center">
+                     <SizableText size="$3" fow="900" color={COLORS.textDark}>Avg</SizableText>
+                 </YStack>
+             </YStack>
+  
+             <YStack gap="$3" jc="center" f={1}>
+                 {topTwo.map(([lang, data], i) => (
+                     <XStack key={lang} ai="center" gap="$2" bg={`${colors[i]}0A`} p="$2" br={12}>
+                         <YStack w={10} h={10} br={5} bg={colors[i]} />
+                         <YStack>
+                             <SizableText size="$1" fow="700" color={COLORS.textMid}>{langNames[lang] || lang.toUpperCase()}</SizableText>
+                             <SizableText size="$4" fow="900" color={colors[i]}>{data.avg_accuracy || 0}%</SizableText>
+                         </YStack>
+                     </XStack>
+                 ))}
+             </YStack>
+          </XStack>
+      </Card>
+    );
+  };
 
 /** Skeleton Stats Card */
 export const SkeletonCard = () => (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Animated, useWindowDimensions, Linking } from 'react-native';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebView } from 'react-native-webview';
 
 // ─── Interfaces ──────────────────────────────────────────
@@ -67,15 +68,15 @@ const classifyFacility = (name: string, tags: Record<string, string> = {}): {
     return { type: 'voice-clinic', services: ['ENT Consultation', 'Hearing Assessment', 'Voice Therapy'], icon: '🎤' };
 
   if (n.match(/rehab|physical.?therap|occupational.?therap|therapy.?center|wellness.?center/i) ||
-      amenity === 'social_facility' || tags['social_facility:for'] === 'disabled')
+    amenity === 'social_facility' || tags['social_facility:for'] === 'disabled')
     return { type: 'pwd-center', services: ['Rehabilitation', 'Speech Services', 'Disability Support'], icon: '♿' };
 
   if (n.match(/sped|special.?ed|special.?need|learning.?center|developmental|autism|inclusive/i) ||
-      tags['school:for'] === 'special_education')
+    tags['school:for'] === 'special_education')
     return { type: 'sped-school', services: ['Special Education', 'Speech Therapy', 'Communication Skills'], icon: '🏫' };
 
   if (n.match(/hospital|medical.?center|general.?hospital|community.?hospital|provincial.?hospital/i) ||
-      amenity === 'hospital')
+    amenity === 'hospital')
     return { type: 'speech-therapy', services: ['Medical Rehab', 'Speech Pathology', 'Consultation'], icon: '🏥' };
 
   if (amenity === 'clinic' || healthcare === 'clinic' || n.match(/clinic|polyclinic|health.?center/i))
@@ -189,157 +190,193 @@ const fetchNominatim = async (lat: number, lng: number): Promise<Center[]> => {
 /**
  * ViewModel for the Map Screen.
  */
+export const FACILITY_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'cleft-clinic', label: 'Cleft' },
+  { key: 'speech-therapy', label: 'Speech' },
+  { key: 'voice-clinic', label: 'Voice / ENT' },
+  { key: 'sped-school', label: 'SPED' },
+  { key: 'pwd-center', label: 'PWD' },
+];
+
 export const useMapViewModel = () => {
-    const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [centers, setCenters] = useState<Center[]>([]);
-    const [mapLoading, setMapLoading] = useState(true);
-    const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
-    const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-    const [travelMode, setTravelMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
-    const [isListExpanded, setIsListExpanded] = useState(true);
-    
-    const { width, height } = useWindowDimensions();
-    const webViewRef = useRef<WebView>(null);
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [centers, setCenters] = useState<Center[]>([]);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [travelMode, setTravelMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
+  const [isListExpanded, setIsListExpanded] = useState(true);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [favorites, setFavorites] = useState<string[]>([]);
 
-    const searchCenters = useCallback(async (lat: number, lng: number) => {
-        try {
-            const [overpassResults, nominatimResults] = await Promise.all([
-                searchOverpass(lat, lng),
-                fetchNominatim(lat, lng),
-            ]);
+  const { width, height } = useWindowDimensions();
+  const webViewRef = useRef<WebView>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
-            const allFound = [...overpassResults, ...nominatimResults];
+  // ─── Derived: filtered center list ───────────────────────────────
+  const filteredCenters = useMemo(() => {
+    if (filterType === 'all') return centers;
+    return centers.filter(c => c.type === filterType);
+  }, [centers, filterType]);
 
-            const unique = allFound.filter((c, i, arr) =>
-                i === arr.findIndex(x =>
-                    Math.abs(x.latitude - c.latitude) < 0.001 &&
-                    Math.abs(x.longitude - c.longitude) < 0.001
-                )
-            );
+  // ─── Favorites: load from storage on mount ────────────────────────
+  useEffect(() => {
+    AsyncStorage.getItem('map_favorites')
+      .then(v => { if (v) setFavorites(JSON.parse(v)); })
+      .catch(() => {});
+  }, []);
 
-            const sorted = unique.map(c => {
-                let score = 0;
-                const n = c.name.toLowerCase();
-                if (n.match(/speech|therap|slp|patholog|cleft|smile.?train|palate/)) score += 50;
-                if (n.match(/rehab|ent\b|ear.?nose|audiolog|hearing/)) score += 40;
-                if (n.match(/sped|special.?ed|developmental|autism|inclusive/)) score += 35;
-                if (n.match(/hospital|medical.?center/)) score += 20;
-                if (n.match(/clinic|health.?center|polyclinic/)) score += 15;
-                score += Math.max(0, 10 - c.distance);
-                return { ...c, _score: score };
-            })
-            .sort((a, b) => (b._score || 0) - (a._score || 0) || a.distance - b.distance)
-            .slice(0, MAX_RESULTS);
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
+      AsyncStorage.setItem('map_favorites', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, []);
 
-            setCenters(sorted);
-            webViewRef.current?.injectJavaScript(
-                "if (window.updateCenters) window.updateCenters(" + JSON.stringify(sorted) + "); true;"
-            );
-            setLoading(false);
-        } catch (e) {
-            console.warn('Search failed:', e);
-            setLoading(false);
-        }
-    }, []);
+  const searchCenters = useCallback(async (lat: number, lng: number) => {
+    try {
+      const [overpassResults, nominatimResults] = await Promise.all([
+        searchOverpass(lat, lng),
+        fetchNominatim(lat, lng),
+      ]);
 
-    const getCurrentLocation = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            setMapLoading(true);
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                setError('Location permission denied.');
-                setLoading(false);
-                return;
-            }
-            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-            setLocation(loc.coords);
-            await searchCenters(loc.coords.latitude, loc.coords.longitude);
-        } catch (e) {
-            setError('Failed to get location.');
-            setLoading(false);
-        }
-    }, [searchCenters]);
+      const allFound = [...overpassResults, ...nominatimResults];
 
-    const getRouteInfo = useCallback(async (center: Center, currentTravelMode: string) => {
-        if (!location) return;
-        try {
-            const profile = currentTravelMode === 'bicycling' ? 'cycling' : currentTravelMode;
-            const osrmUrl = "https://router.project-osrm.org/route/v1/" + profile + "/" + location.longitude + "," + location.latitude + ";" + center.longitude + "," + center.latitude + "?overview=full&geometries=geojson";
-            const res = await fetch(osrmUrl);
-            const data = await res.json();
-            if (data.routes?.[0]) {
-                const r = data.routes[0];
-                const info = { 
-                    distance: (r.distance / 1000).toFixed(1) + " km", 
-                    duration: Math.ceil(r.duration / 60) + " mins", 
-                    geometry: r.geometry 
-                };
-                setRouteInfo(info);
-                webViewRef.current?.injectJavaScript("if (window.showRoute) window.showRoute(" + JSON.stringify(r.geometry) + "); true;");
-            }
-        } catch (e) {
-            const d = calculateDistance(location.latitude, location.longitude, center.latitude, center.longitude);
-            const speeds: any = { driving: 40, walking: 5, bicycling: 15 };
-            setRouteInfo({ 
-                distance: d.toFixed(1) + " km", 
-                duration: Math.ceil((d / (speeds[currentTravelMode] || 40)) * 60) + " mins", 
-                geometry: null 
-            });
-        }
-    }, [location]);
+      const unique = allFound.filter((c, i, arr) =>
+        i === arr.findIndex(x =>
+          Math.abs(x.latitude - c.latitude) < 0.001 &&
+          Math.abs(x.longitude - c.longitude) < 0.001
+        )
+      );
 
-    const handleCenterSelect = useCallback((center: Center) => {
-        setSelectedCenter(center);
-        setRouteInfo(null);
-        getRouteInfo(center, travelMode);
-        setIsListExpanded(false); 
-    }, [getRouteInfo, travelMode]);
+      const sorted = unique.map(c => {
+        let score = 0;
+        const n = c.name.toLowerCase();
+        if (n.match(/speech|therap|slp|patholog|cleft|smile.?train|palate/)) score += 50;
+        if (n.match(/rehab|ent\b|ear.?nose|audiolog|hearing/)) score += 40;
+        if (n.match(/sped|special.?ed|developmental|autism|inclusive/)) score += 35;
+        if (n.match(/hospital|medical.?center/)) score += 20;
+        if (n.match(/clinic|health.?center|polyclinic/)) score += 15;
+        score += Math.max(0, 10 - c.distance);
+        return { ...c, _score: score };
+      })
+        .sort((a, b) => (b._score || 0) - (a._score || 0) || a.distance - b.distance)
+        .slice(0, MAX_RESULTS);
 
-    useEffect(() => { 
-        getCurrentLocation(); 
-        Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-            Animated.spring(slideAnim, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
-        ]).start();
-    }, []);
+      setCenters(sorted);
+      webViewRef.current?.injectJavaScript(
+        "if (window.updateCenters) window.updateCenters(" + JSON.stringify(sorted) + "); true;"
+      );
+      setLoading(false);
+    } catch (e) {
+      console.warn('Search failed:', e);
+      setLoading(false);
+    }
+  }, []);
 
-    const openGoogleMaps = () => {
-        const url = location
-            ? "https://www.google.com/maps/search/speech+therapy+clinics/@" + location.latitude + "," + location.longitude + ",12z"
-            : 'https://www.google.com/maps/search/speech+therapy+near+me';
-        Linking.openURL(url);
-    };
+  const getCurrentLocation = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setMapLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Location permission denied.');
+        setLoading(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setLocation(loc.coords);
+      await searchCenters(loc.coords.latitude, loc.coords.longitude);
+    } catch (e) {
+      setError('Failed to get location.');
+      setLoading(false);
+    }
+  }, [searchCenters]);
 
-    const openDirections = (center: Center) => {
-        Linking.openURL("https://www.google.com/maps/dir/?api=1&destination=" + center.latitude + "," + center.longitude + "&travelmode=" + travelMode);
-    };
+  const getRouteInfo = useCallback(async (center: Center, currentTravelMode: string) => {
+    if (!location) return;
+    try {
+      const profile = currentTravelMode === 'bicycling' ? 'cycling' : currentTravelMode;
+      const osrmUrl = "https://router.project-osrm.org/route/v1/" + profile + "/" + location.longitude + "," + location.latitude + ";" + center.longitude + "," + center.latitude + "?overview=full&geometries=geojson";
+      const res = await fetch(osrmUrl);
+      const data = await res.json();
+      if (data.routes?.[0]) {
+        const r = data.routes[0];
+        const info = {
+          distance: (r.distance / 1000).toFixed(1) + " km",
+          duration: Math.ceil(r.duration / 60) + " mins",
+          geometry: r.geometry
+        };
+        setRouteInfo(info);
+        webViewRef.current?.injectJavaScript("if (window.showRoute) window.showRoute(" + JSON.stringify(r.geometry) + "); true;");
+      }
+    } catch (e) {
+      const d = calculateDistance(location.latitude, location.longitude, center.latitude, center.longitude);
+      const speeds: any = { driving: 40, walking: 5, bicycling: 15 };
+      setRouteInfo({
+        distance: d.toFixed(1) + " km",
+        duration: Math.ceil((d / (speeds[currentTravelMode] || 40)) * 60) + " mins",
+        geometry: null
+      });
+    }
+  }, [location]);
 
-    return {
-        location,
-        loading,
-        error,
-        centers,
-        mapLoading, setMapLoading,
-        selectedCenter, setSelectedCenter,
-        routeInfo,
-        travelMode, setTravelMode,
-        isListExpanded, setIsListExpanded,
-        width, height,
-        webViewRef,
-        getCurrentLocation,
-        handleCenterSelect,
-        getRouteInfo,
-        openGoogleMaps,
-        openDirections,
-        animations: {
-            fadeAnim,
-            slideAnim
-        }
-    };
+  const handleCenterSelect = useCallback((center: Center) => {
+    setSelectedCenter(center);
+    setRouteInfo(null);
+    getRouteInfo(center, travelMode);
+    setIsListExpanded(false);
+  }, [getRouteInfo, travelMode]);
+
+  useEffect(() => {
+    getCurrentLocation();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, tension: 20, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const openGoogleMaps = () => {
+    const url = location
+      ? "https://www.google.com/maps/search/speech+therapy+clinics/@" + location.latitude + "," + location.longitude + ",12z"
+      : 'https://www.google.com/maps/search/speech+therapy+near+me';
+    Linking.openURL(url);
+  };
+
+  const openDirections = (center: Center) => {
+    Linking.openURL("https://www.google.com/maps/dir/?api=1&destination=" + center.latitude + "," + center.longitude + "&travelmode=" + travelMode);
+  };
+
+  return {
+    location,
+    loading,
+    error,
+    centers,
+    filteredCenters,
+    mapLoading, setMapLoading,
+    selectedCenter, setSelectedCenter,
+    routeInfo,
+    travelMode, setTravelMode,
+    isListExpanded, setIsListExpanded,
+    filterType, setFilterType,
+    favorites,
+    toggleFavorite,
+    width, height,
+    webViewRef,
+    getCurrentLocation,
+    handleCenterSelect,
+    getRouteInfo,
+    openGoogleMaps,
+    openDirections,
+    animations: {
+      fadeAnim,
+      slideAnim
+    }
+  };
 };

@@ -103,7 +103,7 @@ export const useEditProfileViewModel = (navigation: any) => {
         } finally {
             setLoading(false);
         }
-    }, [username, gender, birthdateText, profilePic, user, setUser, navigation]);
+    }, [username, firstName, lastName, gender, birthdate, birthdateText, profilePic, user, setUser, navigation]);
 
     const handleUploadImage = useCallback(async (imageUri: string) => {
         try {

@@ -25,6 +25,12 @@ export interface User {
     privacy_accepted: boolean;
     created_at?: string;
     updated_at?: string;
+    tts_settings?: {
+        rate: number;
+        pitch: number;
+        language: string;
+        voice?: string;
+    };
 }
 
 export interface AuthContextType {
@@ -156,7 +162,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: res.data.user?.status || "active",
                 privacy_accepted: res.data.user?.privacy_accepted || false,
                 created_at: res.data.user?.created_at,
-                updated_at: res.data.user?.updated_at
+                updated_at: res.data.user?.updated_at,
+                tts_settings: res.data.user?.tts_settings
             };
 
             await storeUser(userData);
@@ -246,7 +253,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: response.data.status || "active",
                 privacy_accepted: response.data.privacy_accepted || false,
                 created_at: response.data.created_at,
-                updated_at: response.data.updated_at
+                updated_at: response.data.updated_at,
+                tts_settings: response.data.tts_settings
             };
 
             await storeUser(userData);
@@ -285,7 +293,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 status: res.data.status || user?.status || "active",
                 privacy_accepted: res.data.privacy_accepted !== undefined ? res.data.privacy_accepted : (user?.privacy_accepted || false),
                 created_at: res.data.created_at || user?.created_at,
-                updated_at: res.data.updated_at || user?.updated_at
+                updated_at: res.data.updated_at || user?.updated_at,
+                tts_settings: res.data.tts_settings || user?.tts_settings
             };
 
             await storeUser(userData);
@@ -364,7 +373,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
     const deleteMessage = async (timestamp: string) => {
         try {
-            await axios.delete(`${baseURL}/chatbot/history/${timestamp}`);
+            await axios.delete(`${baseURL}/chatbot/history/${encodeURIComponent(timestamp)}`);
             return { success: true };
         } catch (error: any) {
             console.error("Error deleting message:", error);
@@ -378,7 +387,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             if (!token) return [];
             
             const response = await axios.get(`${baseURL}/history`);
-            return response.data;
+            return response.data.items || response.data;
         } catch (error: any) {
             if (error.response?.status !== 401 && error.response?.status !== 403) {
                 console.error("Error fetching speech history:", error.message || error);

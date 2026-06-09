@@ -17,6 +17,9 @@ export const useRegisterViewModel = (navigation: any) => {
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState<Date | null>(null);
     const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+
     
     // UI State
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -78,7 +81,10 @@ export const useRegisterViewModel = (navigation: any) => {
                 gender: gender || undefined,
                 birthdate: birthdate ? birthdate.toISOString().split('T')[0] : undefined,
                 profile_pic: selectedIcon || undefined,
+                first_name: firstName.trim() || undefined,
+                last_name: lastName.trim() || undefined,
             };
+
             await register(registerData);
             Alert.alert("Success", "Account created! Please verify your email with the code we sent.", [
                 { text: "Verify OTP", onPress: () => navigation.navigate("VerifyOTP", { email: email.toLowerCase().trim() }) }
@@ -106,6 +112,9 @@ export const useRegisterViewModel = (navigation: any) => {
         gender, setGender,
         birthdate, setBirthdate,
         selectedIcon, setSelectedIcon,
+        firstName, setFirstName,
+        lastName, setLastName,
+
         showDatePicker, setShowDatePicker,
         showGenderSheet, setShowGenderSheet,
         showIconModal, setShowIconModal,

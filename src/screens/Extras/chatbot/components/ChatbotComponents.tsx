@@ -117,8 +117,13 @@ export const MessageBubble = memo(({
                     borderBottomRightRadius={isUser ? 4 : 20}
                     borderBottomLeftRadius={isUser ? 20 : 4}
                     maw={width * 0.78}
-                    elevation={isUser ? 4 : 2}
-                    bg={isUser ? COLORS.teal : COLORS.white}
+                    elevation={isUser ? 6 : 2}
+                    shadowColor={isUser ? COLORS.royalBlue : COLORS.deepNavy}
+                    shadowOpacity={isUser ? 0.3 : 0.05}
+                    shadowRadius={isUser ? 8 : 4}
+                    bg={isUser ? COLORS.royalBlue : COLORS.white}
+                    bw={isUser ? 0 : 1}
+                    bc={isUser ? "transparent" : "rgba(221, 214, 200, 0.6)"}
                     onPress={() => isLongMessage && !isUser && onToggleExpand(message.id)}
                     onLongPress={() => onLongPress(message)}
                     pressStyle={{ scale: 0.98 }}

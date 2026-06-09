@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Animated, Alert, useWindowDimensions } from 'react-native';
 import { Audio } from 'expo-av';
 import { AuthContext } from './../../../context/AuthContext';
+import { Toast } from './../../../components/ToastNotification';
 
 export interface HistoryItem {
   id: string;
@@ -23,10 +24,11 @@ export interface HistoryItem {
  * ViewModel for the History Screen.
  */
 export const useHistoryViewModel = () => {
-    const { fetchSpeechHistory, deleteSpeechHistoryItem, fetchSpeechAnalysis } = useContext(AuthContext)!;
+    const { fetchSpeechHistory, deleteSpeechHistoryItem, fetchSpeechAnalysis, fetchSpeechStats } = useContext(AuthContext)!;
     const [searchQuery, setSearchQuery] = useState('');
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
+    const [serverStats, setServerStats] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -44,10 +46,17 @@ export const useHistoryViewModel = () => {
         else setLoading(true);
 
         try {
-            const data = await fetchSpeechHistory();
-            if (Array.isArray(data)) {
-                setHistory(data);
-                setFilteredHistory(data);
+            const [historyData, statsData] = await Promise.all([
+                fetchSpeechHistory(),
+                fetchSpeechStats()
+            ]);
+
+            if (Array.isArray(historyData)) {
+                setHistory(historyData);
+                setFilteredHistory(historyData);
+            }
+            if (statsData) {
+                setServerStats(statsData);
             }
         } catch (error) {
             console.error("Load history error:", error);
@@ -72,7 +81,11 @@ export const useHistoryViewModel = () => {
     };
 
     useEffect(() => {
-        loadHistory();
+        loadHistory().then(() => {
+            if (!analysisReport && !isAnalyzing) {
+                generateAIAnalysis();
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -176,6 +189,7 @@ export const useHistoryViewModel = () => {
                         const success = await deleteSpeechHistoryItem(item.id);
                         if (success) {
                             setHistory(prev => prev.filter(h => h.id !== item.id));
+                            Toast.show({ message: "Recording deleted", type: "success" });
                         }
                     }
                 }
@@ -184,12 +198,12 @@ export const useHistoryViewModel = () => {
     };
 
     const stats = {
-        totalRecordings: history.length,
-        avgConfidence: history.length > 0 
+        totalRecordings: serverStats?.total_recordings || history.length,
+        avgConfidence: serverStats?.avg_confidence || (history.length > 0 
             ? (history.reduce((acc, curr) => acc + (curr.overall_confidence || (curr.confidence_score ? curr.confidence_score * 100 : 95)), 0) / history.length) 
-            : 0,
-        totalDuration: history.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0),
-        totalWords: history.reduce((acc, curr) => acc + (curr.corrected_transcript?.split(' ').length || 0), 0)
+            : 0),
+        totalDuration: serverStats?.total_duration_seconds || history.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0),
+        totalWords: serverStats?.total_words || history.reduce((acc, curr) => acc + (curr.corrected_transcript?.split(' ').length || 0), 0)
     };
 
     return {
