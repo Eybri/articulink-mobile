@@ -135,7 +135,7 @@ const HomeStack = () => (
 // ─── Settings Stack ───────────────────────────────────────────────
 const SettingsStack = () => (
   <Stack.Navigator screenOptions={getHeaderOptions()}>
-    <Stack.Screen name="SettingsMain" component={SettingsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="SettingsMain" component={SettingsScreen} options={{ headerShown: true, title: "Settings" }} />
     <Stack.Screen 
       name="EditProfile" 
       component={EditProfileScreen} 

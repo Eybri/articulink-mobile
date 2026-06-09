@@ -60,11 +60,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
             }}>
                 <ScrollView 
                     showsVerticalScrollIndicator={false} 
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 140, paddingTop: 10, marginTop: 40 }}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 130, paddingTop: 10, marginTop: 20 }}
                 >
                     {/* Identity Header */}
                     {vm.user && (
-                        <Card bg="white" br={28} p="$4" mb="$7" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={20} p="$4" mb="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
                             <XStack ai="center" gap="$4">
                                 <YStack w={64} h={64} br={32} jc="center" ai="center" bw={2} bc={COLORS.cream} ov="hidden" elevation={4} shadowColor={COLORS.royalBlue} shadowOpacity={0.15}>
                                     {vm.user.profile_pic ? (
@@ -96,13 +96,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                     )}
 
                     {/* Section: Account */}
-                    <YStack mb="$7">
+                    <YStack mb="$5">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">
                             <User size={14} color={COLORS.royalBlue} />
                             <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Account</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
                             <SettingRow 
                                 icon={<User size={18} color={COLORS.royalBlue} />} 
                                 title="Manage Profile" 
@@ -134,55 +134,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                     </YStack>
 
                     {/* Section: Configuration */}
-                    <YStack mb="$7">
+                    <YStack mb="$5">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">
                             <AppWindow size={14} color={COLORS.royalBlue} />
                             <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Preferences</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
-                            <SettingRow icon={<Bell size={18} color={COLORS.royalBlue} />} title="Push Notifications" description="Daily exercise reminders">
-                                <Switch size="$3" bg={vm.notifications ? COLORS.royalBlue : COLORS.sandMid} checked={vm.notifications} onCheckedChange={vm.setNotifications}>
-                                    <Switch.Thumb bg="white" />
-                                </Switch>
-                            </SettingRow>
-                            
-                            <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Store History" description="Keep logs on this device">
+                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Store History" description="Keep logs on this device" isLast>
                                 <Switch size="$3" bg={vm.saveHistory ? COLORS.royalBlue : COLORS.sandMid} checked={vm.saveHistory} onCheckedChange={vm.setSaveHistory}>
                                     <Switch.Thumb bg="white" />
                                 </Switch>
                             </SettingRow>
-                            
-                            <SettingRow icon={<Smartphone size={18} color={COLORS.royalBlue} />} title="Haptic Feedback" description="Vibrate on interaction" isLast>
-                                <Switch size="$3" bg={vm.vibrationFeedback ? COLORS.royalBlue : COLORS.sandMid} checked={vm.vibrationFeedback} onCheckedChange={vm.setVibrationFeedback}>
-                                    <Switch.Thumb bg="white" />
-                                </Switch>
-                            </SettingRow>
                         </Card>
                     </YStack>
 
-                    {/* Section: Audio Controls */}
-                    <YStack mb="$7">
-                        <XStack ai="center" gap="$2" mb="$3" ml="$2">
-                            <Volume2 size={14} color={COLORS.teal} />
-                            <SizableText size="$2" fontWeight="800" color={COLORS.teal} textTransform="uppercase" ls={1.5}>Audio Engine</SizableText>
-                        </XStack>
-                        
-                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
-                            <SliderSetting icon={<Volume2 size={18} color={COLORS.teal} />} title="Output Volume" value={vm.voiceVolume} onValueChange={vm.setVoiceVolume} />
-                            <Separator bc="rgba(221, 214, 200, 0.4)" />
-                            <SliderSetting icon={<Mic size={18} color={COLORS.teal} />} title="Mic Recording" value={vm.micSensitivity} onValueChange={vm.setMicSensitivity} />
-                        </Card>
-                    </YStack>
+
 
                     {/* Section: Privacy & Storage */}
-                    <YStack mb="$8">
+                    <YStack mb="$5">
                         <XStack ai="center" gap="$2" mb="$3" ml="$2">
                             <Lock size={14} color={COLORS.textMid} />
                             <SizableText size="$2" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1.5}>Privacy & Security</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={28} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
                             <SettingRow 
                                 icon={<Trash2 size={18} color="#DC2626" />} 
                                 title="Clear Local Cache" 
@@ -204,19 +180,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                         </Card>
                     </YStack>
 
-                    {/* Footer Info */}
-                    <YStack ai="center" gap="$2" mt="$4" opacity={0.6}>
-                        <SizableText size="$1" color={COLORS.textMid} fow="800" ls={1}>ARTICULINK v1.0.4 PRO</SizableText>
-                        <XStack ai="center" gap="$1.5">
-                            <Circle size={4} bg={COLORS.teal} />
-                            <Paragraph size="$1" color={COLORS.textMid} fow="600">Built for Articulation Support</Paragraph>
-                            <Circle size={4} bg={COLORS.teal} />
-                        </XStack>
-                    </YStack>
-
                     {/* Logout Button */}
                     <Button
-                        mt="$10"
+                        mt="$5"
                         bg="rgba(220,38,38,0.06)"
                         h={62}
                         br={20}
