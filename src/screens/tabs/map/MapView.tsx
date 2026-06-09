@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Linking, Platform, StatusBar, Animated } from 'react-native';
+import { View, Linking, Platform, StatusBar, Animated, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import {
@@ -32,12 +32,22 @@ import {
     Activity as ActivityIcon,
     GraduationCap,
     Accessibility,
-    Home
+    Home,
+    Heart,
+    Star,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
-import { Center } from "./useMapViewModel";
+import { Center, FACILITY_FILTERS } from "./useMapViewModel";
 
 const SEARCH_RADIUS = 10000;
+
+const TYPE_LABEL: Record<string, string> = {
+    'cleft-clinic': 'Cleft Clinic',
+    'speech-therapy': 'Speech Therapy',
+    'voice-clinic': 'Voice / ENT',
+    'sped-school': 'SPED School',
+    'pwd-center': 'PWD Center',
+};
 
 const FacilityIconComponent = ({ type, size = 20, color = COLORS.royalBlue }: { type: string, size?: number, color?: string }) => {
     switch (type) {
@@ -142,7 +152,21 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
         return (
             <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$6">
                 <Spinner size="large" color={COLORS.royalBlue} mb="$4" />
-                <SizableText size="$5" fow="700" color={COLORS.textDark} ta="center">Optimizing map route...</SizableText>
+                <SizableText size="$5" fow="700" color={COLORS.textDark} ta="center">Finding your location...</SizableText>
+                <SizableText size="$3" color={COLORS.textMid} ta="center" mt="$2">Looking for clinics and therapy centers near you</SizableText>
+            </YStack>
+        );
+    }
+
+    if (vm.error && !vm.location) {
+        return (
+            <YStack f={1} jc="center" ai="center" bg={COLORS.cream} p="$6" gap="$4">
+                <MapPin size={48} color={COLORS.textMid} opacity={0.4} />
+                <SizableText size="$5" fow="700" color={COLORS.textDark} ta="center">Location Unavailable</SizableText>
+                <SizableText size="$3" color={COLORS.textMid} ta="center">{vm.error}</SizableText>
+                <Button bg={COLORS.royalBlue} br={16} px="$6" onPress={vm.getCurrentLocation}>
+                    <SizableText color="white" fow="800">Try Again</SizableText>
+                </Button>
             </YStack>
         );
     }
@@ -155,16 +179,12 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                 <Circle pos="absolute" b={-vm.height * 0.05} l={-vm.width * 0.1} size={vm.width * 0.6} bg={COLORS.orbTeal} opacity={0.2} />
             </ZStack>
 
+            {/* ── Header ──────────────────────────────── */}
             <YStack pt={Platform.OS === 'ios' ? 45 : 10} px="$4" pb="$0.5" bg="transparent">
                 <XStack ai="center" jc="space-between">
                     <XStack ai="center" gap="$2.5">
                         <Button
-                            circular
-                            size="$3"
-                            bg="white"
-                            bw={1}
-                            bc={COLORS.sandMid}
-                            elevation={1}
+                            circular size="$3" bg="white" bw={1} bc={COLORS.sandMid} elevation={1}
                             icon={<Home size={16} color={COLORS.royalBlue} />}
                             onPress={() => navigation.navigate("Home")}
                             pressStyle={{ scale: 0.9, opacity: 0.8 }}
@@ -178,8 +198,30 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                         <RefreshCw size={16} color={COLORS.royalBlue} />
                     </Circle>
                 </XStack>
+
+                {/* ── Filter chips ────────────────────────── */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} mt="$2" contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+                    {FACILITY_FILTERS.map(f => {
+                        const active = vm.filterType === f.key;
+                        return (
+                            <TouchableOpacity
+                                key={f.key}
+                                onPress={() => vm.setFilterType(f.key)}
+                                style={{
+                                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+                                    backgroundColor: active ? COLORS.royalBlue : 'white',
+                                    borderWidth: 1.5,
+                                    borderColor: active ? COLORS.royalBlue : COLORS.sandMid,
+                                }}
+                            >
+                                <SizableText size="$2" fow="700" color={active ? 'white' : COLORS.textMid}>{f.label}</SizableText>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
             </YStack>
 
+            {/* ── Map ─────────────────────────────────── */}
             <Animated.View style={{ flex: 1, opacity: vm.animations.fadeAnim, transform: [{ translateY: vm.animations.slideAnim }] }}>
                 <ZStack f={1} mx="$4" mb="$2" br={28} ov="hidden" bw={1.5} bc={COLORS.sandMid} elevation={4} shadowColor={COLORS.deepNavy}>
                     <WebView
@@ -198,20 +240,41 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                 </ZStack>
             </Animated.View>
 
+            {/* ── Selected Center Card ─────────────────── */}
             <AnimatePresence>
                 {vm.selectedCenter && !vm.isListExpanded && (
                     <YStack pos="absolute" b={120} l={20} r={20} zIndex={100}>
                         <Card bg="white" br={24} p="$4" elevation={10} shadowColor="#000" bw={1} bc={COLORS.sandMid}>
-                            <XStack gap="$3" ai="center" mb="$3">
+                            <XStack gap="$3" ai="center" mb="$2">
                                 <Circle size={44} bg={COLORS.royalBlue + "0C"} bw={1} bc={COLORS.royalBlue + "15"} jc="center" ai="center">
                                     <FacilityIconComponent type={vm.selectedCenter.type} size={20} color={COLORS.royalBlue} />
                                 </Circle>
                                 <YStack f={1}>
                                     <SizableText size="$4" fow="800" color={COLORS.textDark} ls={-0.3}>{vm.selectedCenter.name}</SizableText>
-                                    <SizableText size="$1" color={COLORS.textMid} fow="700" textTransform="uppercase">{vm.selectedCenter.distance.toFixed(1)} km away</SizableText>
+                                    <XStack ai="center" gap="$1">
+                                        <SizableText size="$1" color={COLORS.royalBlue} fow="700" textTransform="uppercase">{TYPE_LABEL[vm.selectedCenter.type] || 'Center'}</SizableText>
+                                        <SizableText size="$1" color={COLORS.textMid} fow="600"> · {vm.selectedCenter.distance.toFixed(1)} km</SizableText>
+                                    </XStack>
                                 </YStack>
+                                {/* Favorite toggle */}
+                                <Button
+                                    size="$3" circular unstyled
+                                    icon={<Heart size={18} color={vm.favorites.includes(vm.selectedCenter.id) ? '#E05C5C' : COLORS.textMid} fill={vm.favorites.includes(vm.selectedCenter.id) ? '#E05C5C' : 'transparent'} />}
+                                    onPress={() => vm.toggleFavorite(vm.selectedCenter.id)}
+                                />
                                 <Button size="$3" circular icon={<Trash2 size={16} color={COLORS.textMid} />} unstyled onPress={() => vm.setSelectedCenter(null)} />
                             </XStack>
+
+                            {/* Services chips */}
+                            {vm.selectedCenter.services?.length > 0 && (
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} mb="$3" contentContainerStyle={{ gap: 6 }}>
+                                    {vm.selectedCenter.services.map((s: string) => (
+                                        <YStack key={s} bg={COLORS.royalBlue + "10"} px="$2.5" py={4} br={20}>
+                                            <SizableText size="$1" fow="700" color={COLORS.royalBlue}>{s}</SizableText>
+                                        </YStack>
+                                    ))}
+                                </ScrollView>
+                            )}
 
                             {vm.routeInfo ? (
                                 <YStack gap="$3" mb="$4" bg={COLORS.warmWhite} p="$3" br={16}>
@@ -251,33 +314,67 @@ export const MapView: React.FC<MapViewProps> = ({ vm }) => {
                 )}
             </AnimatePresence>
 
+            {/* ── Bottom Sheet: Center List ────────────── */}
             <YStack bg="white" borderTopLeftRadius={28} borderTopRightRadius={28} p="$4" pb={Platform.OS === 'android' ? 20 : 35} elevation={8} shadowColor={COLORS.deepNavy} shadowOpacity={0.08} bw={1} bc={COLORS.sandMid}>
                 <XStack ai="center" jc="space-between" mb={vm.isListExpanded ? "$3" : "0"}>
                     <XStack ai="center" gap="$2" onPress={() => vm.setIsListExpanded(!vm.isListExpanded)}>
                         <MapPin size={18} color={COLORS.royalBlue} />
                         <SizableText size="$4" fow="800" color={COLORS.textDark}>Nearby Centers</SizableText>
-                        <YStack bg={COLORS.royalBlue + "14"} px="$2.5" py={2} br={20} ml="$1"><SizableText size="$1" fow="800" color={COLORS.royalBlue}>{vm.centers.length}</SizableText></YStack>
+                        {/* Show filtered count / total */}
+                        <YStack bg={COLORS.royalBlue + "14"} px="$2.5" py={2} br={20} ml="$1">
+                            <SizableText size="$1" fow="800" color={COLORS.royalBlue}>
+                                {vm.filteredCenters.length}{vm.filterType !== 'all' ? `/${vm.centers.length}` : ''}
+                            </SizableText>
+                        </YStack>
                     </XStack>
                     <Button size="$2.5" circular bg="transparent" unstyled icon={<ChevronRight size={18} color={COLORS.textMid} style={{ transform: [{ rotate: vm.isListExpanded ? '90deg' : '-90deg' }] }} />} onPress={() => vm.setIsListExpanded(!vm.isListExpanded)} />
                 </XStack>
 
                 {vm.isListExpanded && (
                     <YStack>
-                        {vm.centers.length > 0 ? (
+                        {vm.filteredCenters.length > 0 ? (
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
-                                {vm.centers.map((c: Center) => (
-                                    <Card key={c.id} w={180} p="$3" br={20} bw={2} bc={vm.selectedCenter?.id === c.id ? COLORS.royalBlue : COLORS.sandMid} bg={vm.selectedCenter?.id === c.id ? COLORS.royalBlue + "05" : "white"} onPress={() => vm.handleCenterSelect(c)} pressStyle={{ scale: 0.95 }}>
-                                        <XStack ai="center" gap="$2" mb="$2">
-                                            <YStack w={28} h={28} br={8} bg={COLORS.royalBlue + "0A"} ai="center" jc="center">
-                                                <FacilityIconComponent type={c.type} size={14} color={COLORS.royalBlue} />
-                                            </YStack>
-                                            <SizableText f={1} size="$2" fow="800" color={COLORS.textDark} numberOfLines={1}>{c.name}</SizableText>
-                                        </XStack>
-                                        <SizableText size="$1" color={COLORS.textMid} fow="600" mb="$1">{c.distance.toFixed(1)} km away</SizableText>
-                                    </Card>
-                                ))}
+                                {vm.filteredCenters.map((c: Center) => {
+                                    const isFav = vm.favorites.includes(c.id);
+                                    const isSelected = vm.selectedCenter?.id === c.id;
+                                    return (
+                                        <Card
+                                            key={c.id} w={190} p="$3" br={20} bw={2}
+                                            bc={isSelected ? COLORS.royalBlue : COLORS.sandMid}
+                                            bg={isSelected ? COLORS.royalBlue + "05" : "white"}
+                                            onPress={() => vm.handleCenterSelect(c)} pressStyle={{ scale: 0.95 }}
+                                        >
+                                            <XStack ai="center" gap="$2" mb="$1.5">
+                                                <YStack w={28} h={28} br={8} bg={COLORS.royalBlue + "0A"} ai="center" jc="center">
+                                                    <FacilityIconComponent type={c.type} size={14} color={COLORS.royalBlue} />
+                                                </YStack>
+                                                <SizableText f={1} size="$2" fow="800" color={COLORS.textDark} numberOfLines={1}>{c.name}</SizableText>
+                                                {/* Favorite indicator */}
+                                                {isFav && <Heart size={12} color="#E05C5C" fill="#E05C5C" />}
+                                            </XStack>
+                                            <SizableText size="$1" color={COLORS.royalBlue} fow="700" textTransform="uppercase" mb={2}>{TYPE_LABEL[c.type] || 'Center'}</SizableText>
+                                            <XStack ai="center" gap="$1">
+                                                <MapPin size={10} color={COLORS.textMid} />
+                                                <SizableText size="$1" color={COLORS.textMid} fow="600">{c.distance.toFixed(1)} km away</SizableText>
+                                            </XStack>
+                                        </Card>
+                                    );
+                                })}
                             </ScrollView>
-                        ) : <SizableText size="$2" color={COLORS.textMid} ta="center" py="$4">Searching...</SizableText>}
+                        ) : vm.loading ? (
+                            <YStack ai="center" py="$4" gap="$2">
+                                <Spinner color={COLORS.royalBlue} />
+                                <SizableText size="$2" color={COLORS.textMid} ta="center">Searching for nearby centers...</SizableText>
+                            </YStack>
+                        ) : (
+                            <YStack ai="center" py="$4" gap="$2">
+                                <MapPin size={28} color={COLORS.textMid} opacity={0.4} />
+                                <SizableText size="$2" color={COLORS.textMid} ta="center" fow="600">
+                                    {vm.filterType !== 'all' ? 'No centers found for this type' : 'No centers found nearby'}
+                                </SizableText>
+                                <SizableText size="$1" color={COLORS.textMid} ta="center" opacity={0.7}>Try a different filter or search on Google Maps</SizableText>
+                            </YStack>
+                        )}
                         <XStack mt="$4" gap="$3">
                             <Button f={1} bg={COLORS.mediumBlue} br={16} icon={<Search size={16} color="white" />} onPress={vm.openGoogleMaps}>
                                 <SizableText color="white" fow="800">Find More on Google</SizableText>

@@ -10,10 +10,6 @@ export const useSettingsViewModel = (navigation: any) => {
     const { user, logout } = auth;
     
     const [saveHistory, setSaveHistory] = useState(true);
-    const [vibrationFeedback, setVibrationFeedback] = useState(true);
-    const [voiceVolume, setVoiceVolume] = useState(0.7);
-    const [micSensitivity, setMicSensitivity] = useState(0.8);
-    const [notifications, setNotifications] = useState(true);
     const { width, height } = useWindowDimensions();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -53,10 +49,6 @@ export const useSettingsViewModel = (navigation: any) => {
     return {
         user,
         saveHistory, setSaveHistory,
-        vibrationFeedback, setVibrationFeedback,
-        voiceVolume, setVoiceVolume,
-        micSensitivity, setMicSensitivity,
-        notifications, setNotifications,
         width, height,
         handleClearHistory,
         handleLogout,

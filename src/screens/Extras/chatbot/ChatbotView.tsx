@@ -32,6 +32,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
         <YStack f={1} bg={COLORS.cream}>
             <StatusBar barStyle="dark-content" />
 
+
+
             {/* Header */}
             <XStack
                 jc="space-between"
@@ -84,24 +86,25 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                     onContentSizeChange={() => vm.scrollViewRef.current?.scrollToEnd({ animated: true })}
                 >
                     {vm.messages.length === 1 && (
-                        <YStack ai="center" mt="$8" mb="$6" gap="$4">
-                            <ZStack w={100} h={100} jc="center" ai="center">
-                                <Circle size={100} bg={`${COLORS.teal}08`} />
-                                <Circle size={80} bg={`${COLORS.teal}0F`} />
+                        <YStack ai="center" mt="$10" mb="$8" gap="$5">
+                            <ZStack w={140} h={140} jc="center" ai="center">
+                                <Circle size={140} bg={`${COLORS.teal}10`} />
+                                <Circle size={110} bg={`${COLORS.teal}20`} />
+                                <Circle size={80} bg={COLORS.teal} opacity={0.1} />
                                 <YStack fullscreen jc="center" ai="center">
                                     <RNImage
                                         source={require("../../../../assets/images/ariya.png")}
-                                        style={{ width: 100, height: 100 }}
+                                        style={{ width: 130, height: 130 }}
                                         resizeMode="contain"
                                     />
                                 </YStack>
                             </ZStack>
-                            <YStack ai="center" gap="$1">
-                                <SizableText size="$6" fow="800" color={COLORS.textDark} ta="center">
+                            <YStack ai="center" gap="$2">
+                                <SizableText size="$8" fow="900" color={COLORS.textDark} ta="center" ls={-0.5}>
                                     Meet Ariya
                                 </SizableText>
-                                <SizableText size="$3" color={COLORS.textMid} ta="center" px="$6" o={0.8} fontStyle="italic">
-                                    "Speak your way. I'll help you be heard."
+                                <SizableText size="$4" color={COLORS.textMid} ta="center" px="$6" o={0.8} fow="600" lh={24}>
+                                    Your personal AI articulation assistant. I'm here to help you practice and improve your speech.
                                 </SizableText>
                             </YStack>
                         </YStack>
@@ -139,9 +142,22 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
             >
                 <Theme name="light">
-                    <YStack bg={COLORS.white} px="$4" pt="$3" pb={Platform.OS === 'ios' ? 34 : 20} elevation={10} bc={COLORS.sandMid} btw={1}>
+                    <YStack 
+                        bg="rgba(255,255,255,0.95)" 
+                        px="$4" 
+                        pt="$3" 
+                        pb={Platform.OS === 'ios' ? 34 : 20} 
+                        borderTopLeftRadius={30}
+                        borderTopRightRadius={30}
+                        elevation={20} 
+                        shadowColor={COLORS.deepNavy}
+                        shadowOpacity={0.06}
+                        shadowRadius={15}
+                        bc="rgba(221, 214, 200, 0.4)" 
+                        btw={1.5}
+                    >
                         <XStack gap="$3" ai="flex-end">
-                            <YStack f={1} bg={COLORS.warmWhite} br={24} px="$4" py="$1" bc={COLORS.sandMid} bw={1.5} focusStyle={{ bc: COLORS.teal }}>
+                            <YStack f={1} bg={COLORS.cream} br={24} px="$4" py="$1" bc={COLORS.sandMid} bw={1.5} focusStyle={{ bc: COLORS.royalBlue }}>
                                 <Input
                                     f={1}
                                     py="$2"
@@ -164,8 +180,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ vm }) => {
                                     w={52}
                                     h={52}
                                     circular
-                                    bg={!vm.inputText.trim() || vm.loading ? COLORS.sandMid : COLORS.teal}
-                                    pressStyle={{ scale: 0.92, bg: COLORS.tealDark }}
+                                    bg={!vm.inputText.trim() || vm.loading ? COLORS.sandMid : COLORS.royalBlue}
+                                    pressStyle={{ scale: 0.92, bg: COLORS.mediumBlue }}
                                     icon={vm.loading ? <Spinner color="white" /> : <Send size={20} color="white" />}
                                     onPress={vm.handleSendMessage}
                                     disabled={!vm.inputText.trim() || vm.loading}
