@@ -177,16 +177,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                     resizeMode="contain"
                                 />
                                 <YStack f={1} gap="$2.5" ai="flex-start">
-                                    <Card bg="white" p="$3" px="$3.5" br={16} borderBottomLeftRadius={4} bw={1} bc={COLORS.sandMid} elevation={1}>
+                                    <Card bg={COLORS.royalBlue} p="$3" px="$3.5" br={16} borderBottomLeftRadius={4} bw={0} elevation={2} shadowColor={COLORS.royalBlue} shadowOpacity={0.3}>
                                         {vm.isAnalyzing ? (
                                             <XStack ai="center" gap="$2">
-                                                <ActivityIndicator size="small" color={COLORS.royalBlue} />
-                                                <SizableText size="$2" color={COLORS.textMid} fow="600">
+                                                <ActivityIndicator size="small" color="white" />
+                                                <SizableText size="$2" color="rgba(255,255,255,0.8)" fow="600">
                                                     Analyzing recent recordings...
                                                 </SizableText>
                                             </XStack>
                                         ) : (
-                                            <SizableText size="$2" color={COLORS.textDark} fow="500" lh={18} whiteSpace="pre-wrap">
+                                            <SizableText size="$2" color="white" fow="500" lh={18} whiteSpace="pre-wrap">
                                                 {vm.analysisReport || '"Keep practicing! Every word brings you closer to your goal."'}
                                             </SizableText>
                                         )}
