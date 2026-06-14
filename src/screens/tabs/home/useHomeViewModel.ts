@@ -386,7 +386,10 @@ export const useHomeViewModel = () => {
             currentJobIdRef.current = null;
             try {
                 const token = await getToken();
-                const headers = token ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+                const headers: Record<string, string> = { "Content-Type": "application/json" };
+                if (token) {
+                    headers["Authorization"] = `Bearer ${token}`;
+                }
                 fetch(`${baseURL}/transcribe/cancel`, { 
                     method: "POST", 
                     headers, 
