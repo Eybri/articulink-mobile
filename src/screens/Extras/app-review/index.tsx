@@ -244,16 +244,16 @@ const AppReviewScreen = ({ navigation }: any) => {
             {/* Thank You Popup Modal */}
             <Modal visible={vm.isSubmitted} transparent={true} animationType="fade">
                 <YStack f={1} bg="rgba(0,0,0,0.6)" ai="center" jc="center" px={30}>
-                    <YStack bg="white" w="100%" br={20} pt={65} pb={30} px={24} ai="center" position="relative" elevation={10} shadowColor="#000" shadowOpacity={0.15} shadowRadius={20}>
+                    <YStack bg="white" w="100%" br={20} pt={75} pb={30} px={24} ai="center" position="relative" elevation={10} shadowColor="#000" shadowOpacity={0.15} shadowRadius={20}>
                         
                         {/* Floating Icon */}
                         <YStack 
                             position="absolute" 
-                            top={-50} 
+                            top={-60} 
                             alignSelf="center" 
-                            width={100} 
-                            height={100} 
-                            borderRadius={50} 
+                            width={120} 
+                            height={120} 
+                            borderRadius={60} 
                             bg="white" 
                             ai="center" 
                             jc="center"
@@ -262,10 +262,10 @@ const AppReviewScreen = ({ navigation }: any) => {
                             shadowOpacity={0.15} 
                             shadowRadius={15}
                         >
-                            <YStack width={86} height={86} borderRadius={43} bg="#EBF8FF" ai="center" jc="center">
+                            <YStack width={104} height={104} borderRadius={52} bg="#EBF8FF" ai="center" jc="center">
                                 <Image
                                     source={require('../../../../assets/images/ariya.png')}
-                                    style={{ width: 55, height: 55, resizeMode: 'contain', marginTop: 5 }}
+                                    style={{ width: 70, height: 70, resizeMode: 'contain', marginTop: 5 }}
                                 />
                             </YStack>
                         </YStack>
