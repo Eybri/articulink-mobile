@@ -5,6 +5,7 @@ import { ChevronLeft, Star, MessageSquareQuote, BadgeCheck, Clock, X } from "@ta
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMyFeedbacksViewModel, FeedbackItem } from "./useMyFeedbacksViewModel";
 import { COLORS } from "../../../constants/colors";
+import { SkeletonFeedbackCard } from "../../../components/Loader";
 
 const MyFeedbacksScreen = ({ navigation }: any) => {
     const vm = useMyFeedbacksViewModel(navigation);
@@ -65,11 +66,10 @@ const MyFeedbacksScreen = ({ navigation }: any) => {
                     <YStack bg="white" borderTopLeftRadius={32} borderTopRightRadius={32} pt={30} px={24} pb={100} f={1} elevation={10} shadowColor="#000" shadowOpacity={0.05} shadowRadius={20} shadowOffset={{ width: 0, height: -5 }}>
 
                         {vm.loading ? (
-                            <YStack ai="center" jc="center" mt={40} bg="#F8FAFC" p={20} br={16} elevation={2} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }} bw={1} bc="#E2E8F0">
-                                <Spinner size="large" color={COLORS.royalBlue} />
-                                <SizableText mt="$4" color={COLORS.textDark} fow="600">
-                                    Loading your history...
-                                </SizableText>
+                            <YStack mt={10}>
+                                {[1, 2, 3].map((key) => (
+                                    <SkeletonFeedbackCard key={key} />
+                                ))}
                             </YStack>
                         ) : vm.feedbacks.length === 0 ? (
                             <YStack ai="center" jc="center" mt={40} bg="#F8FAFC" p={40} br={24} elevation={2} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }} bw={1} bc="#E2E8F0">
@@ -141,23 +141,28 @@ const FeedbackCard = React.memo(({ item, onImagePress }: { item: FeedbackItem, o
                         );
                     })}
                 </XStack>
-                <SizableText size="$2" color="#94A3B8" fow="600">{item.dateSubmitted}</SizableText>
+                <XStack ai="center" gap={6}>
+                    <Clock size={12} color="#94A3B8" />
+                    <SizableText size="$2" color="#94A3B8" fow="500">
+                        {item.createdAt}
+                    </SizableText>
+                </XStack>
             </XStack>
 
-            {item.categories.length > 0 && (
-                <XStack flexWrap="wrap" gap={8} mb={16}>
-                    {item.categories.map(cat => (
-                        <YStack key={cat} bg={`${COLORS.royalBlue}10`} px={10} py={4} br={8} bw={1} bc={`${COLORS.royalBlue}20`}>
-                            <SizableText size="$2" color={COLORS.royalBlue} fow="600">{cat}</SizableText>
+            <SizableText size="$3" color={COLORS.textMid} fow="400" lh={22} mb={16}>
+                {item.feedbackText}
+            </SizableText>
+
+            {item.categories && item.categories.length > 0 && (
+                <XStack gap={8} flexWrap="wrap" mb={item.attachedImages?.length || item.adminReply ? 16 : 0}>
+                    {item.categories.map((cat, idx) => (
+                        <YStack key={idx} bg={`${COLORS.royalBlue}10`} px={12} py={4} br={12} bw={1} bc={`${COLORS.royalBlue}20`}>
+                            <SizableText size="$2" color={COLORS.royalBlue} fow="600">
+                                {cat}
+                            </SizableText>
                         </YStack>
                     ))}
                 </XStack>
-            )}
-
-            {!!item.feedbackText && (
-                <SizableText size="$3" color={COLORS.textDark} lh={22} mb={(item.attachedImages && item.attachedImages.length > 0) ? 16 : (item.adminReply ? 20 : 0)}>
-                    "{item.feedbackText}"
-                </SizableText>
             )}
 
             {item.attachedImages && item.attachedImages.length > 0 && (
@@ -172,25 +177,19 @@ const FeedbackCard = React.memo(({ item, onImagePress }: { item: FeedbackItem, o
                 </ScrollView>
             )}
 
-            {item.adminReply ? (
-                <YStack bg="#F8FAFC" br={12} p={16} bw={1} bc="#E2E8F0">
+            {item.adminReply && (
+                <YStack bg="#F8FAFC" p={16} br={12} bw={1} bc="#E2E8F0" position="relative" overflow="hidden">
+                    <YStack position="absolute" top={0} left={0} bottom={0} width={4} bg={COLORS.royalBlue} />
                     <XStack ai="center" gap={8} mb={8}>
-                        <BadgeCheck size={18} color={COLORS.royalBlue} />
-                        <SizableText size="$2" fow="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1}>
+                        <BadgeCheck size={16} color={COLORS.royalBlue} />
+                        <SizableText size="$2" fow="700" color={COLORS.textDark} textTransform="uppercase" ls={1}>
                             Admin Reply
                         </SizableText>
                     </XStack>
-                    <SizableText size="$3" color={COLORS.textDark} lh={20}>
+                    <SizableText size="$3" color={COLORS.textMid} fow="400" lh={22}>
                         {item.adminReply}
                     </SizableText>
                 </YStack>
-            ) : (
-                <XStack ai="center" gap={8} mt={16} pt={16} borderTopWidth={1} borderTopColor="#F1F5F9">
-                    <Clock size={14} color="#94A3B8" />
-                    <SizableText size="$2" color="#94A3B8" fow="500">
-                        Thank you for your feedback!
-                    </SizableText>
-                </XStack>
             )}
         </YStack>
     );
