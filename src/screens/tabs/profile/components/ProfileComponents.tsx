@@ -78,7 +78,7 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
   const totalArcLength = Math.PI * R;
 
   return (
-    <YStack bg={COLORS.royalBlue} br={28} p="$4" mb="$5" ov="hidden" elevation={8} shadowColor={COLORS.deepNavy}>
+    <YStack bg={COLORS.royalBlue} br={16} p="$4" mb="$5" ov="hidden" elevation={6} shadowColor={COLORS.deepNavy}>
       <YStack pos="absolute" t={0} l={0} r={0} h={100} bg="rgba(255,255,255,0.03)" style={{ borderBottomLeftRadius: 100, borderBottomRightRadius: 100, transform: [{ scaleX: 2 }] }} />
       
       <XStack jc="space-between" ai="center" mb="$3">
@@ -140,7 +140,7 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
 
         <Button
           bg={COLORS.teal}
-          br={24}
+          br={16}
           px="$5"
           h={42}
           onPress={onContinue}
@@ -158,8 +158,8 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
 
 // ─── Stat Card ────────────────────────────────────────────────────
 export const StatCard: React.FC<{ icon: React.ReactNode; value: string; label: string; delta?: string; accentColor: string; iconBg: string; loading?: boolean }> = ({ icon, value, label, delta, accentColor, iconBg, loading }) => (
-  <YStack bg="white" br={18} p="$3" f={1} bw={1} bc={COLORS.sandMid} ov="hidden">
-    <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={18} />
+  <YStack bg="white" br={16} p="$3" f={1} bw={1} bc={COLORS.sandMid} ov="hidden" elevation={2} shadowColor="#000" shadowOpacity={0.05}>
+    <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={16} />
     {loading ? (
       <YStack gap="$2" py="$1">
         <Circle size={30} bg={`${COLORS.sandMid}40`} />
@@ -212,9 +212,9 @@ export const Accordion: React.FC<{ icon: React.ReactNode; title: string; tagText
   const rotation = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] });
 
   return (
-    <YStack bg="white" br={22} mb="$3" ov="hidden" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
-      <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={22} />
-      <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${accentColor}07`} br={22} />
+    <YStack bg="white" br={16} mb="$3" ov="hidden" elevation={3} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+      <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={16} />
+      <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${accentColor}07`} br={16} />
 
       <XStack ai="center" jc="space-between" p="$4" onPress={toggle}>
         <XStack ai="center" gap="$3" f={1}>
@@ -499,7 +499,7 @@ export const LanguageStatsCard: React.FC<{ breakdown: Record<string, any>, total
     const colors = [COLORS.royalBlue, COLORS.teal];
   
     return (
-      <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
+      <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
           <XStack ai="center" gap="$2" mb="$3">
               <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
                   <Globe size={14} color="#6366F1" />
@@ -574,7 +574,7 @@ export const LanguageStatsCard: React.FC<{ breakdown: Record<string, any>, total
 
 /** Skeleton Stats Card */
 export const SkeletonCard = () => (
-    <Card bg="white" br={24} p="$4" elevation={2} bw={1} bc={COLORS.sandMid} opacity={0.6}>
+    <Card bg="white" br={16} p="$4" elevation={2} bw={1} bc={COLORS.sandMid} opacity={0.6}>
         <XStack ai="center" gap="$2" mb="$3">
             <YStack w={28} h={28} br={10} bg={`${COLORS.sandMid}20`} />
             <YStack h={20} w={120} bg={`${COLORS.sandMid}20`} br={4} />

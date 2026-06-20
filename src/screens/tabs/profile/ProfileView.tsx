@@ -18,6 +18,7 @@ import {
   Card,
   Separator,
 } from "tamagui";
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   User,
   Shield,
@@ -96,15 +97,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
     }
 
     return (
-        <YStack f={1} bg={COLORS.cream}>
+        <YStack f={1} bg="#F8FAFC">
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-            {/* Background Orbs */}
-            <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <Circle pos="absolute" t={-vm.height * 0.1} r={-vm.width * 0.15} size={vm.width * 0.95} bg={COLORS.sandLight} opacity={0.55} />
-                <Circle pos="absolute" b={-vm.height * 0.06} l={-vm.width * 0.2} size={vm.width * 0.8} bg={COLORS.sandMid} opacity={0.22} />
-                {orbs.map((orb, i) => <SoftOrb key={i} {...orb} />)}
-            </ZStack>
+            {/* Top Background Gradient */}
+            <LinearGradient
+                colors={['rgba(42, 95, 168, 0.8)', 'rgba(42, 95, 168, 0.1)']}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%' }}
+            />
 
             <ScrollView
                 f={1}
@@ -114,12 +114,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={vm.refreshing} onRefresh={vm.onRefresh} tintColor={COLORS.royalBlue} />
+                    <RefreshControl refreshing={vm.refreshing} onRefresh={vm.onRefresh} tintColor="white" />
                 }
             >
                 {/* Identity Header */}
-                <XStack ai="center" mb="$5" pt="$2" px="$5" w="100%">
-                    <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc={COLORS.sandMid} ov="hidden">
+                <XStack ai="center" mb="$4" pt="$2" px="$5" w="100%">
+                    <YStack w={56} h={56} br={28} jc="center" ai="center" bw={1.5} bc="rgba(255,255,255,0.4)" ov="hidden" elevation={4} shadowColor="#000" shadowOpacity={0.15}>
                         {vm.user.profile_pic ? (
                             <RNImage
                                 source={getProfileSource(vm.user.profile_pic)}
@@ -127,8 +127,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                                 resizeMode="cover"
                             />
                         ) : (
-                            <YStack f={1} w="100%" bg={COLORS.royalBlue} jc="center" ai="center">
-                                <SizableText size="$5" fow="900" color="white">
+                            <YStack f={1} w="100%" bg="white" jc="center" ai="center">
+                                <SizableText size="$5" fow="900" color={COLORS.royalBlue}>
                                     {vm.user.username?.[0]?.toUpperCase() ?? "U"}
                                 </SizableText>
                             </YStack>
@@ -136,10 +136,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     </YStack>
                     
                     <YStack f={1} ml="$3" mr="$3">
-                        <SizableText size="$3" color={COLORS.textMid} fow="600">
+                        <SizableText size="$3" color="rgba(255,255,255,0.8)" fow="600">
                             {getGreeting()},
                         </SizableText>
-                        <SizableText size="$6" fow="900" color={COLORS.textDark} ls={-0.5} mt={-4} numberOfLines={1}>
+                        <SizableText size="$6" fow="900" color="white" ls={-0.5} mt={-4} numberOfLines={1}>
                             {vm.user.first_name && vm.user.last_name ? `${vm.user.first_name} ${vm.user.last_name}` : (vm.user.username || "Speaker")}!
                         </SizableText>
                     </YStack>
@@ -147,26 +147,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     <Button
                         size={48}
                         br={24}
-                        bg="white"
+                        bg="rgba(255,255,255,0.15)"
                         bw={1}
-                        bc={COLORS.sandMid}
-                        pressStyle={{ scale: 0.95, bg: COLORS.cream }}
-                        icon={<Bell size={22} color={COLORS.textMid} />}
-                        elevation={3}
-                        shadowColor="#8A96A4"
+                        bc="rgba(255,255,255,0.3)"
+                        pressStyle={{ scale: 0.95, bg: "rgba(255,255,255,0.25)" }}
+                        icon={<Bell size={22} color="white" />}
                     />
                 </XStack>
 
-                {/* Speech Progress Arc */}
-                <YStack px="$5">
-                    <SpeechProgressCard
-                        sessions={vm.analytics.todaySessions}
-                        hoursToday={vm.analytics.todayHours}
-                        clarityPct={vm.analytics.todayClarityPct}
-                        progressPct={vm.analytics.todayProgressPct}
-                        onContinue={() => navigation.navigate("Home")}
-                    />
-                </YStack>
+                <YStack bg="#F8FAFC" borderTopLeftRadius={32} borderTopRightRadius={32} pt={20} pb={40} f={1} elevation={10} shadowColor="#000" shadowOpacity={0.05} shadowRadius={20} shadowOffset={{ width: 0, height: -5 }}>
+                    {/* Speech Progress Arc */}
+                    <YStack px="$5" mt={-40}>
+                        <SpeechProgressCard
+                            sessions={vm.analytics.todaySessions}
+                            hoursToday={vm.analytics.todayHours}
+                            clarityPct={vm.analytics.todayClarityPct}
+                            progressPct={vm.analytics.todayProgressPct}
+                            onContinue={() => navigation.navigate("Home")}
+                        />
+                    </YStack>
 
                 {/* Analytics Stats */}
                 <YStack px="$5" mt="$4">
@@ -176,7 +175,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             icon={<TrendingUp size={14} color={COLORS.teal} />}
                             value={`${vm.analytics.clarityScore}%`}
                             label="Clarity Score"
-                            delta="↑ +6% this week"
+                            delta="Average speech confidence"
                             accentColor={COLORS.teal}
                             iconBg={`${COLORS.teal}14`}
                             loading={vm.statsLoading}
@@ -185,7 +184,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             icon={<BarChart2 size={14} color={COLORS.blue} />}
                             value={`${vm.analytics.totalSessions}`}
                             label="Total Sessions"
-                            delta="Overall activity"
+                            delta="Overall speech recordings"
                             accentColor={COLORS.blue}
                             iconBg={`${COLORS.blue}14`}
                             loading={vm.statsLoading}
@@ -196,7 +195,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             icon={<Zap size={14} color={COLORS.amber} />}
                             value={`${vm.analytics.avgResponseSec}s`}
                             label="Avg. Response"
-                            delta="improved"
+                            delta="Average recording length"
                             accentColor={COLORS.amber}
                             iconBg={`${COLORS.amber}14`}
                             loading={vm.statsLoading}
@@ -205,7 +204,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             icon={<Flame size={14} color={COLORS.royalBlue} />}
                             value={`${vm.analytics.streakDays}`}
                             label="Day Streak"
-                            delta="Personal best!"
+                            delta="Consecutive active days"
                             accentColor={COLORS.royalBlue}
                             iconBg={`${COLORS.royalBlue}10`}
                             loading={vm.statsLoading}
@@ -226,7 +225,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                         <>
                             {/* Top Words */}
                             {vm.stats.most_used_words?.length > 0 && (
-                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
+                                <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
                                     <XStack ai="center" gap="$2" mb="$3">
                                         <YStack w={28} h={28} br={10} bg={`${COLORS.teal}10`} jc="center" ai="center">
                                             <TrendingUp size={14} color={COLORS.teal} />
@@ -280,7 +279,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
 
                             {/* Recent Phrases */}
                             {vm.stats.recent_phrases?.length > 0 && (
-                                <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
+                                <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
                                     <XStack ai="center" gap="$2" mb="$3">
                                         <YStack w={28} h={28} br={10} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
                                             <FileText size={14} color={COLORS.royalBlue} />
@@ -314,6 +313,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 <YStack ai="center" gap="$1" mt="$8" opacity={0.4}>
                     <SizableText size="$1" color={COLORS.textMid} fow="800" ls={1}>ARTICULINK v1.0.4 PRO</SizableText>
                     <SizableText size="$1" color={COLORS.textMid} fow="600">Built for Articulation Support</SizableText>
+                </YStack>
                 </YStack>
             </ScrollView>
         </YStack>
