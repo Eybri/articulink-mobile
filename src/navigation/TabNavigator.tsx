@@ -274,8 +274,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
       style={{
         position: "absolute",
         bottom: isIOS ? 34 : 20,
-        left: 20,
-        right: 20,
+        left: 12,
+        right: 12,
         zIndex: 1000,
         transform: [{ translateY }],
         shadowColor: "#000",
