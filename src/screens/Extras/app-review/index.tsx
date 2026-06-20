@@ -24,7 +24,7 @@ const AppReviewScreen = ({ navigation }: any) => {
             
             {/* Top Background Gradient */}
             <LinearGradient
-                colors={['rgba(42, 95, 168, 0.4)', 'rgba(42, 95, 168, 0.05)']}
+                colors={['rgba(42, 95, 168, 0.8)', 'rgba(42, 95, 168, 0.1)']}
                 style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40%' }}
             />
 
