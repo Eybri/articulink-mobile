@@ -430,9 +430,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
-    const submitFeedback = async (data: any) => {
+    const submitFeedback = async (data: any | FormData) => {
         try {
-            const res = await axios.post(`${baseURL}/feedbacks`, data);
+            const isFormData = data instanceof FormData;
+            const res = await axios.post(`${baseURL}/feedbacks`, data, {
+                headers: isFormData ? { 'Accept': 'application/json' } : undefined
+            });
             return res.data;
         } catch (error: any) {
             console.error("Error submitting feedback:", error);

@@ -10,6 +10,7 @@ export type FeedbackItem = {
     feedbackText: string;
     dateSubmitted: string;
     adminReply?: string;
+    attachedImages?: string[];
 };
 
 export const useMyFeedbacksViewModel = (navigation: any) => {
@@ -42,7 +43,8 @@ export const useMyFeedbacksViewModel = (navigation: any) => {
                     categories: item.categories || [],
                     feedbackText: item.feedbackText || "",
                     dateSubmitted: dateStr,
-                    adminReply: item.adminReply
+                    adminReply: item.adminReply,
+                    attachedImages: item.attachedImages || []
                 };
             });
             setFeedbacks(formatted);

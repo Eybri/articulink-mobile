@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Animated, StatusBar, Platform } from 'react-native';
+import { ScrollView, Animated, StatusBar, Platform, Image } from 'react-native';
 import { YStack, XStack, SizableText, Button, Card, Spinner } from "tamagui";
 import { ChevronLeft, Star, MessageSquareQuote, BadgeCheck, Clock } from "@tamagui/lucide-icons";
 import { useMyFeedbacksViewModel, FeedbackItem } from "./useMyFeedbacksViewModel";
@@ -83,9 +83,19 @@ const FeedbackCard = React.memo(({ item }: { item: FeedbackItem }) => {
             )}
 
             {!!item.feedbackText && (
-                <SizableText size="$3" color={COLORS.textDark} lh={22} mb={item.adminReply ? "$4" : "$0"}>
+                <SizableText size="$3" color={COLORS.textDark} lh={22} mb={(item.attachedImages && item.attachedImages.length > 0) ? "$3" : (item.adminReply ? "$4" : "$0")}>
                     "{item.feedbackText}"
                 </SizableText>
+            )}
+
+            {item.attachedImages && item.attachedImages.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: item.adminReply ? 15 : 0 }}>
+                    <XStack gap="$3" pr="$4">
+                        {item.attachedImages.map((uri, index) => (
+                            <Image key={index} source={{ uri }} style={{ width: 80, height: 100, borderRadius: 12 }} />
+                        ))}
+                    </XStack>
+                </ScrollView>
             )}
 
             {item.adminReply ? (

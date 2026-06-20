@@ -1,7 +1,7 @@
 import React from 'react';
-import { ScrollView, Animated, StatusBar, Platform } from 'react-native';
+import { ScrollView, Animated, StatusBar, Platform, Image } from 'react-native';
 import { YStack, XStack, SizableText, Button, TextArea, Card, Spinner } from "tamagui";
-import { Star, ShieldAlert, ChevronLeft } from "@tamagui/lucide-icons";
+import { Star, ShieldAlert, ChevronLeft, ImagePlus, X } from "@tamagui/lucide-icons";
 import { useAppReviewViewModel, CATEGORIES } from "./useAppReviewViewModel";
 import { COLORS } from "../../../constants/colors";
 
@@ -98,6 +98,54 @@ const AppReviewScreen = ({ navigation }: any) => {
                             br={12}
                             focusStyle={{ borderColor: COLORS.royalBlue }}
                         />
+                    </Card>
+
+                    {/* Attach Images Section */}
+                    <Card bg="white" br={20} p="$5" mb="$5" elevation={4} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <XStack jc="space-between" ai="center" mb="$3">
+                            <SizableText size="$3" fow="700" color={COLORS.textDark} textTransform="uppercase" ls={1}>
+                                Attach Images (Optional)
+                            </SizableText>
+                            <SizableText size="$2" color={COLORS.textMid}>{vm.images.length}/3</SizableText>
+                        </XStack>
+                        <SizableText size="$2" color={COLORS.textMid} mb="$3" lh={18}>
+                            Share screenshots of any issues or bugs you encountered.
+                        </SizableText>
+
+                        {vm.images.length > 0 && (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
+                                <XStack gap="$3">
+                                    {vm.images.map((uri, index) => (
+                                        <YStack key={index} position="relative">
+                                            <Image source={{ uri }} style={{ width: 80, height: 100, borderRadius: 12 }} />
+                                            <Button 
+                                                size="$2" 
+                                                circular 
+                                                icon={<X size={14} color="white" />} 
+                                                bg="rgba(0,0,0,0.6)" 
+                                                position="absolute" 
+                                                top={4} 
+                                                right={4} 
+                                                onPress={() => vm.removeImage(index)}
+                                            />
+                                        </YStack>
+                                    ))}
+                                </XStack>
+                            </ScrollView>
+                        )}
+
+                        {vm.images.length < 3 && (
+                            <Button 
+                                icon={<ImagePlus size={20} color={COLORS.royalBlue} />}
+                                bg="rgba(26, 68, 128, 0.05)"
+                                bw={1}
+                                bc="rgba(26, 68, 128, 0.2)"
+                                br={12}
+                                onPress={vm.pickImage}
+                            >
+                                <SizableText size="$3" color={COLORS.royalBlue} fow="600">Choose from Gallery</SizableText>
+                            </Button>
+                        )}
                     </Card>
 
                     <XStack ai="center" gap="$2" mb="$5" jc="center">
