@@ -161,7 +161,7 @@ const AppReviewScreen = ({ navigation }: any) => {
                                             backgroundColor="transparent"
                                             color={COLORS.textDark}
                                             placeholder="Amazing experience! The host was very welcoming and provided all the information we needed..."
-                                            placeholderTextColor="#CBD5E1"
+                                            placeholderTextColor={"#CBD5E1" as any}
                                             value={vm.feedback}
                                             onChangeText={vm.setFeedback}
                                             minHeight={100}

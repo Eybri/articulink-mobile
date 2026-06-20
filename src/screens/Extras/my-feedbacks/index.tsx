@@ -144,7 +144,7 @@ const FeedbackCard = React.memo(({ item, onImagePress }: { item: FeedbackItem, o
                 <XStack ai="center" gap={6}>
                     <Clock size={12} color="#94A3B8" />
                     <SizableText size="$2" color="#94A3B8" fow="500">
-                        {item.createdAt}
+                        {item.dateSubmitted}
                     </SizableText>
                 </XStack>
             </XStack>
