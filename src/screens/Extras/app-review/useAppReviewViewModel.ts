@@ -20,6 +20,7 @@ export const useAppReviewViewModel = (navigation: any) => {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [feedback, setFeedback] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [images, setImages] = useState<string[]>([]);
     
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -82,20 +83,7 @@ export const useAppReviewViewModel = (navigation: any) => {
             });
 
             await submitFeedback(formData);
-
-            Alert.alert(
-                "Thank You!",
-                "Your feedback has been submitted successfully and is visible only to administrators.",
-                [
-                    { 
-                        text: "OK", 
-                        onPress: () => {
-                            // Go back to the previous screen
-                            navigation.goBack();
-                        } 
-                    }
-                ]
-            );
+            setIsSubmitted(true);
         } catch (error) {
             console.error("Failed to submit feedback:", error);
             Alert.alert("Error", "Could not submit your feedback right now. Please try again later.");
@@ -109,6 +97,7 @@ export const useAppReviewViewModel = (navigation: any) => {
         selectedCategories,
         feedback, setFeedback,
         isSubmitting,
+        isSubmitted,
         images,
         pickImage,
         removeImage,
