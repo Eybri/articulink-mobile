@@ -90,64 +90,90 @@ export const EditProfileView: React.FC<EditProfileViewProps> = ({ vm, navigation
                     </YStack>
 
                     {/* Identity Form */}
-                    <YStack gap="$5">
-                        <XStack ai="center" gap="$2" mb="$1" ml="$1">
-                            <Fingerprint size={16} color={COLORS.royalBlue} opacity={0.8} />
-                            <SizableText size="$2" fontWeight="800" color={COLORS.textDark} textTransform="uppercase" ls={1.2}>Identity Details</SizableText>
-                        </XStack>
-
-                        <EditProfileCard>
-                            <EditProfileRow icon={<AtSign size={18} color={COLORS.royalBlue} />} title="Display Username">
+                    <YStack gap="$5" mt="$2">
+                        {/* Display Username */}
+                        <YStack gap="$2">
+                            <SizableText size="$2" color="#64748B" fow="600" ml="$1">Display Username</SizableText>
+                            <YStack bg="#F8FAFC" br={12} bw={1} bc="#E2E8F0" px={16} py={Platform.OS === 'ios' ? 14 : 4}>
                                 <Input
-                                    f={1} bg="transparent" bw={0} size="$4"
-                                    fontWeight="600" color={COLORS.textDark}
+                                    bg="transparent" bw={0} size="$4"
+                                    fontWeight="600" color="#1E293B"
                                     value={vm.username} onChangeText={vm.setUsername}
-                                    placeholder="Username" autoCapitalize="none"
-                                    p={0} h={40} textAlign="left"
-                                    w="100%"
+                                    placeholder="Enter username" autoCapitalize="none"
+                                    p={0} h={Platform.OS === 'ios' ? 'auto' : 40}
                                     focusStyle={{ bw: 0 }}
                                 />
-                            </EditProfileRow>
+                            </YStack>
+                        </YStack>
 
-                            <EditProfileRow icon={<User size={18} color={COLORS.royalBlue} />} title="First Name">
+                        {/* First Name */}
+                        <YStack gap="$2">
+                            <SizableText size="$2" color="#64748B" fow="600" ml="$1">First Name</SizableText>
+                            <YStack bg="#F8FAFC" br={12} bw={1} bc="#E2E8F0" px={16} py={Platform.OS === 'ios' ? 14 : 4}>
                                 <Input
-                                    f={1} bg="transparent" bw={0} size="$4"
-                                    fontWeight="600" color={COLORS.textDark}
+                                    bg="transparent" bw={0} size="$4"
+                                    fontWeight="600" color="#1E293B"
                                     value={vm.firstName} onChangeText={vm.setFirstName}
-                                    placeholder="Avery" autoCapitalize="words"
-                                    p={0} h={40} textAlign="left"
-                                    w="100%"
+                                    placeholder="First Name" autoCapitalize="words"
+                                    p={0} h={Platform.OS === 'ios' ? 'auto' : 40}
                                     focusStyle={{ bw: 0 }}
                                 />
-                            </EditProfileRow>
+                            </YStack>
+                        </YStack>
 
-                            <EditProfileRow icon={<User size={18} color={COLORS.royalBlue} />} title="Last Name">
+                        {/* Last Name */}
+                        <YStack gap="$2">
+                            <SizableText size="$2" color="#64748B" fow="600" ml="$1">Last Name</SizableText>
+                            <YStack bg="#F8FAFC" br={12} bw={1} bc="#E2E8F0" px={16} py={Platform.OS === 'ios' ? 14 : 4}>
                                 <Input
-                                    f={1} bg="transparent" bw={0} size="$4"
-                                    fontWeight="600" color={COLORS.textDark}
+                                    bg="transparent" bw={0} size="$4"
+                                    fontWeight="600" color="#1E293B"
                                     value={vm.lastName} onChangeText={vm.setLastName}
-                                    placeholder="Macasa" autoCapitalize="words"
-                                    p={0} h={40} textAlign="left"
-                                    w="100%"
+                                    placeholder="Last Name" autoCapitalize="words"
+                                    p={0} h={Platform.OS === 'ios' ? 'auto' : 40}
                                     focusStyle={{ bw: 0 }}
                                 />
-                            </EditProfileRow>
+                            </YStack>
+                        </YStack>
 
-                            <EditProfileRow
-                                icon={<User size={18} color={COLORS.royalBlue} />}
-                                title="Gender Preference"
-                                onPress={() => vm.setShowGenderModal(true)}
-                                description={vm.gender ? (genderOptions.find(o => o.value === vm.gender)?.label || vm.gender) : "Not Set"}
-                            />
+                        {/* Birth Date */}
+                        <YStack gap="$2">
+                            <SizableText size="$2" color="#64748B" fow="600" ml="$1">Date of Birth</SizableText>
+                            <Pressable onPress={() => vm.setShowDatePicker(true)}>
+                                <XStack bg="#F8FAFC" br={12} bw={1} bc="#E2E8F0" px={16} py={16} ai="center" jc="space-between">
+                                    <SizableText size="$4" color={vm.birthdate ? "#1E293B" : "#94A3B8"} fow="600">
+                                        {vm.birthdate ? vm.birthdate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : (vm.birthdateText || "Select Date")}
+                                    </SizableText>
+                                    <Calendar size={18} color="#94A3B8" />
+                                </XStack>
+                            </Pressable>
+                        </YStack>
 
-                            <EditProfileRow
-                                icon={<Calendar size={18} color={COLORS.royalBlue} />}
-                                title="Birth Date"
-                                isLast
-                                onPress={() => vm.setShowDatePicker(true)}
-                                description={vm.birthdate ? vm.birthdate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : (vm.birthdateText || "Not Set")}
-                            />
-                        </EditProfileCard>
+                        {/* Gender (Inline Buttons) */}
+                        <YStack gap="$2">
+                            <SizableText size="$2" color="#64748B" fow="600" ml="$1">Gender</SizableText>
+                            <XStack gap="$3">
+                                {genderOptions.map((option) => {
+                                    const isSelected = vm.gender === option.value;
+                                    return (
+                                        <Pressable key={option.value} onPress={() => vm.setGender(option.value)} style={{ flex: 1 }}>
+                                            <XStack 
+                                                f={1} bg={isSelected ? "#EEF2FF" : "#F8FAFC"} 
+                                                br={12} bw={1} bc={isSelected ? COLORS.royalBlue : "#E2E8F0"} 
+                                                py={14} ai="center" jc="center" gap="$2"
+                                            >
+                                                <Circle size={16} bw={1.5} bc={isSelected ? COLORS.royalBlue : "#94A3B8"} ai="center" jc="center">
+                                                    {isSelected && <Circle size={8} bg={COLORS.royalBlue} />}
+                                                </Circle>
+                                                <SizableText size="$3" color={isSelected ? COLORS.royalBlue : "#64748B"} fow={isSelected ? "700" : "600"}>
+                                                    {option.label}
+                                                </SizableText>
+                                            </XStack>
+                                        </Pressable>
+                                    );
+                                })}
+                            </XStack>
+                        </YStack>
 
                         {/* Action Buttons */}
                         <YStack gap="$3" mt="$4">
