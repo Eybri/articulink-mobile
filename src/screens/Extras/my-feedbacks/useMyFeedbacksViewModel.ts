@@ -36,7 +36,7 @@ export const useMyFeedbacksViewModel = (navigation: any) => {
             const data = await apiFetchFeedbacks();
             const formatted = data.map((item: any) => {
                 const d = new Date(item.createdAt);
-                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const dateStr = d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
                 return {
                     id: item._id,
                     rating: item.rating,
