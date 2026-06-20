@@ -141,10 +141,7 @@ const SettingsStack = () => (
     <Stack.Screen 
       name="EditProfile" 
       component={EditProfileScreen} 
-      options={{ 
-        title: "Edit Profile",
-        headerLargeTitle: false,
-      }} 
+      options={{ headerShown: false }} 
     />
     <Stack.Screen 
       name="ChangePassword" 
