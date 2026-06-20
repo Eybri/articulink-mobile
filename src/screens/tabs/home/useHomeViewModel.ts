@@ -22,6 +22,8 @@ export const useHomeViewModel = () => {
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [rawHistory, setRawHistory] = useState<any[]>([]);
     const [manualPhrases, setManualPhrases] = useState<string[]>([]);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const currentJobIdRef = useRef<string | null>(null);
     
     const wsRef = useRef<WebSocket | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
@@ -332,10 +334,21 @@ export const useHomeViewModel = () => {
         const fileName = `speech.wav`;
         formData.append("file", { uri, name: fileName, type: "audio/wav" } as any);
 
+        const jobId = Date.now().toString() + Math.random().toString(36).substring(7);
+        currentJobIdRef.current = jobId;
+        abortControllerRef.current = new AbortController();
+
         try {
             const token = await getToken();
             const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
-            const response = await fetch(`${baseURL}/transcribe`, { method: "POST", body: formData, headers });
+            headers["X-Transcription-Id"] = jobId;
+            
+            const response = await fetch(`${baseURL}/transcribe`, { 
+                method: "POST", 
+                body: formData, 
+                headers,
+                signal: abortControllerRef.current.signal
+            });
             const data = await response.json();
             if (response.ok) {
                 const text = data.transcript || data.text || "";
@@ -350,9 +363,42 @@ export const useHomeViewModel = () => {
                     speakText(text);
                 }
             }
-        } catch (err) {
-            console.error("Upload error:", err);
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                console.log('Transcription aborted');
+            } else {
+                console.error("Upload error:", err);
+            }
+        } finally {
+            abortControllerRef.current = null;
+            currentJobIdRef.current = null;
         }
+    };
+
+    const cancelTranscription = async () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
+        if (currentJobIdRef.current) {
+            const jobId = currentJobIdRef.current;
+            currentJobIdRef.current = null;
+            try {
+                const token = await getToken();
+                const headers: Record<string, string> = { "Content-Type": "application/json" };
+                if (token) {
+                    headers["Authorization"] = `Bearer ${token}`;
+                }
+                fetch(`${baseURL}/transcribe/cancel`, { 
+                    method: "POST", 
+                    headers, 
+                    body: JSON.stringify({ jobId }) 
+                }).catch(err => console.log("Cancel request failed", err));
+            } catch (e) {}
+        }
+
+        setLoading(false);
     };
 
     const speakText = useCallback(async (textToSpeak?: any) => {
@@ -428,6 +474,6 @@ export const useHomeViewModel = () => {
         recording, transcript, setTranscript, words, setWords, confidence, loading, width, height,
         fadeAnim, slideAnim, orbs, dotGrid, isRealtime, setIsRealtime, isStreaming,
         phraseVault, saveToVault, usePhrase, deletePhrase,
-        startRecording, stopRecording, speakText, clearTranscript
+        startRecording, stopRecording, speakText, clearTranscript, cancelTranscription
     };
 };

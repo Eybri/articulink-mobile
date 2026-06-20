@@ -170,27 +170,42 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                     contentContainerStyle={{ padding: 20, paddingTop: 10, paddingBottom: 150 }}
                     ListHeaderComponent={
                         <YStack gap="$4" mb="$5">
-                            <XStack ai="center" gap="$4">
+                            <XStack ai="flex-end" gap="$1" mb="$2">
                                 <Image 
                                     source={require("../../../../assets/images/ariya.png")} 
-                                    style={{ width: 90, height: 90 }}
+                                    style={{ width: 110, height: 110 }}
                                     resizeMode="contain"
                                 />
-                                <YStack f={1} gap="$2.5" ai="flex-start">
-                                    <Card bg="white" p="$3" px="$3.5" br={16} borderBottomLeftRadius={4} bw={1} bc={COLORS.sandMid} elevation={1}>
-                                        {vm.isAnalyzing ? (
-                                            <XStack ai="center" gap="$2">
-                                                <ActivityIndicator size="small" color={COLORS.royalBlue} />
-                                                <SizableText size="$2" color={COLORS.textMid} fow="600">
-                                                    Analyzing recent recordings...
+                                <YStack f={1} pb={15} pl={4}>
+                                    <ZStack>
+                                        {/* Speech Bubble Tail */}
+                                        <YStack 
+                                            pos="absolute" 
+                                            l={-6} 
+                                            b={15} 
+                                            w={16} 
+                                            h={16} 
+                                            bg={COLORS.royalBlue} 
+                                            transform={[{ rotate: '45deg' }]} 
+                                            br={3} 
+                                        />
+                                        
+                                        {/* Main Message Box */}
+                                        <Card bg={COLORS.royalBlue} p="$4" br={20} bw={0} elevation={4} shadowColor={COLORS.royalBlue} shadowOpacity={0.3}>
+                                            {vm.isAnalyzing ? (
+                                                <XStack ai="center" gap="$2.5">
+                                                    <ActivityIndicator size="small" color="white" />
+                                                    <SizableText size="$3" color="rgba(255,255,255,0.9)" fow="600">
+                                                        Analyzing recent recordings...
+                                                    </SizableText>
+                                                </XStack>
+                                            ) : (
+                                                <SizableText size="$3" color="white" fow="600" lh={20} whiteSpace="pre-wrap">
+                                                    {vm.analysisReport || '"Keep practicing! Every word brings you closer to your goal."'}
                                                 </SizableText>
-                                            </XStack>
-                                        ) : (
-                                            <SizableText size="$2" color={COLORS.textDark} fow="500" lh={18} whiteSpace="pre-wrap">
-                                                {vm.analysisReport || '"Keep practicing! Every word brings you closer to your goal."'}
-                                            </SizableText>
-                                        )}
-                                    </Card>
+                                            )}
+                                        </Card>
+                                    </ZStack>
                                 </YStack>
                             </XStack>
 
