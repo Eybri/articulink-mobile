@@ -234,6 +234,27 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             </YStack>
                         ) : vm.stats ? (
                             <>
+                                {/* Recent Phrases */}
+                                {vm.stats.recent_phrases?.length > 0 && (
+                                    <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
+                                        <XStack ai="center" gap="$2" mb="$3">
+                                            <YStack w={28} h={28} br={10} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
+                                                <FileText size={14} color={COLORS.royalBlue} />
+                                            </YStack>
+                                            <SizableText fow="800" size="$3" color={COLORS.textDark}>Recent Phrases</SizableText>
+                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+                                        </XStack>
+                                        <YStack gap="$2">
+                                            {vm.stats.recent_phrases.map((phrase: string, i: number) => (
+                                                <XStack key={i} ai="flex-start" gap="$2" py="$1.5" bbc={i < vm.stats.recent_phrases.length - 1 ? `${COLORS.sandMid}30` : "transparent"} bbw={i < vm.stats.recent_phrases.length - 1 ? 1 : 0}>
+                                                    <SizableText size="$1" fow="700" color={COLORS.teal} mt={2} opacity={0.5}>{String(i + 1).padStart(2, '0')}</SizableText>
+                                                    <SizableText size="$2" color={COLORS.textMid} fow="500" f={1} lh={20}>"{phrase}"</SizableText>
+                                                </XStack>
+                                            ))}
+                                        </YStack>
+                                    </Card>
+                                )}
+
                                 {/* Top Words */}
                                 {vm.stats.most_used_words?.length > 0 && (
                                     <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
@@ -285,27 +306,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                                                 <WordChip key={i} word={item.word} badgeText={`${Math.round(item.avg_accuracy)}%`} index={i + 4} />
                                             ))}
                                         </XStack>
-                                    </Card>
-                                )}
-
-                                {/* Recent Phrases */}
-                                {vm.stats.recent_phrases?.length > 0 && (
-                                    <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4">
-                                        <XStack ai="center" gap="$2" mb="$3">
-                                            <YStack w={28} h={28} br={10} bg={`${COLORS.royalBlue}08`} jc="center" ai="center">
-                                                <FileText size={14} color={COLORS.royalBlue} />
-                                            </YStack>
-                                            <SizableText fow="800" size="$3" color={COLORS.textDark}>Recent Phrases</SizableText>
-                                            <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
-                                        </XStack>
-                                        <YStack gap="$2">
-                                            {vm.stats.recent_phrases.map((phrase: string, i: number) => (
-                                                <XStack key={i} ai="flex-start" gap="$2" py="$1.5" bbc={i < vm.stats.recent_phrases.length - 1 ? `${COLORS.sandMid}30` : "transparent"} bbw={i < vm.stats.recent_phrases.length - 1 ? 1 : 0}>
-                                                    <SizableText size="$1" fow="700" color={COLORS.teal} mt={2} opacity={0.5}>{String(i + 1).padStart(2, '0')}</SizableText>
-                                                    <SizableText size="$2" color={COLORS.textMid} fow="500" f={1} lh={20}>"{phrase}"</SizableText>
-                                                </XStack>
-                                            ))}
-                                        </YStack>
                                     </Card>
                                 )}
 
