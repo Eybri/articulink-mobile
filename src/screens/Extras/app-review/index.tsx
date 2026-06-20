@@ -10,14 +10,12 @@ const AppReviewScreen = ({ navigation }: any) => {
     const vm = useAppReviewViewModel(navigation);
 
     const getRatingText = () => {
-        switch (vm.rating) {
-            case 1: return "Terrible experience.";
-            case 2: return "Not great, could be better.";
-            case 3: return "It's okay, nothing special.";
-            case 4: return "Good! I like it.";
-            case 5: return "Great 5 star! Can't get any better than that!";
-            default: return "Tap a star to rate";
-        }
+        if (vm.rating === 0) return "Tap or drag to rate";
+        if (vm.rating <= 1.5) return "Terrible experience.";
+        if (vm.rating <= 2.5) return "Not great, could be better.";
+        if (vm.rating <= 3.5) return "It's okay, nothing special.";
+        if (vm.rating <= 4.5) return "Good! I like it.";
+        return "Great! Can't get any better than that!";
     };
 
     return (
@@ -75,18 +73,40 @@ const AppReviewScreen = ({ navigation }: any) => {
                                 How was your experience?
                             </SizableText>
                             
-                            <XStack jc="center" gap={8} mb={12}>
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <Button
-                                        key={star}
-                                        chromeless
-                                        p={0}
-                                        m={0}
-                                        onPress={() => vm.setRating(star)}
-                                        pressStyle={{ scale: 0.8 }}
-                                        icon={<Star size={44} color={star <= vm.rating ? COLORS.royalBlue : "#E2E8F0"} fill={star <= vm.rating ? COLORS.royalBlue : "transparent"} />}
-                                    />
-                                ))}
+                            <XStack 
+                                jc="center" 
+                                gap={8} 
+                                mb={12}
+                                onStartShouldSetResponder={() => true}
+                                onResponderGrant={(e) => {
+                                    const x = e.nativeEvent.locationX;
+                                    let calc = (x / 252) * 5;
+                                    calc = Math.max(0.5, Math.min(5, Math.ceil(calc * 2) / 2));
+                                    vm.setRating(calc);
+                                }}
+                                onResponderMove={(e) => {
+                                    const x = e.nativeEvent.locationX;
+                                    let calc = (x / 252) * 5;
+                                    calc = Math.max(0.5, Math.min(5, Math.ceil(calc * 2) / 2));
+                                    vm.setRating(calc);
+                                }}
+                            >
+                                {[1, 2, 3, 4, 5].map((starIndex) => {
+                                    let fillWidth: any = "0%";
+                                    if (vm.rating >= starIndex) fillWidth = "100%";
+                                    else if (vm.rating + 0.5 === starIndex) fillWidth = "50%";
+
+                                    return (
+                                        <YStack key={starIndex} width={44} height={44} position="relative" pointerEvents="none">
+                                            <YStack position="absolute" top={0} left={0}>
+                                                <Star size={44} color="#E2E8F0" />
+                                            </YStack>
+                                            <YStack position="absolute" top={0} left={0} width={fillWidth} overflow="hidden">
+                                                <Star size={44} color={COLORS.royalBlue} fill={COLORS.royalBlue} />
+                                            </YStack>
+                                        </YStack>
+                                    );
+                                })}
                             </XStack>
 
                             <SizableText size="$3" color={COLORS.textMid} ta="center" fow="500">
