@@ -55,11 +55,15 @@ const AppReviewScreen = ({ navigation }: any) => {
                     
                     {/* Top gap to reveal the gradient before the sheet starts */}
                     <YStack h={100} jc="flex-end" px={20} pb={20}>
-                        <YStack bg="rgba(255, 255, 255, 0.9)" br={16} p={16} ai="center" jc="center" elevation={2} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }}>
-                            <SizableText size="$3" color={COLORS.textDark} fow="600" ta="center">
+                        <XStack bg="rgba(255, 255, 255, 0.9)" br={16} p={16} ai="center" jc="center" gap={12} elevation={2} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }}>
+                            <Image 
+                                source={require('../../../../assets/images/ariya.png')} 
+                                style={{ width: 40, height: 40, resizeMode: 'contain' }} 
+                            />
+                            <SizableText size="$3" color={COLORS.textDark} fow="600" f={1}>
                                 We'd love to hear more about your experience with Articulink.
                             </SizableText>
-                        </YStack>
+                        </XStack>
                     </YStack>
 
                     {/* Main White Sheet Overlapping the Gradient */}
