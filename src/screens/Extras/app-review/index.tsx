@@ -26,7 +26,7 @@ const AppReviewScreen = ({ navigation }: any) => {
             
             {/* Top Background Gradient matches the sophisticated look */}
             <LinearGradient
-                colors={['rgba(61, 175, 196, 0.4)', 'rgba(61, 175, 196, 0)']}
+                colors={['rgba(42, 95, 168, 0.4)', 'rgba(42, 95, 168, 0)']}
                 style={StyleSheet.absoluteFillObject}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 0.4 }}
@@ -66,7 +66,7 @@ const AppReviewScreen = ({ navigation }: any) => {
                                     m={0}
                                     onPress={() => vm.setRating(star)}
                                     pressStyle={{ scale: 0.8 }}
-                                    icon={<Star size={44} color={star <= vm.rating ? COLORS.royalGreen : "#E2E8F0"} fill={star <= vm.rating ? COLORS.royalGreen : "transparent"} />}
+                                    icon={<Star size={44} color={star <= vm.rating ? COLORS.royalBlue : "#E2E8F0"} fill={star <= vm.rating ? COLORS.royalBlue : "transparent"} />}
                                 />
                             ))}
                         </XStack>
@@ -90,12 +90,12 @@ const AppReviewScreen = ({ navigation }: any) => {
                                         size="$3"
                                         br={8}
                                         bw={1}
-                                        bc={isSelected ? COLORS.royalGreen : "#E2E8F0"}
-                                        bg={isSelected ? `${COLORS.royalGreen}10` : "transparent"}
+                                        bc={isSelected ? COLORS.royalBlue : "#E2E8F0"}
+                                        bg={isSelected ? `${COLORS.royalBlue}10` : "transparent"}
                                         onPress={() => vm.toggleCategory(cat)}
                                         pressStyle={{ scale: 0.98 }}
                                     >
-                                        <SizableText size="$3" fow={isSelected ? "600" : "400"} color={isSelected ? COLORS.royalGreen : COLORS.textMid}>
+                                        <SizableText size="$3" fow={isSelected ? "600" : "400"} color={isSelected ? COLORS.royalBlue : COLORS.textMid}>
                                             {cat}
                                         </SizableText>
                                     </Button>
@@ -105,24 +105,31 @@ const AppReviewScreen = ({ navigation }: any) => {
                     </YStack>
 
                     {/* Written Feedback Section */}
-                    <YStack bg="white" br={12} p={20} mb={20} elevation={1} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }}>
-                        <SizableText size="$4" fow="600" color={COLORS.textDark} mb={12}>
+                    <YStack bg="white" br={12} p={20} mb={32} elevation={1} shadowColor="#000" shadowOpacity={0.05} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }}>
+                        <SizableText size="$4" fow="600" color={COLORS.textDark} mb={16}>
                             Write your review
                         </SizableText>
-                        <TextArea
-                            size="$4"
-                            borderWidth={1}
-                            borderColor="#E2E8F0"
-                            backgroundColor="#F8FAFC"
-                            color={COLORS.textDark}
-                            placeholder="Amazing experience! The app was very welcoming..."
-                            placeholderTextColor="#94A3B8"
-                            value={vm.feedback}
-                            onChangeText={vm.setFeedback}
-                            minHeight={120}
-                            br={8}
-                            focusStyle={{ borderColor: COLORS.royalGreen, backgroundColor: "white" }}
-                        />
+                        
+                        <YStack bg="#F8FAFC" br={12} p={12} bw={1} bc="#F1F5F9">
+                            <SizableText size="$2" fow="500" color="#94A3B8" mb={8} textTransform="uppercase" ls={1}>
+                                Review
+                            </SizableText>
+                            <TextArea
+                                size="$4"
+                                borderWidth={0}
+                                backgroundColor="transparent"
+                                color={COLORS.textDark}
+                                placeholder="Amazing experience! The app was very welcoming..."
+                                placeholderTextColor="#CBD5E1"
+                                value={vm.feedback}
+                                onChangeText={vm.setFeedback}
+                                minHeight={120}
+                                p={0}
+                                m={0}
+                                textAlignVertical="top"
+                                focusStyle={{ backgroundColor: "transparent", outlineWidth: 0 }}
+                            />
+                        </YStack>
                     </YStack>
 
                     {/* Attach Images Section */}
@@ -176,7 +183,7 @@ const AppReviewScreen = ({ navigation }: any) => {
                     </YStack>
 
                     <Button
-                        bg={COLORS.royalGreen}
+                        bg={COLORS.royalBlue}
                         h={56}
                         br={12}
                         onPress={vm.handleSubmit}
@@ -184,7 +191,7 @@ const AppReviewScreen = ({ navigation }: any) => {
                         opacity={vm.isSubmitting ? 0.7 : 1}
                         pressStyle={{ scale: 0.97, opacity: 0.9 }}
                         elevation={2}
-                        shadowColor={COLORS.royalGreen}
+                        shadowColor={COLORS.royalBlue}
                         shadowOpacity={0.3}
                         shadowRadius={8}
                         shadowOffset={{ width: 0, height: 4 }}
