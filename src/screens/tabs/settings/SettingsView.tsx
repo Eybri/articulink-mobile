@@ -31,6 +31,8 @@ import {
   LogOut,
   AppWindow,
   Lock,
+  Star,
+  MessageSquareQuote,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SettingRow, SliderSetting } from "./components/SettingsComponents";
@@ -174,6 +176,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                                 description="Review data handling" 
                                 isLast
                                 onPress={() => Alert.alert("Privacy Policy", "Your data is encrypted.")}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                        </Card>
+                    </YStack>
+
+                    {/* Section: Support & Feedback */}
+                    <YStack mb="$5">
+                        <XStack ai="center" gap="$2" mb="$3" ml="$2">
+                            <Star size={14} color={COLORS.royalBlue} />
+                            <SizableText size="$2" fow="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Support</SizableText>
+                        </XStack>
+                        
+                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                            <SettingRow 
+                                icon={<Star size={18} color={COLORS.royalBlue} />} 
+                                title="Rate the App" 
+                                description="Enjoying Articulink? Leave a review!"
+                                onPress={vm.handleReview}
+                            >
+                                <ChevronRight size={18} color={COLORS.sandMid} />
+                            </SettingRow>
+                            
+                            <SettingRow 
+                                icon={<MessageSquareQuote size={18} color={COLORS.royalBlue} />} 
+                                title="My Feedbacks" 
+                                description="View past feedback and admin replies"
+                                onPress={vm.handleMyFeedbacks}
+                                isLast
                             >
                                 <ChevronRight size={18} color={COLORS.sandMid} />
                             </SettingRow>

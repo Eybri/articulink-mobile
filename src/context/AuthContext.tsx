@@ -56,6 +56,8 @@ export interface AuthContextType {
     updateProfile: (data: Partial<User>) => Promise<User>;
     fetchSpeechAnalysis: () => Promise<any>;
     fetchSpeechStats: () => Promise<any>;
+    submitFeedback: (data: any) => Promise<any>;
+    fetchFeedbacks: () => Promise<any[]>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -428,6 +430,28 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
     };
 
+    const submitFeedback = async (data: any) => {
+        try {
+            const res = await axios.post(`${baseURL}/feedbacks`, data);
+            return res.data;
+        } catch (error: any) {
+            console.error("Error submitting feedback:", error);
+            throw error.response?.data || { detail: "Failed to submit feedback" };
+        }
+    };
+
+    const fetchFeedbacks = async () => {
+        try {
+            const res = await axios.get(`${baseURL}/feedbacks`);
+            return res.data;
+        } catch (error: any) {
+            if (error.response?.status !== 401 && error.response?.status !== 403) {
+                console.error("Error fetching feedbacks:", error.message || error);
+            }
+            return [];
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -452,6 +476,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             updateProfile,
             fetchSpeechAnalysis,
             fetchSpeechStats,
+            submitFeedback,
+            fetchFeedbacks,
         }}>
             {children}
         </AuthContext.Provider>

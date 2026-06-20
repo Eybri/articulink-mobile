@@ -46,12 +46,22 @@ export const useSettingsViewModel = (navigation: any) => {
         ]);
     };
 
+    const handleReview = () => {
+        navigation.navigate("AppReview");
+    };
+
+    const handleMyFeedbacks = () => {
+        navigation.navigate("MyFeedbacks");
+    };
+
     return {
         user,
         saveHistory, setSaveHistory,
         width, height,
         handleClearHistory,
         handleLogout,
+        handleReview,
+        handleMyFeedbacks,
         animations: {
             fadeAnim,
             slideAnim
