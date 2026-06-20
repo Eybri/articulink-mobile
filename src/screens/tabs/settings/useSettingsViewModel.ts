@@ -41,7 +41,7 @@ export const useSettingsViewModel = (navigation: any) => {
         Alert.alert("Logout", "Sign out of your account?", [
             { text: "Cancel", style: 'cancel' },
             { text: "Logout", style: "destructive", onPress: () => {
-                // Logout logic would go here, usually calling auth.logout()
+                logout();
             }}
         ]);
     };
