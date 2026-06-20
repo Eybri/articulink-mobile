@@ -1,13 +1,14 @@
 import React from 'react';
-import { ScrollView, Animated, StatusBar, Platform, Image, StyleSheet } from 'react-native';
+import { ScrollView, Animated, StatusBar, Platform, Image, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { YStack, XStack, SizableText, Button, Spinner } from "tamagui";
-import { ChevronLeft, Star, MessageSquareQuote, BadgeCheck, Clock } from "@tamagui/lucide-icons";
+import { ChevronLeft, Star, MessageSquareQuote, BadgeCheck, Clock, X } from "@tamagui/lucide-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMyFeedbacksViewModel, FeedbackItem } from "./useMyFeedbacksViewModel";
 import { COLORS } from "../../../constants/colors";
 
 const MyFeedbacksScreen = ({ navigation }: any) => {
     const vm = useMyFeedbacksViewModel(navigation);
+    const [viewImage, setViewImage] = React.useState<string | null>(null);
 
     return (
         <YStack f={1} bg="#FFFFFF">
@@ -88,18 +89,37 @@ const MyFeedbacksScreen = ({ navigation }: any) => {
                             </YStack>
                         ) : (
                             vm.feedbacks.map((item: FeedbackItem) => (
-                                <FeedbackCard key={item.id} item={item} />
+                                <FeedbackCard key={item.id} item={item} onImagePress={setViewImage} />
                             ))
                         )}
                     </YStack>
 
                 </ScrollView>
             </Animated.View>
+
+            {/* Fullscreen Image Viewer Modal */}
+            <Modal visible={!!viewImage} transparent={true} animationType="fade" onRequestClose={() => setViewImage(null)}>
+                <YStack f={1} bg="rgba(0,0,0,0.9)" ai="center" jc="center" position="relative">
+                    <Button 
+                        position="absolute" 
+                        top={Platform.OS === 'ios' ? 60 : 40} 
+                        right={20} 
+                        circular 
+                        icon={<X size={24} color="white" />} 
+                        bg="rgba(255,255,255,0.2)" 
+                        onPress={() => setViewImage(null)}
+                        zIndex={100}
+                    />
+                    {viewImage && (
+                        <Image source={{ uri: viewImage }} style={{ width: '100%', height: '100%', resizeMode: 'contain' }} />
+                    )}
+                </YStack>
+            </Modal>
         </YStack>
     );
 };
 
-const FeedbackCard = React.memo(({ item }: { item: FeedbackItem }) => {
+const FeedbackCard = React.memo(({ item, onImagePress }: { item: FeedbackItem, onImagePress: (uri: string) => void }) => {
     return (
         <YStack bg="white" br={16} p={20} mb={20} elevation={2} shadowColor="#000" shadowOpacity={0.06} shadowRadius={12} shadowOffset={{ width: 0, height: 4 }} bw={1} bc="#E2E8F0">
             <XStack jc="space-between" ai="center" mb={12}>
@@ -144,7 +164,9 @@ const FeedbackCard = React.memo(({ item }: { item: FeedbackItem }) => {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: item.adminReply ? 20 : 0 }}>
                     <XStack gap={12} pr={16}>
                         {item.attachedImages.map((uri, index) => (
-                            <Image key={index} source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+                            <TouchableOpacity key={index} onPress={() => onImagePress(uri)} activeOpacity={0.8}>
+                                <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+                            </TouchableOpacity>
                         ))}
                     </XStack>
                 </ScrollView>
