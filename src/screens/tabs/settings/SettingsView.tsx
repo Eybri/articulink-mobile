@@ -45,15 +45,8 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) => {
     return (
-        <YStack f={1} bg={COLORS.cream}>
+        <YStack f={1} bg="#F8FAFC">
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-            
-            {/* Background blobs for depth */}
-            <ZStack pos="absolute" fullscreen pointerEvents="none">
-                <Circle pos="absolute" t={-vm.height * 0.1} r={-vm.width * 0.25} size={vm.width * 0.9} bg={COLORS.sandLight} opacity={0.35} />
-                <Circle pos="absolute" b={-vm.height * 0.15} l={-vm.width * 0.2} size={vm.width * 0.8} bg={COLORS.orbTeal} opacity={0.15} />
-                <Circle pos="absolute" t={vm.height * 0.4} r={-vm.width * 0.1} size={vm.width * 0.2} bg={COLORS.orbSand} opacity={0.2} />
-            </ZStack>
 
             <Animated.View style={{ 
                 flex: 1, 
@@ -66,7 +59,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                 >
                     {/* Identity Header */}
                     {vm.user && (
-                        <Card bg="white" br={20} p="$4" mb="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={12} p="$4" mb="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <XStack ai="center" gap="$4">
                                 <YStack w={64} h={64} br={32} jc="center" ai="center" bw={2} bc={COLORS.cream} ov="hidden" elevation={4} shadowColor={COLORS.royalBlue} shadowOpacity={0.15}>
                                     {vm.user.profile_pic ? (
@@ -104,7 +97,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                             <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Account</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <SettingRow 
                                 icon={<User size={18} color={COLORS.royalBlue} />} 
                                 title="Manage Profile" 
@@ -142,7 +135,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                             <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Preferences</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Store History" description="Keep logs on this device" isLast>
                                 <Switch size="$3" bg={vm.saveHistory ? COLORS.royalBlue : COLORS.sandMid} checked={vm.saveHistory} onCheckedChange={vm.setSaveHistory}>
                                     <Switch.Thumb bg="white" />
@@ -160,7 +153,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                             <SizableText size="$2" fow="800" color={COLORS.textMid} textTransform="uppercase" ls={1.5}>Privacy & Security</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <SettingRow 
                                 icon={<Trash2 size={18} color="#DC2626" />} 
                                 title="Clear Local Cache" 
@@ -175,7 +168,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                                 title="Privacy Policy" 
                                 description="Review data handling" 
                                 isLast
-                                onPress={() => Alert.alert("Privacy Policy", "Your data is encrypted.")}
+                                onPress={() => navigation.navigate("SecurityPrivacy")}
                             >
                                 <ChevronRight size={18} color={COLORS.sandMid} />
                             </SettingRow>
@@ -189,7 +182,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                             <SizableText size="$2" fow="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Support</SizableText>
                         </XStack>
                         
-                        <Card bg="white" br={20} p="$1" px="$5" elevation={6} shadowColor="#8A96A4" shadowOpacity={0.08} bw={1} bc="rgba(221, 214, 200, 0.4)">
+                        <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <SettingRow 
                                 icon={<Star size={18} color={COLORS.royalBlue} />} 
                                 title="Rate the App" 
@@ -213,12 +206,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
 
                     {/* Logout Button */}
                     <Button
-                        mt="$5"
-                        bg="rgba(220,38,38,0.06)"
-                        h={62}
-                        br={20}
-                        bw={1.5}
-                        bc="rgba(220,38,38,0.12)"
+                        mt="$3"
+                        mb="$4"
+                        bg="rgba(220,38,38,0.04)"
+                        h={56}
+                        br={12}
+                        bw={1}
+                        bc="rgba(220,38,38,0.15)"
                         onPress={vm.handleLogout}
                         icon={<LogOut size={20} color="#DC2626" />}
                         pressStyle={{ scale: 0.97, bg: "rgba(220,38,38,0.1)" }}
