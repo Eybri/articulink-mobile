@@ -12,7 +12,6 @@
               "suppressHighlighting": true
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -1869,7 +1868,6 @@
               "role": "link"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -3398,23 +3396,16 @@
             },
             "variants": {
               "unstyled": {
-                "true": {
-                  "outlineWidth": 0,
-                  "borderWidth": 0,
-                  "backgroundColor": "transparent"
-                },
                 "false": {
                   "size": "$true",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "flexWrap": "nowrap",
                   "flexDirection": "row",
+                  "cursor": "pointer",
                   "backgroundColor": "$background",
                   "borderWidth": 1,
                   "borderColor": "transparent",
-                  "$platform-web": {
-                    "cursor": "pointer"
-                  },
                   "hoverStyle": {
                     "backgroundColor": "$backgroundHover",
                     "borderColor": "$borderColorHover"
@@ -6999,7 +6990,6 @@
               "whiteSpace": "normal"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -7949,7 +7939,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -8388,7 +8377,6 @@
               "fontStyle": "italic"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -8620,7 +8608,6 @@
               "pointerEvents": "none"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -10551,7 +10538,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -10798,7 +10784,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -11045,7 +11030,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -11292,7 +11276,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -11539,7 +11522,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -11786,7 +11768,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -12475,7 +12456,6 @@
               "margin": 0
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -12929,11 +12909,6 @@
             },
             "variants": {
               "unstyled": {
-                "true": {
-                  "outlineWidth": 0,
-                  "borderWidth": 0,
-                  "backgroundColor": "transparent"
-                },
                 "false": {
                   "size": "$true",
                   "fontFamily": "$body",
@@ -12992,7 +12967,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -13245,7 +13219,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -14399,7 +14372,6 @@
               "whiteSpace": "normal"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -18957,7 +18929,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -20687,7 +20658,6 @@
               "render": "span"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -21399,7 +21369,6 @@
               "fontWeight": "bold"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -22605,7 +22574,6 @@
               "unstyled": false
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -24097,7 +24065,6 @@
               "pointerEvents": "none"
             },
             "inlineWhenUnflattened": {},
-            "inlineProps": {},
             "variants": {
               "ellipsis": {
                 "true": {
@@ -25870,7 +25837,6 @@
       "useAnimatedNumber": "Function",
       "useAnimatedNumberReaction": "Function",
       "useAnimatedNumberStyle": "Function",
-      "useAnimatedNumbersStyle": "Function",
       "useAnimations": "Function"
     },
     "themes": {

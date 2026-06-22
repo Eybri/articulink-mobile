@@ -173,7 +173,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                             <XStack ai="flex-end" gap="$1" mb="$2">
                                 <Image 
                                     source={require("../../../../assets/images/ariya.png")} 
-                                    style={{ width: 110, height: 110 }}
+                                    style={{ width: 80, height: 80 }}
                                     resizeMode="contain"
                                 />
                                 <YStack f={1} pb={15} pl={4}>
@@ -223,7 +223,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ vm }) => {
                                 <StatCard 
                                     icon={<Activity size={12} color={COLORS.royalBlue} />} 
                                     label="Time" 
-                                    value={`${vm.stats.totalDuration.toFixed(1)}s`} 
+                                    value={
+                                        vm.stats.totalDuration >= 3600 
+                                            ? `${(vm.stats.totalDuration / 3600).toFixed(1)}h` 
+                                            : vm.stats.totalDuration >= 60 
+                                                ? `${(vm.stats.totalDuration / 60).toFixed(1)}m` 
+                                                : `${vm.stats.totalDuration.toFixed(1)}s`
+                                    } 
                                     bg={`${COLORS.royalBlue}10`}
                                 />
                                 <StatCard 
