@@ -65,13 +65,22 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
   onContinue,
 }) => {
   const arcAnim = useRef(new Animated.Value(0)).current;
+  const [displayPct, setDisplayPct] = useState(0);
 
   useEffect(() => {
+    const listener = arcAnim.addListener(({ value }) => {
+      setDisplayPct(Math.round(value * 100));
+    });
+
     Animated.timing(arcAnim, {
       toValue: progressPct / 100,
       duration: 1200,
       useNativeDriver: false,
     }).start();
+
+    return () => {
+      arcAnim.removeListener(listener);
+    };
   }, [progressPct]);
 
   const R = 45;
@@ -127,13 +136,13 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
               stroke={COLORS.tealLight}
               strokeWidth={10}
               strokeLinecap="round"
-              strokeDasharray="4 2"
+              strokeDasharray={totalArcLength}
               strokeDashoffset={totalArcLength * (1 - progressPct / 100)}
             />
           </Svg>
           <YStack pos="absolute" b={2} ai="center">
             <SizableText fow="900" size="$8" color="white" ls={-1}>
-              {progressPct}%
+              {displayPct}%
             </SizableText>
           </YStack>
         </YStack>

@@ -34,7 +34,7 @@ export const useProfileViewModel = (navigation: any) => {
             todaySessions: stats?.today_recordings ?? 0,
             todayHours: +(totalDuration / 3600).toFixed(1),
             todayClarityPct: stats?.today_avg_confidence ?? 0,
-            todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 5) * 100)),
+            todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 30) * 100)),
         };
     }, [stats]);
 
