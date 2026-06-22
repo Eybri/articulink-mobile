@@ -2,6 +2,8 @@ import { useState, useContext, useCallback, useMemo } from "react";
 import { Alert, useWindowDimensions } from "react-native";
 import { AuthContext, AuthContextType } from "./../../../context/AuthContext";
 import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
+import baseURL from "./../../../utils/baseurl";
 
 /**
  * ViewModel for the Profile Screen.
@@ -23,6 +25,13 @@ export const useProfileViewModel = (navigation: any) => {
     // ── Speech Stats ──
     const [stats, setStats] = useState<any>(null);
     const [statsLoading, setStatsLoading] = useState(true);
+
+    // ── Feedbacks & Notifications ──
+    const [feedbacks, setFeedbacks] = useState<any[]>([]);
+
+    const unreadReplies = useMemo(() => {
+        return feedbacks.filter((f) => f.adminReply && f.isReplyRead === false);
+    }, [feedbacks]);
 
     const analytics = useMemo(() => {
         const totalDuration = stats?.total_duration_seconds ?? 0;
@@ -61,6 +70,26 @@ export const useProfileViewModel = (navigation: any) => {
         }
     };
 
+    const loadFeedbacks = async () => {
+        try {
+            const response = await axios.get(`${baseURL}/feedbacks`);
+            setFeedbacks(response.data);
+        } catch (e) {
+            console.error("Failed to load feedbacks:", e);
+        }
+    };
+
+    const markNotificationAsRead = async (feedbackId: string) => {
+        try {
+            await axios.put(`${baseURL}/feedbacks/${feedbackId}/read`);
+            setFeedbacks((prev) => 
+                prev.map((f) => f._id === feedbackId ? { ...f, isReplyRead: true } : f)
+            );
+        } catch (e) {
+            console.error("Failed to mark notification as read:", e);
+        }
+    };
+
     const handleProfileError = (error: any) => {
         if (error.message?.includes("Session expired") || error.response?.status === 401) {
             setError("Session expired");
@@ -75,12 +104,14 @@ export const useProfileViewModel = (navigation: any) => {
     useFocusEffect(useCallback(() => {
         loadProfile();
         loadStats();
+        loadFeedbacks();
     }, []));
 
     const onRefresh = () => {
         setRefreshing(true);
         loadProfile();
         loadStats();
+        loadFeedbacks();
     };
 
     const handleClearHistory = () => {
@@ -140,6 +171,8 @@ export const useProfileViewModel = (navigation: any) => {
         notifications, setNotifications,
         // Speech stats
         stats, statsLoading,
+        // Notifications
+        unreadReplies, markNotificationAsRead, feedbacks
     };
 };
 

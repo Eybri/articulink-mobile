@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Platform,
     StatusBar,
@@ -17,6 +17,7 @@ import {
     Spinner,
     Card,
     Separator,
+    Sheet,
 } from "tamagui";
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -35,6 +36,7 @@ import {
     Lock,
     Globe,
     FileText,
+    Check,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import {
@@ -56,6 +58,8 @@ interface ProfileViewProps {
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
+    const [showNotifications, setShowNotifications] = useState(false);
+
     const orbs = useMemo(
         () => [
             { color: COLORS.orbBlue, size: vm.width * 0.65, x: vm.width * 0.88, y: vm.height * 0.07, duration: 6000, delay: 0 },
@@ -160,8 +164,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                             bw={1}
                             bc="rgba(255,255,255,0.3)"
                             pressStyle={{ scale: 0.95, bg: "rgba(255,255,255,0.25)" }}
-                            icon={<Bell size={22} color="white" />}
-                        />
+                            onPress={() => setShowNotifications(true)}
+                        >
+                            <Bell size={22} color="white" />
+                            {vm.unreadReplies?.length > 0 && (
+                                <Circle size={10} bg="#EF4444" pos="absolute" t={12} r={12} bw={1.5} bc="white" />
+                            )}
+                        </Button>
                     </XStack>
                 </YStack>
 
@@ -321,6 +330,67 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     </YStack>
                 </YStack>
             </ScrollView>
+
+            <Sheet
+                modal
+                open={showNotifications}
+                onOpenChange={setShowNotifications}
+                snapPoints={[85, 50]}
+                dismissOnSnapToBottom
+                zIndex={100000}
+                animation="medium"
+            >
+                <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+                <Sheet.Handle />
+                <Sheet.Frame flex={1} bg={COLORS.cream} p="$4" br={24}>
+                    <XStack jc="space-between" ai="center" mb="$4">
+                        <SizableText size="$6" fow="800" color={COLORS.royalBlue}>Notifications</SizableText>
+                        <Button size="$3" circular bg={`${COLORS.sandMid}40`} onPress={() => setShowNotifications(false)}>
+                            <XStack ai="center" jc="center" w="100%" h="100%">
+                                <SizableText size="$2" fow="700">X</SizableText>
+                            </XStack>
+                        </Button>
+                    </XStack>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        {vm.unreadReplies?.length === 0 ? (
+                            <YStack ai="center" jc="center" p="$5" mt="$5">
+                                <Bell size={48} color={COLORS.sandMid} opacity={0.5} mb="$3" />
+                                <SizableText size="$4" color={COLORS.textMid} fow="600">No new notifications</SizableText>
+                            </YStack>
+                        ) : (
+                            <YStack gap="$3" pb="$6">
+                                {vm.unreadReplies.map((reply: any, idx: number) => (
+                                    <Card key={idx} bg="white" br={16} p="$4" elevation={2} bw={1} bc={COLORS.sandMid}>
+                                        <XStack ai="center" gap="$2" mb="$2">
+                                            <Circle size={8} bg={COLORS.teal} />
+                                            <SizableText size="$2" color={COLORS.textMid} fow="600">Admin replied to your feedback</SizableText>
+                                        </XStack>
+                                        <YStack bg="#F8FAFC" br={8} p="$3" mb="$3">
+                                            <SizableText size="$2" color={COLORS.textDark} fow="500" fontStyle="italic">"{reply.feedbackText}"</SizableText>
+                                        </YStack>
+                                        <YStack pl="$2" blw={2} blc={COLORS.royalBlue}>
+                                            <SizableText size="$3" color={COLORS.royalBlue} fow="700" mb="$1">Admin Team</SizableText>
+                                            <SizableText size="$3" color={COLORS.textDark} fow="500">{reply.adminReply}</SizableText>
+                                        </YStack>
+                                        <Button 
+                                            mt="$4" 
+                                            bg={`${COLORS.teal}15`} 
+                                            onPress={() => vm.markNotificationAsRead(reply._id)}
+                                            br={8}
+                                        >
+                                            <XStack ai="center" gap="$2">
+                                                <Check size={16} color={COLORS.teal} />
+                                                <SizableText size="$2" color={COLORS.teal} fow="700">Mark as Read</SizableText>
+                                            </XStack>
+                                        </Button>
+                                    </Card>
+                                ))}
+                            </YStack>
+                        )}
+                    </ScrollView>
+                </Sheet.Frame>
+            </Sheet>
         </YStack>
     );
 };
