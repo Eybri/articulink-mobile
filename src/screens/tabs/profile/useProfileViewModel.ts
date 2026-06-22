@@ -26,12 +26,12 @@ export const useProfileViewModel = (navigation: any) => {
     const [stats, setStats] = useState<any>(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
-    // ── Feedbacks & Notifications ──
-    const [feedbacks, setFeedbacks] = useState<any[]>([]);
+    // ── Notifications ──
+    const [notificationsData, setNotificationsData] = useState<any[]>([]);
 
     const unreadReplies = useMemo(() => {
-        return feedbacks.filter((f) => f.adminReply && f.isReplyRead === false);
-    }, [feedbacks]);
+        return notificationsData.filter((n) => n.isRead === false);
+    }, [notificationsData]);
 
     const analytics = useMemo(() => {
         const totalDuration = stats?.total_duration_seconds ?? 0;
@@ -70,20 +70,20 @@ export const useProfileViewModel = (navigation: any) => {
         }
     };
 
-    const loadFeedbacks = async () => {
+    const loadNotifications = async () => {
         try {
-            const response = await axios.get(`${baseURL}/feedbacks`);
-            setFeedbacks(response.data);
+            const response = await axios.get(`${baseURL}/notifications`);
+            setNotificationsData(response.data);
         } catch (e) {
-            console.error("Failed to load feedbacks:", e);
+            console.error("Failed to load notifications:", e);
         }
     };
 
-    const markNotificationAsRead = async (feedbackId: string) => {
+    const markNotificationAsRead = async (notificationId: string) => {
         try {
-            await axios.put(`${baseURL}/feedbacks/${feedbackId}/read`);
-            setFeedbacks((prev) => 
-                prev.map((f) => f._id === feedbackId ? { ...f, isReplyRead: true } : f)
+            await axios.put(`${baseURL}/notifications/${notificationId}/read`);
+            setNotificationsData((prev) => 
+                prev.map((n) => n._id === notificationId ? { ...n, isRead: true } : n)
             );
         } catch (e) {
             console.error("Failed to mark notification as read:", e);
@@ -104,14 +104,14 @@ export const useProfileViewModel = (navigation: any) => {
     useFocusEffect(useCallback(() => {
         loadProfile();
         loadStats();
-        loadFeedbacks();
+        loadNotifications();
     }, []));
 
     const onRefresh = () => {
         setRefreshing(true);
         loadProfile();
         loadStats();
-        loadFeedbacks();
+        loadNotifications();
     };
 
     const handleClearHistory = () => {
@@ -172,7 +172,7 @@ export const useProfileViewModel = (navigation: any) => {
         // Speech stats
         stats, statsLoading,
         // Notifications
-        unreadReplies, markNotificationAsRead, feedbacks
+        unreadReplies, markNotificationAsRead, notificationsData
     };
 };
 

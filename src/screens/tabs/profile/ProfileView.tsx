@@ -353,37 +353,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                     </XStack>
 
                     <ScrollView showsVerticalScrollIndicator={false}>
-                        {vm.unreadReplies?.length === 0 ? (
+                        {(!vm.notificationsData || vm.notificationsData.length === 0) ? (
                             <YStack ai="center" jc="center" p="$5" mt="$5">
                                 <Bell size={48} color={COLORS.sandMid} opacity={0.5} mb="$3" />
-                                <SizableText size="$4" color={COLORS.textMid} fow="600">No new notifications</SizableText>
+                                <SizableText size="$4" color={COLORS.textMid} fow="600">No notifications yet</SizableText>
                             </YStack>
                         ) : (
                             <YStack gap="$3" pb="$6">
-                                {vm.unreadReplies.map((reply: any, idx: number) => (
-                                    <Card key={idx} bg="white" br={16} p="$4" elevation={2} bw={1} bc={COLORS.sandMid}>
+                                {vm.notificationsData.map((notif: any, idx: number) => (
+                                    <Card key={idx} bg={notif.isRead ? "#F8FAFC" : "white"} br={16} p="$4" elevation={notif.isRead ? 0 : 2} bw={1} bc={COLORS.sandMid} opacity={notif.isRead ? 0.7 : 1}>
                                         <XStack ai="center" gap="$2" mb="$2">
-                                            <Circle size={8} bg={COLORS.teal} />
-                                            <SizableText size="$2" color={COLORS.textMid} fow="600">Admin replied to your feedback</SizableText>
+                                            {!notif.isRead && <Circle size={8} bg={COLORS.teal} />}
+                                            <SizableText size="$2" color={COLORS.textMid} fow="600">{notif.title}</SizableText>
                                         </XStack>
-                                        <YStack bg="#F8FAFC" br={8} p="$3" mb="$3">
-                                            <SizableText size="$2" color={COLORS.textDark} fow="500" fontStyle="italic">"{reply.feedbackText}"</SizableText>
+                                        <YStack pl={!notif.isRead ? "$2" : "$0"} blw={!notif.isRead ? 2 : 0} blc={COLORS.royalBlue}>
+                                            <SizableText size="$3" color={COLORS.textDark} fow="500">{notif.message}</SizableText>
                                         </YStack>
-                                        <YStack pl="$2" blw={2} blc={COLORS.royalBlue}>
-                                            <SizableText size="$3" color={COLORS.royalBlue} fow="700" mb="$1">Admin Team</SizableText>
-                                            <SizableText size="$3" color={COLORS.textDark} fow="500">{reply.adminReply}</SizableText>
-                                        </YStack>
-                                        <Button 
-                                            mt="$4" 
-                                            bg={`${COLORS.teal}15`} 
-                                            onPress={() => vm.markNotificationAsRead(reply._id)}
-                                            br={8}
-                                        >
-                                            <XStack ai="center" gap="$2">
-                                                <Check size={16} color={COLORS.teal} />
-                                                <SizableText size="$2" color={COLORS.teal} fow="700">Mark as Read</SizableText>
-                                            </XStack>
-                                        </Button>
+                                        {!notif.isRead && (
+                                            <Button 
+                                                mt="$4" 
+                                                bg={`${COLORS.teal}15`} 
+                                                onPress={() => vm.markNotificationAsRead(notif._id)}
+                                                br={8}
+                                            >
+                                                <XStack ai="center" gap="$2">
+                                                    <Check size={16} color={COLORS.teal} />
+                                                    <SizableText size="$2" color={COLORS.teal} fow="700">Mark as Read</SizableText>
+                                                </XStack>
+                                            </Button>
+                                        )}
                                     </Card>
                                 ))}
                             </YStack>
