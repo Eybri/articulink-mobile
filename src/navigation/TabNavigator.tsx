@@ -16,6 +16,8 @@ import ChatbotScreen from '../screens/Extras/chatbot';
 import ChangePasswordScreen from '../screens/Extras/change-password';
 import SecurityPrivacyScreen from '../screens/Extras/security';
 import TtsSettingsScreen from '../screens/Extras/tts-settings';
+import AppReviewScreen from '../screens/Extras/app-review';
+import MyFeedbacksScreen from '../screens/Extras/my-feedbacks';
 import {
   Home,
   History,
@@ -139,10 +141,7 @@ const SettingsStack = () => (
     <Stack.Screen 
       name="EditProfile" 
       component={EditProfileScreen} 
-      options={{ 
-        title: "Edit Profile",
-        headerLargeTitle: false,
-      }} 
+      options={{ headerShown: false }} 
     />
     <Stack.Screen 
       name="ChangePassword" 
@@ -157,6 +156,16 @@ const SettingsStack = () => (
     <Stack.Screen 
       name="TtsSettings" 
       component={TtsSettingsScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="AppReview" 
+      component={AppReviewScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="MyFeedbacks" 
+      component={MyFeedbacksScreen} 
       options={{ headerShown: false }} 
     />
   </Stack.Navigator>
@@ -265,8 +274,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
       style={{
         position: "absolute",
         bottom: isIOS ? 34 : 20,
-        left: 20,
-        right: 20,
+        left: 12,
+        right: 12,
         zIndex: 1000,
         transform: [{ translateY }],
         shadowColor: "#000",
@@ -361,7 +370,7 @@ const TabNavigator = () => (
       component={SettingsStack} 
       options={({ route }) => {
         const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings") {
+        if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings" || routeName === "AppReview" || routeName === "MyFeedbacks") {
           return { headerShown: false, tabBarStyle: { display: "none" } };
         }
         return { headerShown: false };

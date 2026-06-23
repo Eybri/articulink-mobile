@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Platform, StatusBar, Animated } from "react-native";
 import { YStack, XStack, ZStack, Button, Circle, SizableText, TextArea, Card, Spinner, AnimatePresence, ScrollView } from "tamagui";
-import { Mic, Square, Volume2, Trash2, ChevronRight, FileText, Bookmark, Star } from "@tamagui/lucide-icons";
+import { Mic, Square, Volume2, Trash2, ChevronRight, FileText, Bookmark, Star, X } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SoftOrb, AnimatedWaveform, PulseRing } from "./components/HomeComponents";
 
@@ -76,10 +76,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ vm }) => {
                             <YStack w={90} h={90} jc="center" ai="center">
                                 <PulseRing active={isRecording} color={vm.isRealtime ? COLORS.teal : COLORS.royalBlue} />
                                 <Button
-                                    size={64} br={32} bg={isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
-                                    onPress={isRecording ? vm.stopRecording : vm.startRecording} disabled={vm.loading}
+                                    size={64} br={32} bg={vm.loading ? '#F59E0B' : isRecording ? '#DC2626' : (vm.isRealtime ? COLORS.teal : COLORS.royalBlue)}
+                                    onPress={vm.loading ? vm.cancelTranscription : isRecording ? vm.stopRecording : vm.startRecording}
                                     pressStyle={{ scale: 0.95, opacity: 0.9 }} elevation={8}
-                                    icon={vm.loading ? <Spinner size="small" color="white" /> : (isRecording ? <Square size={20} color="white" fill="white" /> : <Mic size={24} color="white" />)}
+                                    icon={vm.loading ? <X size={24} color="white" /> : (isRecording ? <Square size={20} color="white" fill="white" /> : <Mic size={24} color="white" />)}
                                 />
                             </YStack>
                             <YStack ai="center" mt="$-1">

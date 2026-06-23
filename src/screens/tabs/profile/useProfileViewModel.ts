@@ -2,6 +2,8 @@ import { useState, useContext, useCallback, useMemo } from "react";
 import { Alert, useWindowDimensions } from "react-native";
 import { AuthContext, AuthContextType } from "./../../../context/AuthContext";
 import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
+import baseURL from "./../../../utils/baseurl";
 
 /**
  * ViewModel for the Profile Screen.
@@ -24,6 +26,13 @@ export const useProfileViewModel = (navigation: any) => {
     const [stats, setStats] = useState<any>(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
+    // ── Notifications ──
+    const [notificationsData, setNotificationsData] = useState<any[]>([]);
+
+    const unreadReplies = useMemo(() => {
+        return notificationsData.filter((n) => n.isRead === false);
+    }, [notificationsData]);
+
     const analytics = useMemo(() => {
         const totalDuration = stats?.total_duration_seconds ?? 0;
         return {
@@ -34,7 +43,7 @@ export const useProfileViewModel = (navigation: any) => {
             todaySessions: stats?.today_recordings ?? 0,
             todayHours: +(totalDuration / 3600).toFixed(1),
             todayClarityPct: stats?.today_avg_confidence ?? 0,
-            todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 5) * 100)),
+            todayProgressPct: Math.min(100, Math.round(((stats?.today_recordings ?? 0) / 30) * 100)),
         };
     }, [stats]);
 
@@ -61,6 +70,26 @@ export const useProfileViewModel = (navigation: any) => {
         }
     };
 
+    const loadNotifications = async () => {
+        try {
+            const response = await axios.get(`${baseURL}/notifications`);
+            setNotificationsData(response.data);
+        } catch (e) {
+            console.error("Failed to load notifications:", e);
+        }
+    };
+
+    const markNotificationAsRead = async (notificationId: string) => {
+        try {
+            await axios.put(`${baseURL}/notifications/${notificationId}/read`);
+            setNotificationsData((prev) => 
+                prev.map((n) => n._id === notificationId ? { ...n, isRead: true } : n)
+            );
+        } catch (e) {
+            console.error("Failed to mark notification as read:", e);
+        }
+    };
+
     const handleProfileError = (error: any) => {
         if (error.message?.includes("Session expired") || error.response?.status === 401) {
             setError("Session expired");
@@ -75,12 +104,14 @@ export const useProfileViewModel = (navigation: any) => {
     useFocusEffect(useCallback(() => {
         loadProfile();
         loadStats();
+        loadNotifications();
     }, []));
 
     const onRefresh = () => {
         setRefreshing(true);
         loadProfile();
         loadStats();
+        loadNotifications();
     };
 
     const handleClearHistory = () => {
@@ -140,6 +171,8 @@ export const useProfileViewModel = (navigation: any) => {
         notifications, setNotifications,
         // Speech stats
         stats, statsLoading,
+        // Notifications
+        unreadReplies, markNotificationAsRead, notificationsData
     };
 };
 

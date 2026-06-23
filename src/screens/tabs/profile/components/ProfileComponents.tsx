@@ -65,25 +65,34 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
   onContinue,
 }) => {
   const arcAnim = useRef(new Animated.Value(0)).current;
+  const [displayPct, setDisplayPct] = useState(0);
 
   useEffect(() => {
+    const listener = arcAnim.addListener(({ value }) => {
+      setDisplayPct(Math.round(value * 100));
+    });
+
     Animated.timing(arcAnim, {
       toValue: progressPct / 100,
       duration: 1200,
       useNativeDriver: false,
     }).start();
+
+    return () => {
+      arcAnim.removeListener(listener);
+    };
   }, [progressPct]);
 
   const R = 45;
   const totalArcLength = Math.PI * R;
 
   return (
-    <YStack bg={COLORS.royalBlue} br={28} p="$4" mb="$5" ov="hidden" elevation={8} shadowColor={COLORS.deepNavy}>
+    <YStack bg={COLORS.royalBlue} br={16} p="$4" mb="$5" ov="hidden" elevation={6} shadowColor={COLORS.deepNavy}>
       <YStack pos="absolute" t={0} l={0} r={0} h={100} bg="rgba(255,255,255,0.03)" style={{ borderBottomLeftRadius: 100, borderBottomRightRadius: 100, transform: [{ scaleX: 2 }] }} />
-      
+
       <XStack jc="space-between" ai="center" mb="$3">
         <SizableText fow="700" size="$4" color={COLORS.orbBlue} ls={0.3}>
-          Today Progress
+          Today's Activity
         </SizableText>
         <YStack opacity={0.5}>
           <Circle size={4} bg="white" mb={2} />
@@ -127,20 +136,20 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
               stroke={COLORS.tealLight}
               strokeWidth={10}
               strokeLinecap="round"
-              strokeDasharray="4 2"
+              strokeDasharray={totalArcLength}
               strokeDashoffset={totalArcLength * (1 - progressPct / 100)}
             />
           </Svg>
           <YStack pos="absolute" b={2} ai="center">
             <SizableText fow="900" size="$8" color="white" ls={-1}>
-              {progressPct}%
+              {displayPct}%
             </SizableText>
           </YStack>
         </YStack>
 
         <Button
           bg={COLORS.teal}
-          br={24}
+          br={16}
           px="$5"
           h={42}
           onPress={onContinue}
@@ -158,8 +167,8 @@ export const SpeechProgressCard: React.FC<{ sessions: number; hoursToday: number
 
 // ─── Stat Card ────────────────────────────────────────────────────
 export const StatCard: React.FC<{ icon: React.ReactNode; value: string; label: string; delta?: string; accentColor: string; iconBg: string; loading?: boolean }> = ({ icon, value, label, delta, accentColor, iconBg, loading }) => (
-  <YStack bg="white" br={18} p="$3" f={1} bw={1} bc={COLORS.sandMid} ov="hidden">
-    <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={18} />
+  <YStack bg="white" br={16} p="$3" f={1} bw={1} bc={COLORS.sandMid} ov="hidden" elevation={2} shadowColor="#000" shadowOpacity={0.05}>
+    <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={16} />
     {loading ? (
       <YStack gap="$2" py="$1">
         <Circle size={30} bg={`${COLORS.sandMid}40`} />
@@ -212,9 +221,9 @@ export const Accordion: React.FC<{ icon: React.ReactNode; title: string; tagText
   const rotation = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] });
 
   return (
-    <YStack bg="white" br={22} mb="$3" ov="hidden" elevation={5} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
-      <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={22} />
-      <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${accentColor}07`} br={22} />
+    <YStack bg="white" br={16} mb="$3" ov="hidden" elevation={3} shadowColor="#8A96A4" bw={1} bc={COLORS.sandMid}>
+      <YStack pos="absolute" t={0} l={0} r={0} h={3} bg={accentColor} br={16} />
+      <YStack pos="absolute" t={0} l={0} r={0} h={50} bg={`${accentColor}07`} br={16} />
 
       <XStack ai="center" jc="space-between" p="$4" onPress={toggle}>
         <XStack ai="center" gap="$3" f={1}>
@@ -313,104 +322,104 @@ export const SectionLabel: React.FC<{ text: string }> = ({ text }) => (
 );
 
 export const SettingRow = ({ icon, title, description, children, isLast = false, onPress }: { icon: any, title: string, description?: string, children: React.ReactNode, isLast?: boolean, onPress?: () => void }) => (
-    <TouchableOpacity onPress={onPress} disabled={!onPress} activeOpacity={0.7}>
-      <YStack>
-        <XStack ai="center" jc="space-between" py="$4" gap="$3">
-          <XStack ai="center" gap="$3" f={1}>
-            <YStack w={42} h={42} br={14} bg={`${COLORS.royalBlue}0A`} jc="center" ai="center">
-              {icon}
-            </YStack>
-            <YStack f={1}>
-              <SizableText size="$4" fow="700" color={COLORS.textDark} ls={-0.4}>{title}</SizableText>
-              {description && <SizableText size="$1" color={COLORS.textMid} fow="500" opacity={0.8}>{description}</SizableText>}
-            </YStack>
-          </XStack>
-          {children}
-        </XStack>
-        {!isLast && <Separator bc="rgba(221, 214, 200, 0.4)" />}
-      </YStack>
-    </TouchableOpacity>
-  );
-  
-  export const SliderSetting = ({ icon, title, value, onValueChange }: { icon: any, title: string, value: number, onValueChange: (v: number) => void }) => (
-    <YStack py="$4" gap="$3">
-      <XStack ai="center" jc="space-between">
-        <XStack ai="center" gap="$3">
+  <TouchableOpacity onPress={onPress} disabled={!onPress} activeOpacity={0.7}>
+    <YStack>
+      <XStack ai="center" jc="space-between" py="$4" gap="$3">
+        <XStack ai="center" gap="$3" f={1}>
           <YStack w={42} h={42} br={14} bg={`${COLORS.royalBlue}0A`} jc="center" ai="center">
             {icon}
           </YStack>
-          <SizableText size="$4" fow="700" color={COLORS.textDark} ls={-0.4}>{title}</SizableText>
-        </XStack>
-        <SizableText size="$2" fow="800" color={COLORS.royalBlue}>{Math.round(value * 100)}%</SizableText>
-      </XStack>
-      <YStack px="$1" mt="$1">
-        <Slider
-          style={{ width: '100%', height: 30 }}
-          value={value}
-          onValueChange={onValueChange}
-          minimumValue={0}
-          maximumValue={1}
-          minimumTrackTintColor={COLORS.royalBlue}
-          maximumTrackTintColor={COLORS.sandMid}
-          thumbTintColor={COLORS.royalBlue}
-        />
-        <XStack jc="space-between" px="$1" mt="$1">
-          <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.5}>Soft</SizableText>
-          <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.5}>Strong</SizableText>
-        </XStack>
-      </YStack>
-    </YStack>
-  );
-
-export const SettingsItem = ({ 
-    icon, 
-    title, 
-    value, 
-    onPress, 
-    isLast = false,
-    children,
-    danger = false
-  }: { 
-    icon: any, 
-    title: string, 
-    value?: string, 
-    onPress?: () => void, 
-    isLast?: boolean,
-    children?: React.ReactNode,
-    danger?: boolean
-  }) => (
-    <YStack 
-      bg="white" 
-      onPress={onPress}
-      disabled={!onPress && !children}
-      pressStyle={onPress ? { bg: COLORS.sandLight } : undefined}
-    >
-      <XStack ai="center" jc="space-between" px="$5" h={64}>
-        <XStack ai="center" gap="$3" f={1}>
-          <YStack w={38} h={38} br={12} bg={danger ? "#FEF2F2" : `${COLORS.royalBlue}08`} ai="center" jc="center">
-            {icon}
+          <YStack f={1}>
+            <SizableText size="$4" fow="700" color={COLORS.textDark} ls={-0.4}>{title}</SizableText>
+            {description && <SizableText size="$1" color={COLORS.textMid} fow="500" opacity={0.8}>{description}</SizableText>}
           </YStack>
-          <SizableText size="$4" fow="600" color={danger ? "#DC2626" : COLORS.textDark}>{title}</SizableText>
         </XStack>
-        
-        <XStack ai="center" gap="$2">
-          {value && <SizableText size="$3" color={COLORS.textMid} fow="600" opacity={0.6}>{value}</SizableText>}
-          {children}
-          {!children && <ChevronRight size={18} color={COLORS.sandMid} opacity={0.7} />}
-        </XStack>
+        {children}
       </XStack>
-      {!isLast && <Separator ml={65} bc="rgba(221, 214, 200, 0.3)" />}
+      {!isLast && <Separator bc="rgba(221, 214, 200, 0.4)" />}
     </YStack>
-  );
-  
-  export const SettingsSectionHeader = ({ title, icon }: { title: string, icon?: React.ReactNode }) => (
-    <XStack ai="center" gap="$2" pt="$6" pb="$3" px="$5">
-      {icon && <YStack opacity={0.6}>{icon}</YStack>}
-      <SizableText size="$1" fow="800" color={COLORS.textMid} tt="uppercase" ls={1.5} opacity={0.5}>
-        {title}
-      </SizableText>
+  </TouchableOpacity>
+);
+
+export const SliderSetting = ({ icon, title, value, onValueChange }: { icon: any, title: string, value: number, onValueChange: (v: number) => void }) => (
+  <YStack py="$4" gap="$3">
+    <XStack ai="center" jc="space-between">
+      <XStack ai="center" gap="$3">
+        <YStack w={42} h={42} br={14} bg={`${COLORS.royalBlue}0A`} jc="center" ai="center">
+          {icon}
+        </YStack>
+        <SizableText size="$4" fow="700" color={COLORS.textDark} ls={-0.4}>{title}</SizableText>
+      </XStack>
+      <SizableText size="$2" fow="800" color={COLORS.royalBlue}>{Math.round(value * 100)}%</SizableText>
     </XStack>
-  );
+    <YStack px="$1" mt="$1">
+      <Slider
+        style={{ width: '100%', height: 30 }}
+        value={value}
+        onValueChange={onValueChange}
+        minimumValue={0}
+        maximumValue={1}
+        minimumTrackTintColor={COLORS.royalBlue}
+        maximumTrackTintColor={COLORS.sandMid}
+        thumbTintColor={COLORS.royalBlue}
+      />
+      <XStack jc="space-between" px="$1" mt="$1">
+        <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.5}>Soft</SizableText>
+        <SizableText size="$1" color={COLORS.textMid} fow="600" opacity={0.5}>Strong</SizableText>
+      </XStack>
+    </YStack>
+  </YStack>
+);
+
+export const SettingsItem = ({
+  icon,
+  title,
+  value,
+  onPress,
+  isLast = false,
+  children,
+  danger = false
+}: {
+  icon: any,
+  title: string,
+  value?: string,
+  onPress?: () => void,
+  isLast?: boolean,
+  children?: React.ReactNode,
+  danger?: boolean
+}) => (
+  <YStack
+    bg="white"
+    onPress={onPress}
+    disabled={!onPress && !children}
+    pressStyle={onPress ? { bg: COLORS.sandLight } : undefined}
+  >
+    <XStack ai="center" jc="space-between" px="$5" h={64}>
+      <XStack ai="center" gap="$3" f={1}>
+        <YStack w={38} h={38} br={12} bg={danger ? "#FEF2F2" : `${COLORS.royalBlue}08`} ai="center" jc="center">
+          {icon}
+        </YStack>
+        <SizableText size="$4" fow="600" color={danger ? "#DC2626" : COLORS.textDark}>{title}</SizableText>
+      </XStack>
+
+      <XStack ai="center" gap="$2">
+        {value && <SizableText size="$3" color={COLORS.textMid} fow="600" opacity={0.6}>{value}</SizableText>}
+        {children}
+        {!children && <ChevronRight size={18} color={COLORS.sandMid} opacity={0.7} />}
+      </XStack>
+    </XStack>
+    {!isLast && <Separator ml={65} bc="rgba(221, 214, 200, 0.3)" />}
+  </YStack>
+);
+
+export const SettingsSectionHeader = ({ title, icon }: { title: string, icon?: React.ReactNode }) => (
+  <XStack ai="center" gap="$2" pt="$6" pb="$3" px="$5">
+    {icon && <YStack opacity={0.6}>{icon}</YStack>}
+    <SizableText size="$1" fow="800" color={COLORS.textMid} tt="uppercase" ls={1.5} opacity={0.5}>
+      {title}
+    </SizableText>
+  </XStack>
+);
 
 /** Get time-based greeting */
 export function getGreeting(): string {
@@ -423,37 +432,37 @@ export function getGreeting(): string {
 /** Word chip with frequency or custom badge */
 export const WordChip: React.FC<{ word: string; count?: number; badgeText?: string; index: number }> = ({ word, count, badgeText, index }) => {
   const chipColors = [
-      { bg: `${COLORS.royalBlue}08`, border: `${COLORS.royalBlue}18`, text: COLORS.royalBlue },
-      { bg: `${COLORS.teal}08`, border: `${COLORS.teal}18`, text: COLORS.teal },
-      { bg: '#F5F3FF', border: '#E9E5FF', text: '#7C3AED' },
-      { bg: '#FFF7ED', border: '#FFEDD5', text: '#EA580C' },
-      { bg: '#F0FDF4', border: '#DCFCE7', text: '#16A34A' },
-      { bg: '#FDF2F8', border: '#FCE7F3', text: '#DB2777' },
-      { bg: '#FFFBEB', border: '#FEF3C7', text: '#D97706' },
-      { bg: '#F0F9FF', border: '#E0F2FE', text: '#0284C7' },
+    { bg: `${COLORS.royalBlue}08`, border: `${COLORS.royalBlue}18`, text: COLORS.royalBlue },
+    { bg: `${COLORS.teal}08`, border: `${COLORS.teal}18`, text: COLORS.teal },
+    { bg: '#F5F3FF', border: '#E9E5FF', text: '#7C3AED' },
+    { bg: '#FFF7ED', border: '#FFEDD5', text: '#EA580C' },
+    { bg: '#F0FDF4', border: '#DCFCE7', text: '#16A34A' },
+    { bg: '#FDF2F8', border: '#FCE7F3', text: '#DB2777' },
+    { bg: '#FFFBEB', border: '#FEF3C7', text: '#D97706' },
+    { bg: '#F0F9FF', border: '#E0F2FE', text: '#0284C7' },
   ];
   const c = chipColors[index % chipColors.length];
 
   return (
-      <XStack
-          bg={c.bg}
-          br={100}
-          px="$3"
-          py="$1.5"
-          ai="center"
-          gap="$1.5"
-          bw={1}
-          bc={c.border}
-      >
-          <SizableText fow="700" size="$2" color={c.text}>
-              {word}
-          </SizableText>
-          <YStack bg={`${c.text}15`} br={100} px="$1.5" py="$0.5">
-              <SizableText fow="800" size={10} color={c.text}>
-                  {badgeText || `${count}×`}
-              </SizableText>
-          </YStack>
-      </XStack>
+    <XStack
+      bg={c.bg}
+      br={100}
+      px="$3"
+      py="$1.5"
+      ai="center"
+      gap="$1.5"
+      bw={1}
+      bc={c.border}
+    >
+      <SizableText fow="700" size="$2" color={c.text}>
+        {word}
+      </SizableText>
+      <YStack bg={`${c.text}15`} br={100} px="$1.5" py="$0.5">
+        <SizableText fow="800" size={10} color={c.text}>
+          {badgeText || `${count}×`}
+        </SizableText>
+      </YStack>
+    </XStack>
   );
 };
 
@@ -462,128 +471,128 @@ export const LanguagePill: React.FC<{ lang: string; count: any; total: number }>
   const actualCount = typeof count === 'number' ? count : count?.count || 0;
   const pct = total > 0 ? Math.round((actualCount / total) * 100) : 0;
   const langNames: Record<string, string> = {
-      en: "English",
-      fil: "Filipino",
-      tl: "Tagalog",
-      unknown: "Other",
+    en: "English",
+    fil: "Filipino",
+    tl: "Tagalog",
+    unknown: "Other",
   };
   const displayName = langNames[lang] || lang.toUpperCase();
 
   return (
-      <YStack f={1} minWidth={120} gap="$1.5">
-          <XStack jc="space-between" ai="center">
-              <SizableText fow="700" size="$2" color={COLORS.textDark}>{displayName}</SizableText>
-              <SizableText fow="600" size="$1" color={COLORS.textMid}>{pct}%</SizableText>
-          </XStack>
-          <YStack h={6} bg={`${COLORS.sandMid}40`} br={3} ov="hidden">
-              <YStack h={6} w={`${pct}%`} bg="#6366F1" br={3} />
-          </YStack>
-          <SizableText fow="500" size={10} color={COLORS.textMid} opacity={0.6}>
-              {actualCount} recording{actualCount !== 1 ? 's' : ''}
-          </SizableText>
+    <YStack f={1} minWidth={120} gap="$1.5">
+      <XStack jc="space-between" ai="center">
+        <SizableText fow="700" size="$2" color={COLORS.textDark}>{displayName}</SizableText>
+        <SizableText fow="600" size="$1" color={COLORS.textMid}>{pct}%</SizableText>
+      </XStack>
+      <YStack h={6} bg={`${COLORS.sandMid}40`} br={3} ov="hidden">
+        <YStack h={6} w={`${pct}%`} bg="#6366F1" br={3} />
       </YStack>
+      <SizableText fow="500" size={10} color={COLORS.textMid} opacity={0.6}>
+        {actualCount} recording{actualCount !== 1 ? 's' : ''}
+      </SizableText>
+    </YStack>
   );
 };
 
 export const LanguageStatsCard: React.FC<{ breakdown: Record<string, any>, totalRecordings: number }> = ({ breakdown, totalRecordings }) => {
-    const entries = Object.entries(breakdown || {}).filter(([_, data]: [string, any]) => data?.count > 0);
-    if (entries.length === 0) return null;
-  
-    const R1 = 45;
-    const R2 = 30;
-    const center = 70;
-  
-    const topTwo = entries.sort((a, b) => b[1].count - a[1].count).slice(0, 2);
-    
-    const langNames: Record<string, string> = { en: "ENG", fil: "FIL", tl: "TAG", unknown: "OTH" };
-    const colors = [COLORS.royalBlue, COLORS.teal];
-  
-    return (
-      <Card bg="white" br={24} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
-          <XStack ai="center" gap="$2" mb="$3">
-              <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
-                  <Globe size={14} color="#6366F1" />
-              </YStack>
-              <SizableText fow="800" size="$3" color={COLORS.textDark}>Language Insights</SizableText>
-              <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
-          </XStack>
-  
-          {/* Languages Used Pills */}
-          <XStack gap="$3" flexWrap="wrap" mb="$4">
-              {Object.entries(breakdown).map(([lang, count]: [string, any]) => (
-                  <LanguagePill key={lang} lang={lang} count={count} total={totalRecordings} />
-              ))}
-          </XStack>
+  const entries = Object.entries(breakdown || {}).filter(([_, data]: [string, any]) => data?.count > 0);
+  if (entries.length === 0) return null;
 
-          <Separator bc={COLORS.sandMid} opacity={0.3} mb="$4" />
-  
-          {/* Accuracy Comparison Chart */}
-          <XStack jc="center" ai="center" gap="$4">
-             <YStack w={140} h={140} jc="center" ai="center">
-                 <Svg width={140} height={140} viewBox="0 0 140 140">
-                     {topTwo.map(([lang, data], i) => {
-                         const R = i === 0 ? R1 : R2;
-                         const circumference = 2 * Math.PI * R;
-                         const strokeDashoffset = circumference - ((data.avg_accuracy || 0) / 100) * circumference;
-                         return (
-                             <React.Fragment key={lang}>
-                                 <SvgCircle
-                                     cx={center}
-                                     cy={center}
-                                     r={R}
-                                     stroke={`${colors[i]}20`}
-                                     strokeWidth={10}
-                                     fill="none"
-                                 />
-                                 <SvgCircle
-                                     cx={center}
-                                     cy={center}
-                                     r={R}
-                                     stroke={colors[i]}
-                                     strokeWidth={10}
-                                     strokeLinecap="round"
-                                     strokeDasharray={circumference}
-                                     strokeDashoffset={strokeDashoffset}
-                                     fill="none"
-                                     transform={`rotate(-90 ${center} ${center})`}
-                                 />
-                             </React.Fragment>
-                         );
-                     })}
-                 </Svg>
-                 <YStack pos="absolute" ai="center" jc="center">
-                     <SizableText size="$3" fow="900" color={COLORS.textDark}>Avg</SizableText>
-                 </YStack>
-             </YStack>
-  
-             <YStack gap="$3" jc="center" f={1}>
-                 {topTwo.map(([lang, data], i) => (
-                     <XStack key={lang} ai="center" gap="$2" bg={`${colors[i]}0A`} p="$2" br={12}>
-                         <YStack w={10} h={10} br={5} bg={colors[i]} />
-                         <YStack>
-                             <SizableText size="$1" fow="700" color={COLORS.textMid}>{langNames[lang] || lang.toUpperCase()}</SizableText>
-                             <SizableText size="$4" fow="900" color={colors[i]}>{data.avg_accuracy || 0}%</SizableText>
-                         </YStack>
-                     </XStack>
-                 ))}
-             </YStack>
-          </XStack>
-      </Card>
-    );
-  };
+  const R1 = 45;
+  const R2 = 30;
+  const center = 70;
+
+  const topTwo = entries.sort((a, b) => b[1].count - a[1].count).slice(0, 2);
+
+  const langNames: Record<string, string> = { en: "ENG", fil: "FIL", tl: "TAG", unknown: "OTH" };
+  const colors = [COLORS.royalBlue, COLORS.teal];
+
+  return (
+    <Card bg="white" br={16} elevation={2} bw={1} bc={COLORS.sandMid} p="$4" mb="$3">
+      <XStack ai="center" gap="$2" mb="$3">
+        <YStack w={28} h={28} br={10} bg="#EEF2FF" jc="center" ai="center">
+          <Globe size={14} color="#6366F1" />
+        </YStack>
+        <SizableText fow="800" size="$3" color={COLORS.textDark}>Language Insights</SizableText>
+        <YStack f={1} h={1} bg={COLORS.sandMid} opacity={0.2} ml="$2" />
+      </XStack>
+
+      {/* Languages Used Pills */}
+      <XStack gap="$3" flexWrap="wrap" mb="$4">
+        {Object.entries(breakdown).map(([lang, count]: [string, any]) => (
+          <LanguagePill key={lang} lang={lang} count={count} total={totalRecordings} />
+        ))}
+      </XStack>
+
+      <Separator bc={COLORS.sandMid} opacity={0.3} mb="$4" />
+
+      {/* Accuracy Comparison Chart */}
+      <XStack jc="center" ai="center" gap="$4">
+        <YStack w={140} h={140} jc="center" ai="center">
+          <Svg width={140} height={140} viewBox="0 0 140 140">
+            {topTwo.map(([lang, data], i) => {
+              const R = i === 0 ? R1 : R2;
+              const circumference = 2 * Math.PI * R;
+              const strokeDashoffset = circumference - ((data.avg_accuracy || 0) / 100) * circumference;
+              return (
+                <React.Fragment key={lang}>
+                  <SvgCircle
+                    cx={center}
+                    cy={center}
+                    r={R}
+                    stroke={`${colors[i]}20`}
+                    strokeWidth={10}
+                    fill="none"
+                  />
+                  <SvgCircle
+                    cx={center}
+                    cy={center}
+                    r={R}
+                    stroke={colors[i]}
+                    strokeWidth={10}
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    fill="none"
+                    transform={`rotate(-90 ${center} ${center})`}
+                  />
+                </React.Fragment>
+              );
+            })}
+          </Svg>
+          <YStack pos="absolute" ai="center" jc="center">
+            <SizableText size="$3" fow="900" color={COLORS.textDark}>Avg</SizableText>
+          </YStack>
+        </YStack>
+
+        <YStack gap="$3" jc="center" f={1}>
+          {topTwo.map(([lang, data], i) => (
+            <XStack key={lang} ai="center" gap="$2" bg={`${colors[i]}0A`} p="$2" br={12}>
+              <YStack w={10} h={10} br={5} bg={colors[i]} />
+              <YStack>
+                <SizableText size="$1" fow="700" color={COLORS.textMid}>{langNames[lang] || lang.toUpperCase()}</SizableText>
+                <SizableText size="$4" fow="900" color={colors[i]}>{data.avg_accuracy || 0}%</SizableText>
+              </YStack>
+            </XStack>
+          ))}
+        </YStack>
+      </XStack>
+    </Card>
+  );
+};
 
 /** Skeleton Stats Card */
 export const SkeletonCard = () => (
-    <Card bg="white" br={24} p="$4" elevation={2} bw={1} bc={COLORS.sandMid} opacity={0.6}>
-        <XStack ai="center" gap="$2" mb="$3">
-            <YStack w={28} h={28} br={10} bg={`${COLORS.sandMid}20`} />
-            <YStack h={20} w={120} bg={`${COLORS.sandMid}20`} br={4} />
-        </XStack>
-        <YStack gap="$2">
-            <YStack h={12} w="90%" bg={`${COLORS.sandMid}10`} br={2} />
-            <YStack h={12} w="70%" bg={`${COLORS.sandMid}10`} br={2} />
-        </YStack>
-    </Card>
+  <Card bg="white" br={16} p="$4" elevation={2} bw={1} bc={COLORS.sandMid} opacity={0.6}>
+    <XStack ai="center" gap="$2" mb="$3">
+      <YStack w={28} h={28} br={10} bg={`${COLORS.sandMid}20`} />
+      <YStack h={20} w={120} bg={`${COLORS.sandMid}20`} br={4} />
+    </XStack>
+    <YStack gap="$2">
+      <YStack h={12} w="90%" bg={`${COLORS.sandMid}10`} br={2} />
+      <YStack h={12} w="70%" bg={`${COLORS.sandMid}10`} br={2} />
+    </YStack>
+  </Card>
 );
 
 

@@ -75,7 +75,7 @@ export const BrandIntroView: React.FC<BrandIntroViewProps> = ({ vm }) => {
                                     Welcome
                                 </SizableText>
                                 <SizableText color="white" opacity={0.7} size="$2" fow="400" lh={18}>
-                                    Empowering communication through advanced AI. Break the silence and express yourself naturally.
+                                    An assistive communication tool tailored for individuals with cleft conditions.
                                 </SizableText>
                             </YStack>
 
