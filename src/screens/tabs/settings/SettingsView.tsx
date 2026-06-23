@@ -129,22 +129,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                         </Card>
                     </YStack>
 
-                    {/* Section: Configuration */}
-                    <YStack mb="$5">
-                        <XStack ai="center" gap="$2" mb="$3" ml="$2">
-                            <AppWindow size={14} color={COLORS.royalBlue} />
-                            <SizableText size="$2" fontWeight="800" color={COLORS.royalBlue} textTransform="uppercase" ls={1.5}>Preferences</SizableText>
-                        </XStack>
-                        
-                        <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
-                            <SettingRow icon={<History size={18} color={COLORS.royalBlue} />} title="Store History" description="Keep logs on this device" isLast>
-                                <Switch size="$3" bg={vm.saveHistory ? COLORS.royalBlue : COLORS.sandMid} checked={vm.saveHistory} onCheckedChange={vm.setSaveHistory}>
-                                    <Switch.Thumb bg="white" />
-                                </Switch>
-                            </SettingRow>
-                        </Card>
-                    </YStack>
-
 
 
                     {/* Section: Privacy & Storage */}

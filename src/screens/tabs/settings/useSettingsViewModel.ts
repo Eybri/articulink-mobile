@@ -9,7 +9,6 @@ export const useSettingsViewModel = (navigation: any) => {
     const auth = useContext(AuthContext) as AuthContextType;
     const { user, logout } = auth;
     
-    const [saveHistory, setSaveHistory] = useState(true);
     const { width, height } = useWindowDimensions();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -43,7 +42,6 @@ export const useSettingsViewModel = (navigation: any) => {
 
     return {
         user,
-        saveHistory, setSaveHistory,
         width, height,
 
         handleLogout,
