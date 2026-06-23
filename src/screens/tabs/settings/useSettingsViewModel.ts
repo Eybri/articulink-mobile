@@ -22,20 +22,7 @@ export const useSettingsViewModel = (navigation: any) => {
         ]).start();
     }, []);
 
-    const handleClearHistory = () => {
-        Alert.alert(
-            "Clear History",
-            "Are you sure you want to clear all translation history? This action cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Clear", style: "destructive", onPress: () => {
-                        Alert.alert("Success", "Translation history cleared successfully!");
-                    }
-                }
-            ]
-        );
-    };
+
 
     const handleLogout = () => {
         Alert.alert("Logout", "Sign out of your account?", [
@@ -58,7 +45,7 @@ export const useSettingsViewModel = (navigation: any) => {
         user,
         saveHistory, setSaveHistory,
         width, height,
-        handleClearHistory,
+
         handleLogout,
         handleReview,
         handleMyFeedbacks,

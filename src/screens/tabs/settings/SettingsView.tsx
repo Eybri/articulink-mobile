@@ -33,6 +33,7 @@ import {
   Lock,
   Star,
   MessageSquareQuote,
+  Info,
 } from "@tamagui/lucide-icons";
 import { COLORS } from "./../../../constants/colors";
 import { SettingRow, SliderSetting } from "./components/SettingsComponents";
@@ -155,10 +156,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ vm, navigation }) =>
                         
                         <Card bg="white" br={12} p="$1" px="$5" elevation={2} shadowColor="#000" shadowOpacity={0.04} shadowRadius={8} bw={1} bc="#E2E8F0">
                             <SettingRow 
-                                icon={<Trash2 size={18} color="#DC2626" />} 
-                                title="Clear Local Cache" 
-                                description="Remove all local message data"
-                                onPress={vm.handleClearHistory}
+                                icon={<Info size={18} color={COLORS.royalBlue} />} 
+                                title="About" 
+                                description="Learn more about Articulink"
+                                onPress={() => navigation.navigate("About")}
                             >
                                 <ChevronRight size={18} color={COLORS.sandMid} />
                             </SettingRow>

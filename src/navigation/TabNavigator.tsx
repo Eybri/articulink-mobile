@@ -18,6 +18,7 @@ import SecurityPrivacyScreen from '../screens/Extras/security';
 import TtsSettingsScreen from '../screens/Extras/tts-settings';
 import AppReviewScreen from '../screens/Extras/app-review';
 import MyFeedbacksScreen from '../screens/Extras/my-feedbacks';
+import AboutScreen from '../screens/Extras/about';
 import {
   Home,
   History,
@@ -166,6 +167,11 @@ const SettingsStack = () => (
     <Stack.Screen 
       name="MyFeedbacks" 
       component={MyFeedbacksScreen} 
+      options={{ headerShown: false }} 
+    />
+    <Stack.Screen 
+      name="About" 
+      component={AboutScreen} 
       options={{ headerShown: false }} 
     />
   </Stack.Navigator>
@@ -370,7 +376,7 @@ const TabNavigator = () => (
       component={SettingsStack} 
       options={({ route }) => {
         const routeName = getFocusedRouteNameFromRoute(route);
-        if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings" || routeName === "AppReview" || routeName === "MyFeedbacks") {
+        if (routeName === "EditProfile" || routeName === "ChangePassword" || routeName === "SecurityPrivacy" || routeName === "TtsSettings" || routeName === "AppReview" || routeName === "MyFeedbacks" || routeName === "About") {
           return { headerShown: false, tabBarStyle: { display: "none" } };
         }
         return { headerShown: false };
