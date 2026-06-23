@@ -338,9 +338,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ vm, navigation }) => {
                 snapPoints={[85, 50]}
                 dismissOnSnapToBottom
                 zIndex={100000}
-                animation="medium"
             >
-                <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
+                <Sheet.Overlay enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
                 <Sheet.Handle />
                 <Sheet.Frame flex={1} bg={COLORS.cream} p="$4" br={24}>
                     <XStack jc="space-between" ai="center" mb="$4">
